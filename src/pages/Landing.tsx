@@ -351,7 +351,7 @@ export default function Landing() {
             ))}
           </div>
           <div className="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© 2026 AutoServe. Built for African businesses.</p>
+            <p>© 2026 ManyFlow. Built for African businesses.</p>
             <div className="flex gap-4">
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
