@@ -32,6 +32,7 @@ const navItems = [
 export default function AppSidebar() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { logoUrl, businessName } = useBusiness();
 
   return (
     <>
