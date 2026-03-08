@@ -108,7 +108,6 @@ export default function Dashboard() {
 
   if (loading) return <DashboardSkeleton />;
 
-  const markAllRead = () => setNotifList((prev) => prev.map((n) => ({ ...n, read: true })));
 
   return (
     <div className="space-y-6">
