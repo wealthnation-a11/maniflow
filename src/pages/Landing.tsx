@@ -103,7 +103,7 @@ export default function Landing() {
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
-            <Zap className="h-7 w-7 text-primary" />
+            <ManyFlowLogo className="h-7 w-7" />
             <span className="font-heading font-bold text-xl tracking-tight">ManyFlow</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
