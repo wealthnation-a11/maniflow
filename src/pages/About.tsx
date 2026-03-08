@@ -19,7 +19,7 @@ export default function About() {
           <p>Our AI Sales Assistant replies to customers instantly, captures orders, generates payment links, and follows up on abandoned orders — all while you focus on growing your business.</p>
           <h2 className="font-heading text-xl font-semibold text-foreground pt-4">Our Mission</h2>
           <p>To empower small businesses with enterprise-grade AI automation, making it effortless to sell, serve, and grow across every social channel.</p>
-          <h2 className="font-heading text-xl font-semibold text-foreground pt-4">Why AutoServe?</h2>
+          <h2 className="font-heading text-xl font-semibold text-foreground pt-4">Why ManyFlow?</h2>
           <ul className="list-disc pl-5 space-y-2">
             <li>Set up in under 5 minutes — no coding required</li>
             <li>AI handles replies, orders, and payments automatically</li>
