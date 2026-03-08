@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, Home, ArrowLeft } from "lucide-react";
+import { Home, ArrowLeft } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
