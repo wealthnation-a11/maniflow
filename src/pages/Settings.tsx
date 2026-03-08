@@ -145,6 +145,58 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Profile / Account */}
+      <div className="bg-card rounded-xl shadow-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <UserCircle className="h-5 w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-lg">Profile & Account</h2>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm">Business Logo</Label>
+            <div className="mt-2 flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                <Upload className="h-6 w-6" />
+              </div>
+              <Button variant="outline" size="sm" className="text-xs">Upload Logo</Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">PNG or JPG, max 2MB</p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">Timezone</Label>
+              <Select defaultValue="africa-lagos">
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="africa-lagos">Africa/Lagos (WAT)</SelectItem>
+                  <SelectItem value="africa-accra">Africa/Accra (GMT)</SelectItem>
+                  <SelectItem value="europe-london">Europe/London (GMT)</SelectItem>
+                  <SelectItem value="america-new_york">America/New York (EST)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm">Currency</Label>
+              <Select defaultValue="ngn">
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ngn">₦ Nigerian Naira</SelectItem>
+                  <SelectItem value="usd">$ US Dollar</SelectItem>
+                  <SelectItem value="gbp">£ British Pound</SelectItem>
+                  <SelectItem value="ghs">₵ Ghanaian Cedi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="pt-3 border-t">
+            <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs">
+              <Trash2 className="h-3 w-3 mr-1.5" /> Delete Account
+            </Button>
+            <p className="text-[10px] text-muted-foreground mt-1">This action is permanent and cannot be undone.</p>
+          </div>
+        </div>
+      </div>
+
       <Button onClick={() => toast.success("Settings saved!")} className="gradient-primary text-primary-foreground">
         <Save className="h-4 w-4 mr-2" /> Save Changes
       </Button>
