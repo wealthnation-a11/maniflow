@@ -66,10 +66,10 @@ const footerLinks = {
 };
 
 const testimonials = [
-  { name: "Adaeze Obi", role: "Owner, Adaeze Beauty", quote: "AutoServe tripled my sales in 2 months. I no longer miss customer messages, and the AI handles orders while I sleep!", avatar: "AO" },
+  { name: "Adaeze Obi", role: "Owner, Adaeze Beauty", quote: "ManyFlow tripled my sales in 2 months. I no longer miss customer messages, and the AI handles orders while I sleep!", avatar: "AO" },
   { name: "Tunde Adeyemi", role: "Founder, TundeStyles", quote: "The unified inbox changed everything. I used to switch between 3 apps — now it's all in one place with AI auto-replies.", avatar: "TA" },
   { name: "Halima Mohammed", role: "CEO, Halima's Kitchen", quote: "Payment links from chat? Game changer. My customers pay instantly and I get notified right away. Revenue up 40%.", avatar: "HM" },
-  { name: "Kelechi Nnadi", role: "Manager, KeKe Fashion", quote: "We were losing orders on Instagram DMs. AutoServe captures every single one now. Best investment for my business.", avatar: "KN" },
+  { name: "Kelechi Nnadi", role: "Manager, KeKe Fashion", quote: "We were losing orders on Instagram DMs. ManyFlow captures every single one now. Best investment for my business.", avatar: "KN" },
 ];
 
 const faqs = [
