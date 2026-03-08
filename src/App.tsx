@@ -13,6 +13,7 @@ import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
+import BotConfig from "./pages/BotConfig";
 import Onboarding from "./pages/Onboarding";
 import About from "./pages/About";
 import Pricing from "./pages/Pricing";
