@@ -21,8 +21,8 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Zap className="h-8 w-8 text-primary" />
-            <span className="font-heading font-bold text-2xl">AutoServe</span>
+            <ManyFlowLogo className="h-8 w-8" />
+            <span className="font-heading font-bold text-2xl">ManyFlow</span>
           </Link>
           <h1 className="font-heading text-2xl font-bold">
             {isSignup ? "Create your account" : "Welcome back"}

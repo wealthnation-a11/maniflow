@@ -329,7 +329,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
-                <Zap className="h-6 w-6 text-primary" />
+                <ManyFlowLogo className="h-6 w-6" />
                 <span className="font-heading font-bold text-lg">ManyFlow</span>
               </div>
               <p className="text-sm text-muted-foreground">Many channels, one flow. AI-powered business automation.</p>

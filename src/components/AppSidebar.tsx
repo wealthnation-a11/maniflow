@@ -68,7 +68,7 @@ export default function AppSidebar() {
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
           ) : (
-            <Zap className="h-7 w-7 text-primary" />
+            <ManyFlowLogo className="h-7 w-7" />
           )}
           <span className="font-heading font-bold text-sidebar-foreground text-xl tracking-tight">{businessName}</span>
         </div>

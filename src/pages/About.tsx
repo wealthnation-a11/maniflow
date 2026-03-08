@@ -45,7 +45,7 @@ function Footer() {
     <footer className="border-t py-8 px-4">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
+          <ManyFlowLogo className="h-5 w-5" />
           <span className="font-heading font-semibold text-foreground">ManyFlow</span>
         </div>
         <p>© 2026 ManyFlow. Built for African businesses.</p>
