@@ -28,6 +28,8 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { useLoadingState } from "@/hooks/use-loading";
+import { DashboardSkeleton } from "@/components/Skeletons";
 
 const stats = [
   { label: "Revenue", value: "₦2,450,000", change: "+12%", icon: DollarSign, color: "text-primary" },
@@ -96,13 +98,16 @@ const platformConnections = [
 type DateFilter = "today" | "week" | "month";
 
 export default function Dashboard() {
+  const loading = useLoadingState();
   const [dateFilter, setDateFilter] = useState<DateFilter>("week");
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifList, setNotifList] = useState(notifications);
 
   const unreadCount = notifList.filter((n) => !n.read).length;
-
   const markAllRead = () => setNotifList((prev) => prev.map((n) => ({ ...n, read: true })));
+
+  if (loading) return <DashboardSkeleton />;
+
 
   return (
     <div className="space-y-6">
