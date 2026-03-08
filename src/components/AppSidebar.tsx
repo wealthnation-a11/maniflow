@@ -19,6 +19,7 @@ import { ThemeToggle } from "./ThemeToggle";
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Inbox", icon: MessageSquare, path: "/inbox", badge: 12 },
+  { label: "Bot Config", icon: Bot, path: "/bot-config" },
   { label: "Products", icon: Package, path: "/products" },
   { label: "Orders", icon: ShoppingCart, path: "/orders", badge: 3 },
   { label: "Customers", icon: Users, path: "/customers" },
