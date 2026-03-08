@@ -14,6 +14,7 @@ import {
   Settings,
   Bell,
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
