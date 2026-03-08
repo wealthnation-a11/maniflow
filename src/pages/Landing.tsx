@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Zap, MessageSquare, ShoppingCart, CreditCard, Bot, ArrowRight, CheckCircle2, Globe, Bell,
+  MessageSquare, ShoppingCart, CreditCard, Bot, ArrowRight, CheckCircle2, Globe, Bell,
   BarChart3, Shield, Clock, Users, Repeat, Smartphone, Menu, X, Star, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
