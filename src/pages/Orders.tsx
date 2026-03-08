@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Filter, Download, Search, X } from "lucide-react";
+import { Filter, Download, Search, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/lib/csv";
 import { toast } from "sonner";
 import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
+import InvoiceDialog from "@/components/InvoiceDialog";
 
 const orders = [
   { id: "#ORD-001", customer: "Amina Bello", phone: "+234 812 345 6789", product: "Hair Cream Set", amount: "₦15,000", amountNum: 15000, platform: "WhatsApp", status: "delivered", payment: "paid" },
@@ -40,6 +41,7 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [invoiceOrder, setInvoiceOrder] = useState<typeof orders[0] | null>(null);
 
   if (loading) return <TableSkeleton />;
 
@@ -125,11 +127,12 @@ export default function Orders() {
                 <th className="px-4 py-3 font-medium hidden sm:table-cell">Platform</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Payment</th>
+                <th className="px-4 py-3 font-medium text-center">Invoice</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No orders match your filters</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No orders match your filters</td></tr>
               ) : filtered.map((o, i) => (
                 <motion.tr key={o.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{o.id}</td>
@@ -146,12 +149,19 @@ export default function Orders() {
                   <td className="px-4 py-3">
                     <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${paymentStyles[o.payment]}`}>{o.payment}</span>
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => setInvoiceOrder(o)}>
+                      <FileText className="h-3.5 w-3.5" /> Invoice
+                    </Button>
+                  </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      <InvoiceDialog order={invoiceOrder} open={invoiceOrder !== null} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
     </div>
   );
 }

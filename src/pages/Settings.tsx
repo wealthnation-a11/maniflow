@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2 } from "lucide-react";
+import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ConfirmDialog";
-
+import { useBusiness } from "@/hooks/use-business";
+import { setLogoUrl, setBusinessName } from "@/store/businessStore";
 const platforms = [
   { name: "WhatsApp", connected: true, icon: "💬" },
   { name: "Instagram", connected: true, icon: "📸" },
@@ -21,6 +22,33 @@ export default function Settings() {
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
+  const { logoUrl, businessName } = useBusiness();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File too large. Max 2MB.");
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
+      toast.error("Only PNG, JPG, or WebP files allowed.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      setLogoUrl(url);
+      toast.success("Logo uploaded successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoUrl(null);
+    toast.success("Logo removed");
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -155,10 +183,27 @@ export default function Settings() {
           <div>
             <Label className="text-sm">Business Logo</Label>
             <div className="mt-2 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-                <Upload className="h-6 w-6" />
+              {logoUrl ? (
+                <div className="relative group">
+                  <img src={logoUrl} alt="Business Logo" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                  <button
+                    onClick={handleRemoveLogo}
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                  <Upload className="h-6 w-6" />
+                </div>
+              )}
+              <div>
+                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={handleLogoUpload} />
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => fileInputRef.current?.click()}>
+                  {logoUrl ? "Change Logo" : "Upload Logo"}
+                </Button>
               </div>
-              <Button variant="outline" size="sm" className="text-xs">Upload Logo</Button>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">PNG or JPG, max 2MB</p>
           </div>
