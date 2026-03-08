@@ -48,7 +48,7 @@ export default function Settings() {
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-success" />
                   <span className="text-xs text-success">Connected</span>
-                  <Button variant="ghost" size="sm" className="text-xs text-destructive h-7">Disconnect</Button>
+                  <Button variant="ghost" size="sm" className="text-xs text-destructive h-7" onClick={() => setDisconnectPlatform(p.name)}>Disconnect</Button>
                 </div>
               ) : (
                 <Button size="sm" className="gradient-primary text-primary-foreground text-xs h-7">Connect</Button>
