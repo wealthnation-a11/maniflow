@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const platforms = [
   { name: "WhatsApp", connected: true, icon: "💬" },
@@ -18,6 +19,7 @@ const platforms = [
 export default function Settings() {
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
+  const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -46,7 +48,7 @@ export default function Settings() {
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-success" />
                   <span className="text-xs text-success">Connected</span>
-                  <Button variant="ghost" size="sm" className="text-xs text-destructive h-7">Disconnect</Button>
+                  <Button variant="ghost" size="sm" className="text-xs text-destructive h-7" onClick={() => setDisconnectPlatform(p.name)}>Disconnect</Button>
                 </div>
               ) : (
                 <Button size="sm" className="gradient-primary text-primary-foreground text-xs h-7">Connect</Button>
@@ -133,6 +135,18 @@ export default function Settings() {
       <Button onClick={() => toast.success("Settings saved!")} className="gradient-primary text-primary-foreground">
         <Save className="h-4 w-4 mr-2" /> Save Changes
       </Button>
+
+      <ConfirmDialog
+        open={disconnectPlatform !== null}
+        onOpenChange={(open) => !open && setDisconnectPlatform(null)}
+        title={`Disconnect ${disconnectPlatform}?`}
+        description={`You will stop receiving messages from ${disconnectPlatform}. You can reconnect anytime.`}
+        onConfirm={() => {
+          toast.success(`${disconnectPlatform} disconnected`);
+          setDisconnectPlatform(null);
+        }}
+        confirmLabel="Disconnect"
+      />
     </div>
   );
 }

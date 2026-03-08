@@ -14,6 +14,7 @@ import {
   Settings,
   Bell,
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -90,6 +91,7 @@ export default function AppSidebar() {
         </nav>
 
         <div className="p-3 border-t border-sidebar-border space-y-1">
+          <ThemeToggle />
           <Link
             to="/settings"
             onClick={() => setMobileOpen(false)}

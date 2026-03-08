@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Product = {
   id: number;
@@ -30,6 +31,7 @@ export default function Products() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const openEdit = (p: Product) => {
     setEditId(p.id);
@@ -70,8 +72,10 @@ export default function Products() {
     setShowForm(false);
   };
 
-  const deleteProduct = (id: number) => {
-    setProducts((p) => p.filter((x) => x.id !== id));
+  const deleteProduct = () => {
+    if (deleteId === null) return;
+    setProducts((p) => p.filter((x) => x.id !== deleteId));
+    setDeleteId(null);
     toast.success("Product deleted");
   };
 
@@ -203,7 +207,7 @@ export default function Products() {
                 <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => openEdit(p)}>
                   <Pencil className="h-3 w-3 mr-1" /> Edit
                 </Button>
-                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => deleteProduct(p.id)}>
+                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(p.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
@@ -211,6 +215,14 @@ export default function Products() {
           </motion.div>
         ))}
       </div>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+        onConfirm={deleteProduct}
+        confirmLabel="Delete"
+      />
     </div>
   );
 }

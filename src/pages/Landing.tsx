@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 
 const features = [
@@ -117,6 +118,7 @@ export default function Landing() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle variant="header" />
             <Link to="/auth"><Button variant="ghost" size="sm">Log in</Button></Link>
             <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>
           </div>
