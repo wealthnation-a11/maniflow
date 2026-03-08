@@ -190,11 +190,6 @@ export default function Landing() {
                 Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link to="/dashboard">
-              <Button size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground font-semibold text-base px-8 py-6 rounded-xl hover:bg-primary-foreground/10">
-                View Demo Dashboard
-              </Button>
-            </Link>
           </motion.div>
           <p className="mt-4 text-sm opacity-60">No credit card required · Set up in 5 minutes</p>
         </div>
