@@ -31,6 +31,7 @@ export default function Products() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const openEdit = (p: Product) => {
     setEditId(p.id);
