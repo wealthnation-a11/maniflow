@@ -72,8 +72,10 @@ export default function Products() {
     setShowForm(false);
   };
 
-  const deleteProduct = (id: number) => {
-    setProducts((p) => p.filter((x) => x.id !== id));
+  const deleteProduct = () => {
+    if (deleteId === null) return;
+    setProducts((p) => p.filter((x) => x.id !== deleteId));
+    setDeleteId(null);
     toast.success("Product deleted");
   };
 
