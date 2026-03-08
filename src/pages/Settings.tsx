@@ -135,6 +135,18 @@ export default function Settings() {
       <Button onClick={() => toast.success("Settings saved!")} className="gradient-primary text-primary-foreground">
         <Save className="h-4 w-4 mr-2" /> Save Changes
       </Button>
+
+      <ConfirmDialog
+        open={disconnectPlatform !== null}
+        onOpenChange={(open) => !open && setDisconnectPlatform(null)}
+        title={`Disconnect ${disconnectPlatform}?`}
+        description={`You will stop receiving messages from ${disconnectPlatform}. You can reconnect anytime.`}
+        onConfirm={() => {
+          toast.success(`${disconnectPlatform} disconnected`);
+          setDisconnectPlatform(null);
+        }}
+        confirmLabel="Disconnect"
+      />
     </div>
   );
 }
