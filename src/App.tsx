@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/orders" element={<Orders />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/campaigns" element={<Campaigns />} />
+            <Route path="/bot-config" element={<BotConfig />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />

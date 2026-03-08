@@ -129,7 +129,7 @@ export default function Inbox() {
       setTimeout(() => {
         const aiReply: ConvMessage = {
           role: "ai",
-          text: getAIResponse(userMsg, selected.customer),
+          text: generateAIResponse(userMsg, selected.customer, config, selected.id),
           time: now(),
         };
         setMessages((prev) =>

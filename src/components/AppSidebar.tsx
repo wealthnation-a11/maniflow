@@ -13,6 +13,7 @@ import {
   LogOut,
   Settings,
   Bell,
+  Bot,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
