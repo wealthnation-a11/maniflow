@@ -63,7 +63,7 @@ export default function Onboarding() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <Zap className="h-8 w-8 text-primary" />
-          <span className="font-heading font-bold text-2xl">AutoServe</span>
+          <span className="font-heading font-bold text-2xl">ManyFlow</span>
         </div>
 
         {/* Progress */}

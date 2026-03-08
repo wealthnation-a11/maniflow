@@ -59,7 +59,7 @@ const DEFAULT_CONFIG: BotConfig = {
   },
 };
 
-const STORAGE_KEY = "autoserve-bot-config";
+const STORAGE_KEY = "manyflow-bot-config";
 
 function loadConfig(): BotConfig {
   try {

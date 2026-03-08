@@ -23,9 +23,9 @@ export default function Privacy() {
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">4. Social Platform Data</h2>
           <p>Messages received via WhatsApp, Instagram, and Facebook are processed to enable AI replies and order capture. We comply with Meta's data usage policies.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">5. Your Rights</h2>
-          <p>You can request access to, correction of, or deletion of your data at any time by contacting us at privacy@autoserve.co.</p>
+          <p>You can request access to, correction of, or deletion of your data at any time by contacting us at privacy@manyflow.co.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">6. Contact</h2>
-          <p>For privacy-related inquiries, email us at <span className="text-primary">privacy@autoserve.co</span>.</p>
+          <p>For privacy-related inquiries, email us at <span className="text-primary">privacy@manyflow.co</span>.</p>
         </div>
       </div>
     </div>

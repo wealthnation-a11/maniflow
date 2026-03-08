@@ -23,7 +23,7 @@ export default function Terms() {
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">4. Payment Terms</h2>
           <p>Subscription fees are billed monthly. Payment processing via Paystack or Flutterwave is subject to their respective terms. ManyFlow charges no additional transaction fees.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">5. AI Disclaimer</h2>
-          <p>AI-generated replies are designed to be helpful and accurate, but we recommend monitoring conversations. AutoServe is not liable for AI response errors.</p>
+          <p>AI-generated replies are designed to be helpful and accurate, but we recommend monitoring conversations. ManyFlow is not liable for AI response errors.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">6. Termination</h2>
           <p>You may cancel your subscription at any time. Your data will be retained for 30 days after cancellation.</p>
         </div>

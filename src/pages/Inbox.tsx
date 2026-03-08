@@ -56,7 +56,7 @@ const mockMessages: Message[] = [
       { role: "customer", text: "I want the Ankara bundle", time: "8:30 AM" },
       { role: "ai", text: "Hi Fatima! Our Ankara Bundle (6 yards) is ₦22,000. Shall I prepare your order?", time: "8:30 AM" },
       { role: "customer", text: "Yes please!", time: "8:31 AM" },
-      { role: "ai", text: "Order confirmed! Here's your payment link: pay.autoserve.co/fatima-ank22k 🛍️", time: "8:31 AM" },
+      { role: "ai", text: "Order confirmed! Here's your payment link: pay.manyflow.co/fatima-ank22k 🛍️", time: "8:31 AM" },
       { role: "customer", text: "Thanks! Payment sent", time: "8:45 AM" },
       { role: "ai", text: "Payment received! ✅ Your order is now being processed. You'll get a delivery update soon. Thank you, Fatima! 🙏", time: "8:45 AM" },
     ],

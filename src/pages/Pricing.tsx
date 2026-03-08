@@ -38,7 +38,7 @@ export default function Pricing() {
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Zap className="h-7 w-7 text-primary" />
-          <span className="font-heading font-bold text-xl">AutoServe</span>
+          <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/auth"><Button variant="ghost" size="sm">Log in</Button></Link>
       </nav>

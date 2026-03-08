@@ -74,7 +74,7 @@ const testimonials = [
 
 const faqs = [
   { q: "How does the AI know about my products?", a: "You upload your product catalog (names, prices, descriptions) and the AI uses this information to answer customer questions, recommend products, and capture orders — all automatically." },
-  { q: "Which platforms does AutoServe support?", a: "Currently WhatsApp, Instagram, and Facebook via Meta Business API. LinkedIn and TikTok support are coming soon. All messages flow into one unified inbox." },
+  { q: "Which platforms does ManyFlow support?", a: "Currently WhatsApp, Instagram, and Facebook via Meta Business API. LinkedIn and TikTok support are coming soon. All messages flow into one unified inbox." },
   { q: "Is my data secure?", a: "Absolutely. We use industry-standard encryption, secure payment processing via Paystack and Flutterwave, and never share your customer data with third parties." },
   { q: "Can I override the AI and reply manually?", a: "Yes! You can toggle between AI auto-reply and manual mode for any conversation. The AI handles routine queries while you focus on high-value conversations." },
   { q: "How much does it cost?", a: "We offer a free trial to get started. Paid plans start at affordable rates designed for small businesses. Visit our pricing page for details." },
