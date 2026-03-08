@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Zap, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 
 export default function About() {
