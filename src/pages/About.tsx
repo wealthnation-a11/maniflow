@@ -13,9 +13,9 @@ export default function About() {
         <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>
       </nav>
       <div className="max-w-3xl mx-auto px-4 py-16">
-        <h1 className="font-heading text-3xl md:text-4xl font-bold mb-6">About AutoServe</h1>
+        <h1 className="font-heading text-3xl md:text-4xl font-bold mb-6">About ManyFlow</h1>
         <div className="space-y-4 text-muted-foreground">
-          <p>AutoServe is the AI-powered business automation platform built for small businesses across Africa and the world. We help you sell on autopilot by connecting your social platforms — WhatsApp, Instagram, and Facebook — into one powerful dashboard.</p>
+          <p>ManyFlow is the AI-powered business automation platform built for small businesses across Africa and the world. Many channels, one flow — we connect your social platforms — WhatsApp, Instagram, and Facebook — into one powerful dashboard.</p>
           <p>Our AI Sales Assistant replies to customers instantly, captures orders, generates payment links, and follows up on abandoned orders — all while you focus on growing your business.</p>
           <h2 className="font-heading text-xl font-semibold text-foreground pt-4">Our Mission</h2>
           <p>To empower small businesses with enterprise-grade AI automation, making it effortless to sell, serve, and grow across every social channel.</p>
