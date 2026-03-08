@@ -15,9 +15,9 @@ export default function Terms() {
         <div className="space-y-4 text-sm text-muted-foreground">
           <p><strong className="text-foreground">Last updated:</strong> March 1, 2026</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">1. Acceptance of Terms</h2>
-          <p>By using AutoServe, you agree to these terms. If you don't agree, please don't use the service.</p>
+          <p>By using ManyFlow, you agree to these terms. If you don't agree, please don't use the service.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">2. Service Description</h2>
-          <p>AutoServe provides AI-powered business automation including unified messaging, order capture, and payment link generation across social platforms.</p>
+          <p>ManyFlow provides AI-powered business automation including unified messaging, order capture, and payment link generation across social platforms.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">3. User Responsibilities</h2>
           <p>You are responsible for the accuracy of your product catalog, maintaining appropriate social platform connections, and complying with platform-specific policies.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">4. Payment Terms</h2>
