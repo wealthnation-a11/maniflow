@@ -53,7 +53,7 @@ export default function Onboarding() {
   };
 
   const finish = () => {
-    toast.success("Welcome to AutoServe! Your AI assistant is active.");
+    toast.success("Welcome to ManyFlow! Your AI assistant is active.");
     navigate("/dashboard");
   };
 
