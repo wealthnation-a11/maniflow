@@ -25,6 +25,7 @@ const navItems = [
   { label: "Orders", icon: ShoppingCart, path: "/orders", badge: 3 },
   { label: "Customers", icon: Users, path: "/customers" },
   { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
+  { label: "Notifications", icon: Bell, path: "/notifications" },
 ];
 
 export default function AppSidebar() {
