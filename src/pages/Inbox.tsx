@@ -77,6 +77,7 @@ const mockMessages: Message[] = [
 
 export default function Inbox() {
   const loading = useLoadingState();
+  const { config } = useBotConfig();
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [selected, setSelected] = useState<Message>(mockMessages[0]);
   const [search, setSearch] = useState("");
