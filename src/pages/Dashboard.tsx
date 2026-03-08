@@ -34,6 +34,7 @@ import {
 } from "recharts";
 import { useLoadingState } from "@/hooks/use-loading";
 import { DashboardSkeleton } from "@/components/Skeletons";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const stats = [
   { label: "Revenue", value: "₦2,450,000", change: "+12%", icon: DollarSign, color: "text-primary" },
@@ -103,6 +104,7 @@ type DateFilter = "today" | "week" | "month";
 
 export default function Dashboard() {
   const loading = useLoadingState();
+  const isMobile = useIsMobile();
   const [dateFilter, setDateFilter] = useState<DateFilter>("week");
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifList, setNotifList] = useState(notifications);
@@ -112,33 +114,32 @@ export default function Dashboard() {
 
   if (loading) return <DashboardSkeleton />;
 
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl md:text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">Welcome back! Here's how your business is doing.</p>
+          <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Welcome back! Here's how your business is doing.</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Date filter */}
-          <div className="hidden sm:flex bg-muted rounded-lg p-0.5">
+          <div className="flex bg-muted rounded-lg p-0.5">
             {(["today", "week", "month"] as DateFilter[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setDateFilter(f)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-medium capitalize transition-colors ${
                   dateFilter === f ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f}
+                {f === "today" && isMobile ? "1D" : f === "week" && isMobile ? "1W" : f === "month" && isMobile ? "1M" : f}
               </button>
             ))}
           </div>
           {/* Notifications */}
           <div className="relative">
-            <Button variant="outline" size="icon" onClick={() => setShowNotifs(!showNotifs)} className="relative">
-              <Bell className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => setShowNotifs(!showNotifs)} className="relative h-8 w-8 sm:h-9 sm:w-9">
+              <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full gradient-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                   {unreadCount}
@@ -146,80 +147,84 @@ export default function Dashboard() {
               )}
             </Button>
             {showNotifs && (
-              <div className="absolute right-0 top-12 w-80 bg-card rounded-xl shadow-card-hover border z-50">
-                <div className="flex items-center justify-between p-3 border-b">
-                  <span className="font-heading font-semibold text-sm">Notifications</span>
-                  <button onClick={markAllRead} className="text-xs text-primary hover:underline">Mark all read</button>
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {notifList.map((n) => {
-                    const Icon = notifIcons[n.type] || Bell;
-                    return (
-                      <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 border-b last:border-0 ${!n.read ? 'bg-primary/5' : ''}`}>
-                        <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs">{n.text}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
+              <>
+                {/* Backdrop for mobile */}
+                <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setShowNotifs(false)} />
+                <div className="fixed inset-x-3 top-16 z-50 sm:absolute sm:inset-auto sm:right-0 sm:top-12 sm:w-80 bg-card rounded-xl shadow-card-hover border">
+                  <div className="flex items-center justify-between p-3 border-b">
+                    <span className="font-heading font-semibold text-sm">Notifications</span>
+                    <button onClick={markAllRead} className="text-xs text-primary hover:underline">Mark all read</button>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {notifList.map((n) => {
+                      const Icon = notifIcons[n.type] || Bell;
+                      return (
+                        <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 border-b last:border-0 ${!n.read ? 'bg-primary/5' : ''}`}>
+                          <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs">{n.text}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
+                          </div>
+                          {!n.read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />}
                         </div>
-                        {!n.read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />}
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
       </div>
 
       {/* Platform connections */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {platformConnections.map((p) => (
-          <div key={p.name} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 shadow-card text-sm">
+          <div key={p.name} className="flex items-center gap-1.5 sm:gap-2 bg-card rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-card text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
             <div className={`w-2 h-2 rounded-full ${p.connected ? p.color : 'bg-muted-foreground'}`} />
             <span className={p.connected ? '' : 'text-muted-foreground'}>{p.name}</span>
             {p.connected ? (
-              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+              <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-success" />
             ) : (
-              <button className="text-xs text-primary hover:underline">Connect</button>
+              <button className="text-[10px] sm:text-xs text-primary hover:underline">Connect</button>
             )}
           </div>
         ))}
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {stats.map((s, i) => (
           <motion.div
             key={s.label}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
-            className="bg-card rounded-xl p-4 md:p-5 shadow-card"
+            className="bg-card rounded-xl p-3 sm:p-4 md:p-5 shadow-card"
           >
-            <div className="flex items-center justify-between mb-3">
-              <s.icon className={`h-5 w-5 ${s.color}`} />
-              <span className="flex items-center text-xs font-medium text-success">
-                {s.change} <ArrowUpRight className="h-3 w-3 ml-0.5" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <s.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${s.color}`} />
+              <span className="flex items-center text-[10px] sm:text-xs font-medium text-success">
+                {s.change} <ArrowUpRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 ml-0.5" />
               </span>
             </div>
-            <p className="font-heading text-xl md:text-2xl font-bold">{s.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+            <p className="font-heading text-base sm:text-xl md:text-2xl font-bold">{s.value}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{s.label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Charts row */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid lg:grid-cols-3 gap-3 md:gap-4">
         {/* Revenue chart */}
-        <div className="lg:col-span-2 bg-card rounded-xl shadow-card p-4 md:p-5">
-          <h2 className="font-heading font-semibold text-lg mb-4">Revenue This Week</h2>
-          <div className="h-56">
+        <div className="lg:col-span-2 bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4">Revenue This Week</h2>
+          <div className="h-40 sm:h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
+                <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 12, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} width={isMobile ? 40 : 60} />
                 <Tooltip formatter={(v: number) => [`₦${v.toLocaleString()}`, "Revenue"]} />
                 <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -228,12 +233,12 @@ export default function Dashboard() {
         </div>
 
         {/* Platform breakdown */}
-        <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
-          <h2 className="font-heading font-semibold text-lg mb-4">Revenue by Platform</h2>
-          <div className="h-44">
+        <div className="bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4">Revenue by Platform</h2>
+          <div className="h-36 sm:h-44">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={platformData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" paddingAngle={3}>
+                <Pie data={platformData} cx="50%" cy="50%" innerRadius={isMobile ? 30 : 40} outerRadius={isMobile ? 50 : 65} dataKey="value" paddingAngle={3}>
                   {platformData.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
                   ))}
@@ -257,16 +262,16 @@ export default function Dashboard() {
       </div>
 
       {/* Sales trend + Bot Analytics */}
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-3 md:gap-4">
         {/* Weekly sales trend */}
-        <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
-          <h2 className="font-heading font-semibold text-lg mb-4">Sales Trend (4 Weeks)</h2>
-          <div className="h-44">
+        <div className="bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4">Sales Trend (4 Weeks)</h2>
+          <div className="h-36 sm:h-44">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={salesTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                <XAxis dataKey="day" tick={{ fontSize: isMobile ? 10 : 12, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: 'hsl(var(--muted-foreground))' }} width={isMobile ? 30 : 40} />
                 <Tooltip />
                 <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
               </LineChart>
@@ -275,9 +280,9 @@ export default function Dashboard() {
         </div>
 
         {/* AI Activity */}
-        <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
-          <h2 className="font-heading font-semibold text-lg mb-4">AI Activity</h2>
-          <div className="space-y-3">
+        <div className="bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-sm sm:text-lg mb-3 sm:mb-4">AI Activity</h2>
+          <div className="space-y-2.5 sm:space-y-3">
             {[
               { label: "Messages auto-replied", value: "1,089", pct: 87 },
               { label: "Orders captured", value: "156", pct: 85 },
@@ -285,11 +290,11 @@ export default function Dashboard() {
               { label: "Follow-ups sent", value: "28", pct: 100 },
             ].map((item) => (
               <div key={item.label}>
-                <div className="flex justify-between text-sm mb-1">
+                <div className="flex justify-between text-xs sm:text-sm mb-1">
                   <span className="text-muted-foreground">{item.label}</span>
                   <span className="font-medium">{item.value}</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${item.pct}%` }}
@@ -304,12 +309,12 @@ export default function Dashboard() {
       </div>
 
       {/* Bot Negotiation Analytics */}
-      <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
-        <div className="flex items-center gap-2 mb-5">
-          <Bot className="h-5 w-5 text-primary" />
-          <h2 className="font-heading font-semibold text-lg">Bot Negotiation Analytics</h2>
+      <div className="bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-4 sm:mb-5">
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Bot Negotiation Analytics</h2>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {[
             { label: "Total Conversations", value: "1,247", icon: MessageSquare, color: "text-primary", subtext: "This month" },
             { label: "Successful Negotiations", value: "89", icon: Handshake, color: "text-success", subtext: "Deals closed by bot" },
@@ -321,29 +326,29 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-muted/50 rounded-xl p-4 space-y-2"
+              className="bg-muted/50 rounded-xl p-3 sm:p-4 space-y-1.5 sm:space-y-2"
             >
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              <p className="font-heading text-2xl font-bold">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-              <p className="text-[10px] text-muted-foreground/70">{stat.subtext}</p>
+              <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
+              <p className="font-heading text-lg sm:text-2xl font-bold">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-[10px] text-muted-foreground/70 hidden sm:block">{stat.subtext}</p>
             </motion.div>
           ))}
         </div>
 
         {/* Negotiation breakdown */}
-        <div className="grid sm:grid-cols-3 gap-4 mt-5">
+        <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-5">
           {[
             { label: "Auto-Accepted", value: 42, total: 89, color: "bg-success" },
             { label: "Counter-Offered → Accepted", value: 31, total: 89, color: "bg-primary" },
             { label: "Rejected (Below Min)", value: 16, total: 89, color: "bg-destructive" },
           ].map((item) => (
-            <div key={item.label} className="space-y-2">
-              <div className="flex justify-between text-sm">
+            <div key={item.label} className="space-y-1.5 sm:space-y-2">
+              <div className="flex justify-between text-xs sm:text-sm">
                 <span className="text-muted-foreground">{item.label}</span>
                 <span className="font-medium">{item.value}</span>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${(item.value / item.total) * 100}%` }}
@@ -359,40 +364,60 @@ export default function Dashboard() {
 
       {/* Recent Orders */}
       <div className="bg-card rounded-xl shadow-card">
-        <div className="p-4 md:p-5 border-b flex items-center justify-between">
-          <h2 className="font-heading font-semibold text-lg">Recent Orders</h2>
-          <Button variant="outline" size="sm">
-            <Filter className="h-3.5 w-3.5 mr-1.5" /> Filter
+        <div className="p-3 sm:p-4 md:p-5 border-b flex items-center justify-between">
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Recent Orders</h2>
+          <Button variant="outline" size="sm" className="h-7 sm:h-8 text-xs">
+            <Filter className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" /> Filter
           </Button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted-foreground border-b">
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium hidden md:table-cell">Product</th>
-                <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium hidden sm:table-cell">Platform</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((o, i) => (
-                <tr key={i} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                  <td className="px-4 py-3 font-medium">{o.customer}</td>
-                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{o.product}</td>
-                  <td className="px-4 py-3">{o.amount}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${statusStyles[o.status]}`}>
-                      {o.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">{o.platform}</td>
+        {isMobile ? (
+          <div className="divide-y">
+            {recentOrders.map((o, i) => (
+              <div key={i} className="p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{o.customer}</span>
+                  <span className="font-medium text-sm">{o.amount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{o.product}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${statusStyles[o.status]}`}>{o.status}</span>
+                    <span className="text-[10px] text-muted-foreground">{o.platform}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b">
+                  <th className="px-4 py-3 font-medium">Customer</th>
+                  <th className="px-4 py-3 font-medium hidden md:table-cell">Product</th>
+                  <th className="px-4 py-3 font-medium">Amount</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium hidden sm:table-cell">Platform</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {recentOrders.map((o, i) => (
+                  <tr key={i} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3 font-medium">{o.customer}</td>
+                    <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{o.product}</td>
+                    <td className="px-4 py-3">{o.amount}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${statusStyles[o.status]}`}>
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-muted-foreground">{o.platform}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

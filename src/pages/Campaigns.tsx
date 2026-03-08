@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Campaign = {
   id: number;
@@ -57,6 +58,7 @@ const allPlatforms = ["all", "WhatsApp", "Instagram", "Facebook"];
 
 export default function Campaigns() {
   const loading = useLoadingState();
+  const isMobile = useIsMobile();
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
@@ -111,48 +113,48 @@ export default function Campaigns() {
   const clearFilters = () => { setStatusFilter("all"); setPlatformFilter("all"); setSearch(""); };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="font-heading text-2xl md:text-3xl font-bold">Campaigns</h1>
-          <p className="text-muted-foreground text-sm mt-1">Send bulk promotions and discount campaigns to your customers</p>
+          <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Campaigns</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Send bulk promotions and discount campaigns</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gradient-primary text-primary-foreground" size="sm">
-          <Plus className="h-4 w-4 mr-1.5" /> New Campaign
+        <Button onClick={() => setShowForm(true)} className="gradient-primary text-primary-foreground text-xs sm:text-sm" size="sm">
+          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" /> New Campaign
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: "Total Campaigns", value: campaigns.length, icon: Megaphone, color: "text-primary" },
           { label: "Messages Sent", value: totalSent.toLocaleString(), icon: Send, color: "text-success" },
           { label: "Total Replies", value: totalReplied, icon: Users, color: "text-info" },
           { label: "Avg. Open Rate", value: `${avgOpen}%`, icon: BarChart3, color: "text-warning" },
         ].map((s, i) => (
-          <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card rounded-xl p-4 shadow-card">
-            <s.icon className={`h-5 w-5 ${s.color} mb-2`} />
-            <p className="font-heading text-xl md:text-2xl font-bold">{s.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+          <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="bg-card rounded-xl p-3 sm:p-4 shadow-card">
+            <s.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${s.color} mb-1.5 sm:mb-2`} />
+            <p className="font-heading text-lg sm:text-xl md:text-2xl font-bold">{s.value}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{s.label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search campaigns…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2 flex-wrap">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 px-3 rounded-lg border bg-card text-sm">
-            {allStatuses.map((s) => <option key={s} value={s}>{s === "all" ? "All Status" : s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-2 sm:px-3 rounded-lg border bg-card text-xs sm:text-sm flex-1 min-w-0 sm:flex-none">
+            {allStatuses.map((s) => <option key={s} value={s}>{s === "all" ? "Status" : s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
           </select>
-          <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} className="h-10 px-3 rounded-lg border bg-card text-sm">
-            {allPlatforms.map((p) => <option key={p} value={p}>{p === "all" ? "All Platforms" : p}</option>)}
+          <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} className="h-9 px-2 sm:px-3 rounded-lg border bg-card text-xs sm:text-sm flex-1 min-w-0 sm:flex-none">
+            {allPlatforms.map((p) => <option key={p} value={p}>{p === "all" ? "Platform" : p}</option>)}
           </select>
           {hasFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground h-9">
               <X className="h-4 w-4 mr-1" /> Clear
             </Button>
           )}
@@ -161,51 +163,52 @@ export default function Campaigns() {
 
       {/* New Campaign Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 bg-foreground/40 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card rounded-xl shadow-card-hover p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-foreground/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowForm(false)}>
+          <motion.div initial={{ opacity: 0, y: isMobile ? 100 : 0, scale: isMobile ? 1 : 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="bg-card rounded-t-2xl sm:rounded-xl shadow-card-hover p-5 sm:p-6 w-full sm:max-w-lg space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {isMobile && <div className="w-10 h-1 rounded-full bg-muted mx-auto mb-2" />}
             <div className="flex items-center justify-between">
-              <h2 className="font-heading font-semibold text-lg">New Campaign</h2>
+              <h2 className="font-heading font-semibold text-base sm:text-lg">New Campaign</h2>
               <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
             </div>
             <div className="space-y-4">
-              <div><Label className="text-sm">Campaign Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Weekend Flash Sale 🔥" className="mt-1" /></div>
+              <div><Label className="text-xs sm:text-sm">Campaign Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Weekend Flash Sale 🔥" className="mt-1" /></div>
               <div>
-                <Label className="text-sm">Platforms *</Label>
+                <Label className="text-xs sm:text-sm">Platforms *</Label>
                 <div className="flex gap-2 mt-1.5">
                   {platformOptions.map((p) => (
-                    <button key={p.name} onClick={() => togglePlatform(p.name)} className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${form.platforms.includes(p.name) ? p.color : "border-border text-muted-foreground"}`}>{p.name}</button>
+                    <button key={p.name} onClick={() => togglePlatform(p.name)} className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium border-2 transition-all ${form.platforms.includes(p.name) ? p.color : "border-border text-muted-foreground"}`}>{p.name}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <Label className="text-sm">Target Audience</Label>
+                <Label className="text-xs sm:text-sm">Target Audience</Label>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {audiences.map((a) => (
-                    <button key={a} onClick={() => setForm({ ...form, audience: a })} className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${form.audience === a ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>{a}</button>
+                    <button key={a} onClick={() => setForm({ ...form, audience: a })} className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-medium transition-colors ${form.audience === a ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>{a}</button>
                   ))}
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm">Message *</Label>
+                  <Label className="text-xs sm:text-sm">Message *</Label>
                   <div className="flex gap-1">
                     {["name", "business"].map((v) => (
                       <button key={v} onClick={() => insertVariable(v)} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground hover:text-foreground">{`{${v}}`}</button>
                     ))}
                   </div>
                 </div>
-                <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Write your promotional message…" className="mt-1" rows={5} />
+                <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Write your promotional message…" className="mt-1 text-sm" rows={4} />
                 <p className="text-[10px] text-muted-foreground mt-1">{form.message.length} characters</p>
               </div>
               <div>
-                <Label className="text-sm">Schedule (optional)</Label>
+                <Label className="text-xs sm:text-sm">Schedule (optional)</Label>
                 <Input type="datetime-local" value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} className="mt-1" />
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => handleSend(true)}>Save Draft</Button>
-              <Button className="flex-1 gradient-primary text-primary-foreground" onClick={() => handleSend(false)}>
-                {form.schedule ? <><Calendar className="h-4 w-4 mr-1.5" /> Schedule</> : <><Send className="h-4 w-4 mr-1.5" /> Send Now</>}
+              <Button variant="outline" className="flex-1 text-xs sm:text-sm" onClick={() => handleSend(true)}>Save Draft</Button>
+              <Button className="flex-1 gradient-primary text-primary-foreground text-xs sm:text-sm" onClick={() => handleSend(false)}>
+                {form.schedule ? <><Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" /> Schedule</> : <><Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" /> Send Now</>}
               </Button>
             </div>
           </motion.div>
@@ -215,38 +218,38 @@ export default function Campaigns() {
       {/* Campaigns list */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="bg-card rounded-xl shadow-card p-12 text-center text-muted-foreground">No campaigns match your filters</div>
+          <div className="bg-card rounded-xl shadow-card p-8 sm:p-12 text-center text-muted-foreground text-sm">No campaigns match your filters</div>
         ) : filtered.map((c, i) => (
-          <motion.div key={c.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="bg-card rounded-xl shadow-card p-4 md:p-5">
-            <div className="flex items-start justify-between gap-3 mb-3">
+          <motion.div key={c.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
+            <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-heading font-semibold">{c.name}</h3>
+                  <h3 className="font-heading font-semibold text-sm sm:text-base">{c.name}</h3>
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${statusStyles[c.status]}`}>{c.status}</span>
                 </div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
                   {c.platforms.map((p) => (
                     <span key={p} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${platformBadgeColors[p]}`}>{p}</span>
                   ))}
                   <span className="text-[10px] text-muted-foreground">· {c.audience}</span>
-                  {c.sentAt && <span className="text-[10px] text-muted-foreground">· Sent {c.sentAt}</span>}
+                  {c.sentAt && <span className="text-[10px] text-muted-foreground hidden sm:inline">· Sent {c.sentAt}</span>}
                   {c.scheduledAt && <span className="text-[10px] text-warning flex items-center gap-0.5"><Clock className="h-3 w-3" /> {c.scheduledAt}</span>}
                 </div>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3 whitespace-pre-line">{c.message}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-2 sm:mb-3 whitespace-pre-line">{c.message}</p>
             {(c.status === "sent" || c.status === "active") && (
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-muted rounded-lg p-2.5 text-center">
-                  <p className="font-heading font-bold text-sm">{c.recipients}</p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="bg-muted rounded-lg p-2 sm:p-2.5 text-center">
+                  <p className="font-heading font-bold text-xs sm:text-sm">{c.recipients}</p>
                   <p className="text-[10px] text-muted-foreground">Sent</p>
                 </div>
-                <div className="bg-muted rounded-lg p-2.5 text-center">
-                  <p className="font-heading font-bold text-sm">{c.opened}</p>
+                <div className="bg-muted rounded-lg p-2 sm:p-2.5 text-center">
+                  <p className="font-heading font-bold text-xs sm:text-sm">{c.opened}</p>
                   <p className="text-[10px] text-muted-foreground">Opened ({c.recipients > 0 ? Math.round((c.opened / c.recipients) * 100) : 0}%)</p>
                 </div>
-                <div className="bg-muted rounded-lg p-2.5 text-center">
-                  <p className="font-heading font-bold text-sm">{c.replied}</p>
+                <div className="bg-muted rounded-lg p-2 sm:p-2.5 text-center">
+                  <p className="font-heading font-bold text-xs sm:text-sm">{c.replied}</p>
                   <p className="text-[10px] text-muted-foreground">Replied ({c.recipients > 0 ? Math.round((c.replied / c.recipients) * 100) : 0}%)</p>
                 </div>
               </div>

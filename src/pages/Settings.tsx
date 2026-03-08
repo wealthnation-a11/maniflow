@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
 import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useBusiness } from "@/hooks/use-business";
 import { setLogoUrl, setBusinessName } from "@/store/businessStore";
+
 const platforms = [
   { name: "WhatsApp", connected: true, icon: "💬" },
   { name: "Instagram", connected: true, icon: "📸" },
@@ -51,36 +51,36 @@ export default function Settings() {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-4 md:space-y-6 max-w-3xl">
       <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage your account, connections, and preferences</p>
+        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">Manage your account, connections, and preferences</p>
       </div>
 
       {/* Platform connections */}
-      <div className="bg-card rounded-xl shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Globe className="h-5 w-5 text-primary" />
-          <h2 className="font-heading font-semibold text-lg">Social Connections</h2>
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Social Connections</h2>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {platforms.map((p) => (
             <div key={p.name} className="flex items-center justify-between py-2 border-b last:border-0">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{p.icon}</span>
-                <span className="font-medium text-sm">{p.name}</span>
-                {p.soon && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Coming Soon</span>}
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-lg sm:text-xl">{p.icon}</span>
+                <span className="font-medium text-xs sm:text-sm">{p.name}</span>
+                {p.soon && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Soon</span>}
               </div>
               {p.soon ? (
                 <span className="text-xs text-muted-foreground">—</span>
               ) : p.connected ? (
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span className="text-xs text-success">Connected</span>
-                  <Button variant="ghost" size="sm" className="text-xs text-destructive h-7" onClick={() => setDisconnectPlatform(p.name)}>Disconnect</Button>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
+                  <span className="text-[10px] sm:text-xs text-success hidden sm:inline">Connected</span>
+                  <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-destructive h-6 sm:h-7 px-1.5 sm:px-2" onClick={() => setDisconnectPlatform(p.name)}>Disconnect</Button>
                 </div>
               ) : (
-                <Button size="sm" className="gradient-primary text-primary-foreground text-xs h-7">Connect</Button>
+                <Button size="sm" className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7">Connect</Button>
               )}
             </div>
           ))}
@@ -88,20 +88,20 @@ export default function Settings() {
       </div>
 
       {/* AI settings */}
-      <div className="bg-card rounded-xl shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Bot className="h-5 w-5 text-primary" />
-          <h2 className="font-heading font-semibold text-lg">AI Assistant</h2>
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">AI Assistant</h2>
         </div>
         <div className="space-y-4">
           <div>
-            <Label className="text-sm">AI Conversation Tone</Label>
+            <Label className="text-xs sm:text-sm">AI Conversation Tone</Label>
             <div className="flex gap-2 mt-2">
               {["friendly", "professional", "casual"].map((tone) => (
                 <button
                   key={tone}
                   onClick={() => setAiTone(tone)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium capitalize transition-colors ${
                     aiTone === tone ? "gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -111,19 +111,19 @@ export default function Settings() {
             </div>
           </div>
           <div>
-            <Label className="text-sm">Business Name (shown in AI replies)</Label>
+            <Label className="text-xs sm:text-sm">Business Name (shown in AI replies)</Label>
             <Input defaultValue="My Business" className="mt-1" />
           </div>
         </div>
       </div>
 
       {/* Notification settings */}
-      <div className="bg-card rounded-xl shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Bell className="h-5 w-5 text-primary" />
-          <h2 className="font-heading font-semibold text-lg">Notifications</h2>
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Notifications</h2>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {[
             { key: "messages", label: "New messages" },
             { key: "payments", label: "Payment confirmations" },
@@ -132,7 +132,7 @@ export default function Settings() {
             { key: "sms", label: "SMS notifications" },
           ].map((item) => (
             <div key={item.key} className="flex items-center justify-between py-1">
-              <span className="text-sm">{item.label}</span>
+              <span className="text-xs sm:text-sm">{item.label}</span>
               <Switch
                 checked={notifs[item.key as keyof typeof notifs]}
                 onCheckedChange={(v) => setNotifs({ ...notifs, [item.key]: v })}
@@ -143,49 +143,49 @@ export default function Settings() {
       </div>
 
       {/* Payment integration */}
-      <div className="bg-card rounded-xl shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <CreditCard className="h-5 w-5 text-primary" />
-          <h2 className="font-heading font-semibold text-lg">Payment Integration</h2>
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Payment Integration</h2>
         </div>
         <div className="space-y-3">
           <div>
-            <Label className="text-sm">Bank Name</Label>
+            <Label className="text-xs sm:text-sm">Bank Name</Label>
             <Input placeholder="e.g. GTBank" className="mt-1" />
           </div>
           <div>
-            <Label className="text-sm">Account Number</Label>
+            <Label className="text-xs sm:text-sm">Account Number</Label>
             <Input placeholder="e.g. 0123456789" className="mt-1 font-mono text-xs" />
           </div>
           <div>
-            <Label className="text-sm">Account Name</Label>
+            <Label className="text-xs sm:text-sm">Account Name</Label>
             <Input placeholder="e.g. My Business Ltd" className="mt-1" />
           </div>
-          <p className="text-xs text-muted-foreground">These details are shared by the AI bot after a price is agreed. You can also configure them in Bot Config.</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">These details are shared by the AI bot after a price is agreed.</p>
           <div>
-            <Label className="text-sm mt-3">Paystack Public Key</Label>
+            <Label className="text-xs sm:text-sm mt-3">Paystack Public Key</Label>
             <Input placeholder="pk_live_..." className="mt-1 font-mono text-xs" />
           </div>
           <div>
-            <Label className="text-sm">Flutterwave Public Key</Label>
+            <Label className="text-xs sm:text-sm">Flutterwave Public Key</Label>
             <Input placeholder="FLWPUBK-..." className="mt-1 font-mono text-xs" />
           </div>
         </div>
       </div>
 
       {/* Profile / Account */}
-      <div className="bg-card rounded-xl shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <UserCircle className="h-5 w-5 text-primary" />
-          <h2 className="font-heading font-semibold text-lg">Profile & Account</h2>
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <UserCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Profile & Account</h2>
         </div>
         <div className="space-y-4">
           <div>
-            <Label className="text-sm">Business Logo</Label>
-            <div className="mt-2 flex items-center gap-4">
+            <Label className="text-xs sm:text-sm">Business Logo</Label>
+            <div className="mt-2 flex items-center gap-3 sm:gap-4">
               {logoUrl ? (
                 <div className="relative group">
-                  <img src={logoUrl} alt="Business Logo" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                  <img src={logoUrl} alt="Business Logo" className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-cover border border-border" />
                   <button
                     onClick={handleRemoveLogo}
                     className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -194,22 +194,22 @@ export default function Settings() {
                   </button>
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-                  <Upload className="h-6 w-6" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                  <Upload className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
               )}
               <div>
                 <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={handleLogoUpload} />
-                <Button variant="outline" size="sm" className="text-xs" onClick={() => fileInputRef.current?.click()}>
+                <Button variant="outline" size="sm" className="text-[10px] sm:text-xs" onClick={() => fileInputRef.current?.click()}>
                   {logoUrl ? "Change Logo" : "Upload Logo"}
                 </Button>
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">PNG or JPG, max 2MB</p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label className="text-sm">Timezone</Label>
+              <Label className="text-xs sm:text-sm">Timezone</Label>
               <Select defaultValue="africa-lagos">
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -221,7 +221,7 @@ export default function Settings() {
               </Select>
             </div>
             <div>
-              <Label className="text-sm">Currency</Label>
+              <Label className="text-xs sm:text-sm">Currency</Label>
               <Select defaultValue="ngn">
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -234,7 +234,7 @@ export default function Settings() {
             </div>
           </div>
           <div className="pt-3 border-t">
-            <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs">
+            <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10 text-[10px] sm:text-xs">
               <Trash2 className="h-3 w-3 mr-1.5" /> Delete Account
             </Button>
             <p className="text-[10px] text-muted-foreground mt-1">This action is permanent and cannot be undone.</p>
@@ -242,7 +242,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <Button onClick={() => toast.success("Settings saved!")} className="gradient-primary text-primary-foreground">
+      <Button onClick={() => toast.success("Settings saved!")} className="gradient-primary text-primary-foreground w-full sm:w-auto">
         <Save className="h-4 w-4 mr-2" /> Save Changes
       </Button>
 
