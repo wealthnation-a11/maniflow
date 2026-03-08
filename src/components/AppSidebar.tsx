@@ -16,6 +16,7 @@ import {
   Bot,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import ManyFlowLogo from "./ManyFlowLogo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
