@@ -19,6 +19,7 @@ const platforms = [
 export default function Settings() {
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
+  const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
 
   return (
     <div className="space-y-6 max-w-3xl">
