@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, CheckCircle2, ArrowRight, ArrowLeft, MessageSquare, Package, Bot } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, MessageSquare, Package, Bot } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
