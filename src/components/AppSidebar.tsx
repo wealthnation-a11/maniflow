@@ -91,6 +91,7 @@ export default function AppSidebar() {
         </nav>
 
         <div className="p-3 border-t border-sidebar-border space-y-1">
+          <ThemeToggle />
           <Link
             to="/settings"
             onClick={() => setMobileOpen(false)}

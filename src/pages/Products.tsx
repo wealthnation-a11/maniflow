@@ -215,6 +215,14 @@ export default function Products() {
           </motion.div>
         ))}
       </div>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone."
+        onConfirm={deleteProduct}
+        confirmLabel="Delete"
+      />
     </div>
   );
 }
