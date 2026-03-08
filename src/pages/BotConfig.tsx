@@ -14,6 +14,36 @@ export default function BotConfig() {
   const { config, setConfig } = useBotConfig();
   const [newKeyword, setNewKeyword] = useState("");
 
+  // ── Chat Preview State ──
+  type PreviewMsg = { role: "customer" | "ai"; text: string };
+  const [previewMessages, setPreviewMessages] = useState<PreviewMsg[]>([]);
+  const [previewInput, setPreviewInput] = useState("");
+  const [previewTyping, setPreviewTyping] = useState(false);
+  const previewEndRef = useRef<HTMLDivElement>(null);
+  const previewConvId = useRef(Date.now());
+
+  useEffect(() => {
+    previewEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [previewMessages.length, previewTyping]);
+
+  const sendPreviewMessage = () => {
+    if (!previewInput.trim()) return;
+    const userText = previewInput.trim();
+    setPreviewInput("");
+    setPreviewMessages((prev) => [...prev, { role: "customer", text: userText }]);
+    setPreviewTyping(true);
+    setTimeout(() => {
+      const reply = generateAIResponse(userText, "Test Customer", config, previewConvId.current);
+      setPreviewMessages((prev) => [...prev, { role: "ai", text: reply }]);
+      setPreviewTyping(false);
+    }, 800);
+  };
+
+  const resetPreview = () => {
+    setPreviewMessages([]);
+    previewConvId.current = Date.now();
+  };
+
   // ── Q&A Pairs ──
   const addQARule = () => {
     setConfig((prev) => ({
