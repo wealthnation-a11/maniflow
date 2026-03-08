@@ -289,6 +289,8 @@ export default function Inbox() {
     </div>
   );
 
+  if (loading) return <InboxSkeleton />;
+
   return (
     <div className="space-y-4">
       <div>
