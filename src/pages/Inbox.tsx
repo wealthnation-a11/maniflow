@@ -36,7 +36,7 @@ const mockMessages: Message[] = [
       { role: "customer", text: "Hi! How much is the hair cream set?", time: "10:02 AM" },
       { role: "ai", text: "Hello Amina! 😊 Our Hair Cream Set is ₦15,000. It includes a leave-in conditioner, edge control, and deep treatment mask. Would you like to place an order?", time: "10:02 AM" },
       { role: "customer", text: "Yes I want to order!", time: "10:03 AM" },
-      { role: "ai", text: "Great choice! 🎉 I've prepared your order. Here's your payment link: pay.autoserve.co/amina-hc15k\n\nOnce payment is confirmed, we'll process your order immediately!", time: "10:03 AM" },
+      { role: "ai", text: "Great choice! 🎉 I've prepared your order. Here's your payment link: pay.manyflow.co/amina-hc15k\n\nOnce payment is confirmed, we'll process your order immediately!", time: "10:03 AM" },
     ],
   },
   {
