@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, Search, ToggleLeft, ToggleRight, Clock, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useLoadingState } from "@/hooks/use-loading";
+import { InboxSkeleton } from "@/components/Skeletons";
 
 type ConvMessage = { role: "customer" | "ai" | "manual"; text: string; time: string };
 

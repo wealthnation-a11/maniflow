@@ -112,11 +112,15 @@ const platformConnections = [
 type DateFilter = "today" | "week" | "month";
 
 export default function Dashboard() {
+  const loading = useLoadingState();
   const [dateFilter, setDateFilter] = useState<DateFilter>("week");
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifList, setNotifList] = useState(notifications);
 
   const unreadCount = notifList.filter((n) => !n.read).length;
+  const markAllRead = () => setNotifList((prev) => prev.map((n) => ({ ...n, read: true })));
+
+  if (loading) return <DashboardSkeleton />;
 
   const markAllRead = () => setNotifList((prev) => prev.map((n) => ({ ...n, read: true })));
 
