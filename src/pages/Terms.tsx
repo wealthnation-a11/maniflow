@@ -7,7 +7,7 @@ export default function Terms() {
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Zap className="h-7 w-7 text-primary" />
-          <span className="font-heading font-bold text-xl">AutoServe</span>
+          <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
       </nav>
       <div className="max-w-3xl mx-auto px-4 py-16">
