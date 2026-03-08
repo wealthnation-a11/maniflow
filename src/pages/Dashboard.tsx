@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   DollarSign,
@@ -5,13 +6,57 @@ import {
   MessageSquare,
   TrendingUp,
   ArrowUpRight,
+  Bell,
+  Filter,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+} from "recharts";
 
 const stats = [
   { label: "Revenue", value: "₦2,450,000", change: "+12%", icon: DollarSign, color: "text-primary" },
   { label: "Orders", value: "184", change: "+8%", icon: ShoppingCart, color: "text-accent" },
   { label: "Messages", value: "1,247", change: "+23%", icon: MessageSquare, color: "text-info" },
   { label: "Conversion", value: "34%", change: "+5%", icon: TrendingUp, color: "text-success" },
+];
+
+const revenueData = [
+  { name: "Mon", revenue: 320000 },
+  { name: "Tue", revenue: 450000 },
+  { name: "Wed", revenue: 280000 },
+  { name: "Thu", revenue: 510000 },
+  { name: "Fri", revenue: 420000 },
+  { name: "Sat", revenue: 650000 },
+  { name: "Sun", revenue: 380000 },
+];
+
+const platformData = [
+  { name: "WhatsApp", value: 55, color: "hsl(160, 60%, 40%)" },
+  { name: "Instagram", value: 30, color: "hsl(340, 70%, 55%)" },
+  { name: "Facebook", value: 15, color: "hsl(210, 80%, 55%)" },
+];
+
+const salesTrend = [
+  { day: "W1", sales: 42 },
+  { day: "W2", sales: 58 },
+  { day: "W3", sales: 45 },
+  { day: "W4", sales: 72 },
 ];
 
 const recentOrders = [
@@ -21,18 +66,116 @@ const recentOrders = [
   { customer: "Emeka Nwachukwu", product: "Body Oil Set", amount: "₦12,000", status: "failed", platform: "WhatsApp" },
 ];
 
+const notifications = [
+  { id: 1, type: "message", text: "New message from Amina Bello on WhatsApp", time: "2m ago", read: false },
+  { id: 2, type: "payment", text: "Payment confirmed: ₦22,000 from Fatima Yusuf", time: "15m ago", read: false },
+  { id: 3, type: "order", text: "New order #ORD-007 captured by AI", time: "1h ago", read: true },
+  { id: 4, type: "alert", text: "Follow-up sent to Chidi Okafor (abandoned order)", time: "2h ago", read: true },
+  { id: 5, type: "payment", text: "Payment failed: ₦12,000 from Emeka Nwachukwu", time: "3h ago", read: false },
+];
+
 const statusStyles: Record<string, string> = {
   paid: "bg-success/10 text-success",
   pending: "bg-warning/10 text-warning",
   failed: "bg-destructive/10 text-destructive",
 };
 
+const notifIcons: Record<string, typeof Bell> = {
+  message: MessageSquare,
+  payment: DollarSign,
+  order: ShoppingCart,
+  alert: AlertCircle,
+};
+
+const platformConnections = [
+  { name: "WhatsApp", connected: true, color: "bg-success" },
+  { name: "Instagram", connected: true, color: "bg-pink-500" },
+  { name: "Facebook", connected: false, color: "bg-info" },
+];
+
+type DateFilter = "today" | "week" | "month";
+
 export default function Dashboard() {
+  const [dateFilter, setDateFilter] = useState<DateFilter>("week");
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [notifList, setNotifList] = useState(notifications);
+
+  const unreadCount = notifList.filter((n) => !n.read).length;
+
+  const markAllRead = () => setNotifList((prev) => prev.map((n) => ({ ...n, read: true })));
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">Welcome back! Here's how your business is doing.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">Welcome back! Here's how your business is doing.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Date filter */}
+          <div className="hidden sm:flex bg-muted rounded-lg p-0.5">
+            {(["today", "week", "month"] as DateFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setDateFilter(f)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors ${
+                  dateFilter === f ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          {/* Notifications */}
+          <div className="relative">
+            <Button variant="outline" size="icon" onClick={() => setShowNotifs(!showNotifs)} className="relative">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full gradient-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+            {showNotifs && (
+              <div className="absolute right-0 top-12 w-80 bg-card rounded-xl shadow-card-hover border z-50">
+                <div className="flex items-center justify-between p-3 border-b">
+                  <span className="font-heading font-semibold text-sm">Notifications</span>
+                  <button onClick={markAllRead} className="text-xs text-primary hover:underline">Mark all read</button>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {notifList.map((n) => {
+                    const Icon = notifIcons[n.type] || Bell;
+                    return (
+                      <div key={n.id} className={`flex items-start gap-3 px-3 py-2.5 border-b last:border-0 ${!n.read ? 'bg-primary/5' : ''}`}>
+                        <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs">{n.text}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
+                        </div>
+                        {!n.read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Platform connections */}
+      <div className="flex flex-wrap gap-2">
+        {platformConnections.map((p) => (
+          <div key={p.name} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 shadow-card text-sm">
+            <div className={`w-2 h-2 rounded-full ${p.connected ? p.color : 'bg-muted-foreground'}`} />
+            <span className={p.connected ? '' : 'text-muted-foreground'}>{p.name}</span>
+            {p.connected ? (
+              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+            ) : (
+              <button className="text-xs text-primary hover:underline">Connect</button>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Stats */}
@@ -57,10 +200,107 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Charts row */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* Revenue chart */}
+        <div className="lg:col-span-2 bg-card rounded-xl shadow-card p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-lg mb-4">Revenue This Week</h2>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => `₦${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number) => [`₦${v.toLocaleString()}`, "Revenue"]} />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Platform breakdown */}
+        <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-lg mb-4">Revenue by Platform</h2>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={platformData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" paddingAngle={3}>
+                  {platformData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v: number) => [`${v}%`, "Share"]} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-col gap-1.5 mt-2">
+            {platformData.map((p) => (
+              <div key={p.name} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                  <span>{p.name}</span>
+                </div>
+                <span className="font-medium">{p.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sales trend + AI activity */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* Weekly sales trend */}
+        <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-lg mb-4">Sales Trend (4 Weeks)</h2>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={salesTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip />
+                <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* AI Activity */}
+        <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
+          <h2 className="font-heading font-semibold text-lg mb-4">AI Activity</h2>
+          <div className="space-y-3">
+            {[
+              { label: "Messages auto-replied", value: "1,089", pct: 87 },
+              { label: "Orders captured", value: "156", pct: 85 },
+              { label: "Payment links sent", value: "134", pct: 73 },
+              { label: "Follow-ups sent", value: "28", pct: 100 },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">{item.label}</span>
+                  <span className="font-medium">{item.value}</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.pct}%` }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="h-full gradient-primary rounded-full"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Recent Orders */}
       <div className="bg-card rounded-xl shadow-card">
-        <div className="p-4 md:p-5 border-b">
+        <div className="p-4 md:p-5 border-b flex items-center justify-between">
           <h2 className="font-heading font-semibold text-lg">Recent Orders</h2>
+          <Button variant="outline" size="sm">
+            <Filter className="h-3.5 w-3.5 mr-1.5" /> Filter
+          </Button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

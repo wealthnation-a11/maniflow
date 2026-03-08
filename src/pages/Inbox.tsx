@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Send, Bot, User, Search } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, Bot, User, Search, ToggleLeft, ToggleRight, Clock, Tag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
+type ConvMessage = { role: "customer" | "ai" | "manual"; text: string; time: string };
 
 type Message = {
   id: number;
@@ -11,7 +13,8 @@ type Message = {
   lastMessage: string;
   time: string;
   unread: boolean;
-  conversation: { role: "customer" | "ai"; text: string }[];
+  tags: string[];
+  conversation: ConvMessage[];
 };
 
 const platformColors: Record<string, string> = {
@@ -22,41 +25,151 @@ const platformColors: Record<string, string> = {
 
 const mockMessages: Message[] = [
   {
-    id: 1, customer: "Amina Bello", platform: "WhatsApp", lastMessage: "How much is the hair cream set?", time: "2m ago", unread: true,
+    id: 1, customer: "Amina Bello", platform: "WhatsApp",
+    lastMessage: "How much is the hair cream set?", time: "2m ago", unread: true,
+    tags: ["price-query", "hot-lead"],
     conversation: [
-      { role: "customer", text: "Hi! How much is the hair cream set?" },
-      { role: "ai", text: "Hello Amina! 😊 Our Hair Cream Set is ₦15,000. It includes a leave-in conditioner, edge control, and deep treatment mask. Would you like to place an order?" },
-      { role: "customer", text: "Yes I want to order!" },
-      { role: "ai", text: "Great choice! 🎉 I've prepared your order. Here's your payment link: pay.autoserve.co/amina-hc15k\n\nOnce payment is confirmed, we'll process your order immediately!" },
+      { role: "customer", text: "Hi! How much is the hair cream set?", time: "10:02 AM" },
+      { role: "ai", text: "Hello Amina! 😊 Our Hair Cream Set is ₦15,000. It includes a leave-in conditioner, edge control, and deep treatment mask. Would you like to place an order?", time: "10:02 AM" },
+      { role: "customer", text: "Yes I want to order!", time: "10:03 AM" },
+      { role: "ai", text: "Great choice! 🎉 I've prepared your order. Here's your payment link: pay.autoserve.co/amina-hc15k\n\nOnce payment is confirmed, we'll process your order immediately!", time: "10:03 AM" },
     ],
   },
   {
-    id: 2, customer: "Chidi Okafor", platform: "Instagram", lastMessage: "Do you have shea butter?", time: "15m ago", unread: true,
+    id: 2, customer: "Chidi Okafor", platform: "Instagram",
+    lastMessage: "Do you have shea butter?", time: "15m ago", unread: true,
+    tags: ["availability"],
     conversation: [
-      { role: "customer", text: "Do you have shea butter in stock?" },
-      { role: "ai", text: "Hi Chidi! Yes we do! 🧴 We have:\n\n• Raw Shea Butter (500g) — ₦5,000\n• Raw Shea Butter (1kg) — ₦8,500\n• Whipped Shea Butter — ₦6,500\n\nWhich one would you like?" },
+      { role: "customer", text: "Do you have shea butter in stock?", time: "9:45 AM" },
+      { role: "ai", text: "Hi Chidi! Yes we do! 🧴 We have:\n\n• Raw Shea Butter (500g) — ₦5,000\n• Raw Shea Butter (1kg) — ₦8,500\n• Whipped Shea Butter — ₦6,500\n\nWhich one would you like?", time: "9:45 AM" },
     ],
   },
   {
-    id: 3, customer: "Fatima Yusuf", platform: "Facebook", lastMessage: "Thanks! Payment sent", time: "1h ago", unread: false,
+    id: 3, customer: "Fatima Yusuf", platform: "Facebook",
+    lastMessage: "Thanks! Payment sent", time: "1h ago", unread: false,
+    tags: ["order-complete"],
     conversation: [
-      { role: "customer", text: "I want the Ankara bundle" },
-      { role: "ai", text: "Hi Fatima! Our Ankara Bundle (6 yards) is ₦22,000. Shall I prepare your order?" },
-      { role: "customer", text: "Yes please!" },
-      { role: "ai", text: "Order confirmed! Here's your payment link: pay.autoserve.co/fatima-ank22k 🛍️" },
-      { role: "customer", text: "Thanks! Payment sent" },
-      { role: "ai", text: "Payment received! ✅ Your order is now being processed. You'll get a delivery update soon. Thank you, Fatima! 🙏" },
+      { role: "customer", text: "I want the Ankara bundle", time: "8:30 AM" },
+      { role: "ai", text: "Hi Fatima! Our Ankara Bundle (6 yards) is ₦22,000. Shall I prepare your order?", time: "8:30 AM" },
+      { role: "customer", text: "Yes please!", time: "8:31 AM" },
+      { role: "ai", text: "Order confirmed! Here's your payment link: pay.autoserve.co/fatima-ank22k 🛍️", time: "8:31 AM" },
+      { role: "customer", text: "Thanks! Payment sent", time: "8:45 AM" },
+      { role: "ai", text: "Payment received! ✅ Your order is now being processed. You'll get a delivery update soon. Thank you, Fatima! 🙏", time: "8:45 AM" },
+    ],
+  },
+  {
+    id: 4, customer: "Ngozi Eze", platform: "WhatsApp",
+    lastMessage: "I'll think about it", time: "3h ago", unread: false,
+    tags: ["abandoned", "follow-up-scheduled"],
+    conversation: [
+      { role: "customer", text: "What hair products do you sell?", time: "6:10 AM" },
+      { role: "ai", text: "Hi Ngozi! 👋 We have:\n\n• Hair Cream Set — ₦15,000\n• Body Oil Set — ₦12,000\n\nWould you like to order any?", time: "6:10 AM" },
+      { role: "customer", text: "I'll think about it", time: "6:15 AM" },
+      { role: "ai", text: "No problem at all, Ngozi! Take your time 😊 I'll check back with you later. Feel free to message anytime!", time: "6:15 AM" },
     ],
   },
 ];
 
+// Simulated AI responses based on keywords
+const getAIResponse = (input: string, customerName: string): string => {
+  const lower = input.toLowerCase();
+  if (lower.includes("price") || lower.includes("how much") || lower.includes("cost")) {
+    return `Great question! Let me check our catalog for you. Our popular items are:\n\n• Hair Cream Set — ₦15,000\n• Shea Butter (1kg) — ₦8,500\n• Ankara Bundle — ₦22,000\n• Body Oil Set — ₦12,000\n\nWould you like to order any of these? 😊`;
+  }
+  if (lower.includes("order") || lower.includes("buy") || lower.includes("want") || lower.includes("yes")) {
+    return `Wonderful! 🎉 I've prepared your order. Here's your payment link:\n\npay.autoserve.co/${customerName.toLowerCase().replace(' ', '-')}-order\n\nOnce payment is confirmed, we'll ship it right away!`;
+  }
+  if (lower.includes("delivery") || lower.includes("ship")) {
+    return `We deliver within 2-3 business days across Nigeria! 🚚 Delivery is free for orders above ₦20,000. Would you like to place an order?`;
+  }
+  if (lower.includes("thank") || lower.includes("thanks")) {
+    return `You're welcome, ${customerName}! 🙏 Don't hesitate to reach out anytime. Happy shopping! ✨`;
+  }
+  return `Thanks for your message, ${customerName}! 😊 I'm here to help. You can ask about our products, pricing, or place an order directly. What would you like to know?`;
+};
+
 export default function Inbox() {
+  const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [selected, setSelected] = useState<Message>(mockMessages[0]);
   const [search, setSearch] = useState("");
+  const [input, setInput] = useState("");
+  const [aiAutoReply, setAiAutoReply] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const filtered = mockMessages.filter((m) =>
+  const filtered = messages.filter((m) =>
     m.customer.toLowerCase().includes(search.toLowerCase())
   );
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selected.conversation.length, isTyping]);
+
+  const now = () => {
+    const d = new Date();
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    const userMsg = input.trim();
+    setInput("");
+
+    if (aiAutoReply) {
+      // Simulate customer sending a message, then AI replies
+      const customerMsg: ConvMessage = { role: "customer", text: userMsg, time: now() };
+      
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === selected.id
+            ? { ...m, conversation: [...m.conversation, customerMsg], lastMessage: userMsg }
+            : m
+        )
+      );
+      setSelected((prev) => ({
+        ...prev,
+        conversation: [...prev.conversation, customerMsg],
+        lastMessage: userMsg,
+      }));
+
+      // AI typing delay
+      setIsTyping(true);
+      setTimeout(() => {
+        const aiReply: ConvMessage = {
+          role: "ai",
+          text: getAIResponse(userMsg, selected.customer),
+          time: now(),
+        };
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === selected.id
+              ? { ...m, conversation: [...m.conversation, customerMsg, aiReply] }
+              : m
+          )
+        );
+        setSelected((prev) => ({
+          ...prev,
+          conversation: [...prev.conversation, aiReply],
+        }));
+        setIsTyping(false);
+      }, 1200);
+    } else {
+      // Manual reply mode
+      const manualMsg: ConvMessage = { role: "manual", text: userMsg, time: now() };
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === selected.id
+            ? { ...m, conversation: [...m.conversation, manualMsg], lastMessage: userMsg }
+            : m
+        )
+      );
+      setSelected((prev) => ({
+        ...prev,
+        conversation: [...prev.conversation, manualMsg],
+        lastMessage: userMsg,
+      }));
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -89,7 +202,10 @@ export default function Inbox() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm">{m.customer}</span>
+                  <span className="font-medium text-sm flex items-center gap-1.5">
+                    {m.customer}
+                    {m.unread && <span className="w-2 h-2 rounded-full bg-primary" />}
+                  </span>
                   <span className="text-xs text-muted-foreground">{m.time}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -98,6 +214,15 @@ export default function Inbox() {
                     {m.platform}
                   </span>
                 </div>
+                {m.tags.length > 0 && (
+                  <div className="flex gap-1 mt-1.5">
+                    {m.tags.slice(0, 2).map((tag) => (
+                      <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -106,15 +231,26 @@ export default function Inbox() {
         {/* Chat area */}
         <div className="hidden md:flex flex-1 flex-col">
           <div className="px-4 py-3 border-b flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
               <span className="font-medium">{selected.customer}</span>
-              <span className={`ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${platformColors[selected.platform]}`}>
+              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${platformColors[selected.platform]}`}>
                 {selected.platform}
               </span>
+              {selected.tags.includes("follow-up-scheduled") && (
+                <span className="flex items-center text-[10px] text-warning gap-0.5">
+                  <Clock className="h-3 w-3" /> Follow-up scheduled
+                </span>
+              )}
             </div>
-            <span className="flex items-center text-xs text-success gap-1">
-              <Bot className="h-3.5 w-3.5" /> AI Auto-Reply On
-            </span>
+            <button
+              onClick={() => setAiAutoReply(!aiAutoReply)}
+              className={`flex items-center text-xs gap-1.5 px-2.5 py-1 rounded-full transition-colors ${
+                aiAutoReply ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {aiAutoReply ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+              AI Auto-Reply {aiAutoReply ? "On" : "Off"}
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -123,22 +259,35 @@ export default function Inbox() {
                 key={i}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className={`flex gap-2 ${msg.role === "ai" ? "" : "justify-end"}`}
+                transition={{ delay: i * 0.03 }}
+                className={`flex gap-2 ${msg.role === "customer" ? "justify-end" : ""}`}
               >
-                {msg.role === "ai" && (
-                  <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 mt-1">
-                    <Bot className="h-4 w-4 text-primary-foreground" />
+                {(msg.role === "ai" || msg.role === "manual") && (
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
+                    msg.role === "ai" ? "gradient-primary" : "bg-accent"
+                  }`}>
+                    {msg.role === "ai" ? (
+                      <Bot className="h-4 w-4 text-primary-foreground" />
+                    ) : (
+                      <User className="h-4 w-4 text-accent-foreground" />
+                    )}
                   </div>
                 )}
-                <div
-                  className={`max-w-[70%] rounded-xl px-3.5 py-2.5 text-sm whitespace-pre-line ${
-                    msg.role === "ai"
-                      ? "bg-muted"
-                      : "gradient-primary text-primary-foreground"
-                  }`}
-                >
-                  {msg.text}
+                <div className="max-w-[70%]">
+                  <div
+                    className={`rounded-xl px-3.5 py-2.5 text-sm whitespace-pre-line ${
+                      msg.role === "customer"
+                        ? "gradient-primary text-primary-foreground"
+                        : msg.role === "manual"
+                        ? "bg-accent/10 border border-accent/20"
+                        : "bg-muted"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1 px-1">
+                    {msg.time} {msg.role === "ai" && "· AI"} {msg.role === "manual" && "· Manual"}
+                  </p>
                 </div>
                 {msg.role === "customer" && (
                   <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
@@ -147,13 +296,45 @@ export default function Inbox() {
                 )}
               </motion.div>
             ))}
+            {isTyping && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2">
+                <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="bg-muted rounded-xl px-4 py-3">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            <div ref={chatEndRef} />
           </div>
 
-          <div className="p-3 border-t flex gap-2">
-            <Input placeholder="Type a message…" className="flex-1 h-10 text-sm" />
-            <Button size="icon" className="gradient-primary text-primary-foreground h-10 w-10">
-              <Send className="h-4 w-4" />
-            </Button>
+          <div className="p-3 border-t">
+            <div className="flex gap-2">
+              <Input
+                placeholder={aiAutoReply ? "Simulate customer message…" : "Type a manual reply…"}
+                className="flex-1 h-10 text-sm"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              />
+              <Button
+                size="icon"
+                className="gradient-primary text-primary-foreground h-10 w-10"
+                onClick={handleSend}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1.5 px-1">
+              {aiAutoReply
+                ? "AI Auto-Reply is ON — type as if you're a customer to test AI responses"
+                : "Manual mode — your replies will be sent directly to the customer"}
+            </p>
           </div>
         </div>
       </div>

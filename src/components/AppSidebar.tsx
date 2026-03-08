@@ -10,6 +10,7 @@ import {
   Zap,
   LogOut,
   Settings,
+  Bell,
 } from "lucide-react";
 
 const navItems = [
@@ -31,9 +32,15 @@ export default function AppSidebar() {
           <Zap className="h-6 w-6 text-primary" />
           <span className="font-heading font-bold text-sidebar-foreground text-lg">AutoServe</span>
         </Link>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground p-1">
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link to="/inbox" className="relative p-1 text-sidebar-foreground">
+            <Bell className="h-5 w-5" />
+            <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full gradient-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">3</span>
+          </Link>
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground p-1">
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Overlay */}
@@ -80,8 +87,13 @@ export default function AppSidebar() {
 
         <div className="p-3 border-t border-sidebar-border space-y-1">
           <Link
-            to="/dashboard"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            to="/settings"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+              location.pathname === "/settings"
+                ? "bg-sidebar-accent text-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            }`}
           >
             <Settings className="h-5 w-5" />
             <span>Settings</span>
