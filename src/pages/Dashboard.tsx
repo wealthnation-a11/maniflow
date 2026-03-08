@@ -12,6 +12,10 @@ import {
   Clock,
   AlertCircle,
   X,
+  Bot,
+  Handshake,
+  Percent,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
