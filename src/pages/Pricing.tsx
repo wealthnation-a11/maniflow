@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Zap, Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 
 const plans = [
