@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Package,
   ShoppingCart,
+  Users,
   Menu,
   X,
   Zap,
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Inbox", icon: MessageSquare, path: "/inbox", badge: 12 },
   { label: "Products", icon: Package, path: "/products" },
   { label: "Orders", icon: ShoppingCart, path: "/orders", badge: 3 },
+  { label: "Customers", icon: Users, path: "/customers" },
 ];
 
 export default function AppSidebar() {

@@ -9,8 +9,15 @@ import Dashboard from "./pages/Dashboard";
 import Inbox from "./pages/Inbox";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
+import Customers from "./pages/Customers";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
+import About from "./pages/About";
+import Pricing from "./pages/Pricing";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
+import Help from "./pages/Help";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -26,11 +33,18 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<Help />} />
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/products" element={<Products />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/customers" element={<Customers />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />

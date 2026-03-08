@@ -16,50 +16,21 @@ import {
   Users,
   Repeat,
   Smartphone,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const features = [
-  {
-    icon: Globe,
-    title: "1-Click Social Connect",
-    desc: "Connect WhatsApp, Instagram & Facebook in seconds via Meta Business API. Auto token refresh — no repeated logins.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Unified Inbox",
-    desc: "All messages from every platform in one dashboard. AI auto-replies while you focus on growing your business.",
-  },
-  {
-    icon: Bot,
-    title: "AI Sales Assistant",
-    desc: "Handles price queries, availability, recommendations, and follow-ups — across all platforms without separate config.",
-  },
-  {
-    icon: ShoppingCart,
-    title: "Smart Order Capture",
-    desc: "AI captures orders from conversations: customer name, contact, product, quantity — all tracked automatically.",
-  },
-  {
-    icon: CreditCard,
-    title: "Instant Payments",
-    desc: "Auto-generate Paystack or Flutterwave payment links. Payment confirms → order updates → receipt sent automatically.",
-  },
-  {
-    icon: BarChart3,
-    title: "Dashboard & Analytics",
-    desc: "Revenue, orders, platform performance — all visualized. Filter by platform, product, or date. Mobile-first design.",
-  },
-  {
-    icon: Repeat,
-    title: "Follow-Up Automation",
-    desc: "AI schedules follow-ups for abandoned orders and sends promotions automatically to re-engage customers.",
-  },
-  {
-    icon: Bell,
-    title: "Smart Notifications",
-    desc: "Get alerted for new messages, pending payments, and completed orders via email, SMS, or push notifications.",
-  },
+  { icon: Globe, title: "1-Click Social Connect", desc: "Connect WhatsApp, Instagram & Facebook in seconds via Meta Business API. Auto token refresh — no repeated logins." },
+  { icon: MessageSquare, title: "Unified Inbox", desc: "All messages from every platform in one dashboard. AI auto-replies while you focus on growing your business." },
+  { icon: Bot, title: "AI Sales Assistant", desc: "Handles price queries, availability, recommendations, and follow-ups — across all platforms without separate config." },
+  { icon: ShoppingCart, title: "Smart Order Capture", desc: "AI captures orders from conversations: customer name, contact, product, quantity — all tracked automatically." },
+  { icon: CreditCard, title: "Instant Payments", desc: "Auto-generate Paystack or Flutterwave payment links. Payment confirms → order updates → receipt sent automatically." },
+  { icon: BarChart3, title: "Dashboard & Analytics", desc: "Revenue, orders, platform performance — all visualized. Filter by platform, product, or date. Mobile-first design." },
+  { icon: Repeat, title: "Follow-Up Automation", desc: "AI schedules follow-ups for abandoned orders and sends promotions automatically to re-engage customers." },
+  { icon: Bell, title: "Smart Notifications", desc: "Get alerted for new messages, pending payments, and completed orders via email, SMS, or push notifications." },
 ];
 
 const steps = [
@@ -84,6 +55,30 @@ const benefits = [
   { icon: Smartphone, text: "Mobile-first design" },
 ];
 
+const headerLinks = [
+  { label: "Features", href: "#features" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "About", href: "/about" },
+  { label: "Help", href: "/help" },
+];
+
+const footerLinks = {
+  Product: [
+    { label: "Features", href: "#features" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Dashboard Demo", href: "/dashboard" },
+  ],
+  Company: [
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
+    { label: "Help Center", href: "/help" },
+  ],
+  Legal: [
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
+  ],
+};
+
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
@@ -94,22 +89,64 @@ const fadeUp = {
 };
 
 export default function Landing() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <Zap className="h-7 w-7 text-primary" />
-          <span className="font-heading font-bold text-xl tracking-tight">AutoServe</span>
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2">
+            <Zap className="h-7 w-7 text-primary" />
+            <span className="font-heading font-bold text-xl tracking-tight">AutoServe</span>
+          </div>
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-6">
+            {headerLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a key={link.label} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.label} to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {link.label}
+                </Link>
+              )
+            )}
+          </div>
+
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/auth"><Button variant="ghost" size="sm">Log in</Button></Link>
+            <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <button className="md:hidden p-1" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/auth">
-            <Button variant="ghost" size="sm">Log in</Button>
-          </Link>
-          <Link to="/auth?mode=signup">
-            <Button size="sm">Get Started</Button>
-          </Link>
-        </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden border-t bg-background px-4 py-4 space-y-2">
+            {headerLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a key={link.label} href={link.href} onClick={() => setMenuOpen(false)} className="block py-2 text-sm text-muted-foreground">
+                  {link.label}
+                </a>
+              ) : (
+                <Link key={link.label} to={link.href} onClick={() => setMenuOpen(false)} className="block py-2 text-sm text-muted-foreground">
+                  {link.label}
+                </Link>
+              )
+            )}
+            <div className="flex gap-2 pt-2 border-t">
+              <Link to="/auth" className="flex-1"><Button variant="outline" className="w-full" size="sm">Log in</Button></Link>
+              <Link to="/auth?mode=signup" className="flex-1"><Button className="w-full" size="sm">Get Started</Button></Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero */}
@@ -140,27 +177,14 @@ export default function Landing() {
           >
             AI replies to customers, captures orders, and sends payment links — all from WhatsApp, Instagram, and Facebook in one dashboard. Your customers never leave their favorite app.
           </motion.p>
-          
-          {/* Platform badges */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="flex flex-wrap justify-center gap-2 mb-8"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="flex flex-wrap justify-center gap-2 mb-8">
             {platforms.map((p) => (
               <span key={p.name} className={`text-xs font-medium px-3 py-1.5 rounded-full ${p.color} ${p.soon ? 'opacity-50' : ''}`}>
                 {p.name} {p.soon && "(Soon)"}
               </span>
             ))}
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }} className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/auth?mode=signup">
               <Button size="lg" className="gradient-primary text-primary-foreground font-semibold text-base px-8 py-6 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
                 Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
@@ -190,23 +214,11 @@ export default function Landing() {
 
       {/* Features */}
       <section className="py-20 px-4 max-w-6xl mx-auto" id="features">
-        <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">
-          Everything You Need to Sell on Autopilot
-        </h2>
-        <p className="text-center text-muted-foreground mb-14 max-w-xl mx-auto">
-          One platform to manage messages, orders, and payments from all your social channels.
-        </p>
+        <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">Everything You Need to Sell on Autopilot</h2>
+        <p className="text-center text-muted-foreground mb-14 max-w-xl mx-auto">One platform to manage messages, orders, and payments from all your social channels.</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              custom={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeUp}
-              className="gradient-card rounded-xl p-6 shadow-card hover:shadow-card-hover transition-shadow"
-            >
+            <motion.div key={f.title} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="gradient-card rounded-xl p-6 shadow-card hover:shadow-card-hover transition-shadow">
               <div className="w-12 h-12 rounded-lg gradient-primary flex items-center justify-center mb-4">
                 <f.icon className="h-6 w-6 text-primary-foreground" />
               </div>
@@ -220,23 +232,11 @@ export default function Landing() {
       {/* How it works */}
       <section className="py-20 px-4 bg-muted/50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">
-            How It Works
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-lg mx-auto">
-            From sign-up to your first automated sale in under 5 minutes. No coding required.
-          </p>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">How It Works</h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-lg mx-auto">From sign-up to your first automated sale in under 5 minutes. No coding required.</p>
           <div className="grid md:grid-cols-2 gap-6">
             {steps.map((step, i) => (
-              <motion.div
-                key={i}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                className="flex items-start gap-4 bg-card rounded-xl p-5 shadow-card"
-              >
+              <motion.div key={i} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex items-start gap-4 bg-card rounded-xl p-5 shadow-card">
                 <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
                   <span className="text-primary-foreground text-sm font-bold">{step.num}</span>
                 </div>
@@ -253,12 +253,8 @@ export default function Landing() {
       {/* AI Workflow */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">
-            The AI Sales Workflow
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-lg mx-auto">
-            Your AI assistant handles the entire sales process — customers never leave their favorite app.
-          </p>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">The AI Sales Workflow</h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-lg mx-auto">Your AI assistant handles the entire sales process — customers never leave their favorite app.</p>
           <div className="space-y-3">
             {[
               "Customer sends a message on WhatsApp, Instagram, or Facebook",
@@ -269,15 +265,7 @@ export default function Landing() {
               "Payment confirmed → Order status auto-updates in dashboard",
               "AI sends receipt and follow-up on the same platform",
             ].map((step, i) => (
-              <motion.div
-                key={i}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                className="flex items-center gap-3 bg-card rounded-xl p-4 shadow-card"
-              >
+              <motion.div key={i} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex items-center gap-3 bg-card rounded-xl p-4 shadow-card">
                 <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
                 <p className="text-sm md:text-base">{step}</p>
               </motion.div>
@@ -289,12 +277,8 @@ export default function Landing() {
       {/* CTA */}
       <section className="py-20 px-4 gradient-hero">
         <div className="max-w-2xl mx-auto text-center text-primary-foreground">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-            Ready to Automate Your Sales?
-          </h2>
-          <p className="opacity-80 mb-8">
-            Join thousands of businesses across Africa using AI to serve customers faster. Set up in 5 minutes — no coding required.
-          </p>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">Ready to Automate Your Sales?</h2>
+          <p className="opacity-80 mb-8">Join thousands of businesses across Africa using AI to serve customers faster. Set up in 5 minutes — no coding required.</p>
           <Link to="/auth?mode=signup">
             <Button size="lg" className="gradient-primary text-primary-foreground font-semibold px-8 py-6 rounded-xl">
               Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
@@ -304,13 +288,45 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            <span className="font-heading font-semibold text-foreground">AutoServe</span>
+      <footer className="border-t bg-card py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="h-6 w-6 text-primary" />
+                <span className="font-heading font-bold text-lg">AutoServe</span>
+              </div>
+              <p className="text-sm text-muted-foreground">AI-powered business automation for African businesses and beyond.</p>
+            </div>
+
+            {/* Link columns */}
+            {Object.entries(footerLinks).map(([category, links]) => (
+              <div key={category}>
+                <h4 className="font-heading font-semibold text-sm mb-3">{category}</h4>
+                <ul className="space-y-2">
+                  {links.map((link) => (
+                    <li key={link.label}>
+                      {link.href.startsWith("#") ? (
+                        <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
+                      ) : (
+                        <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <p>© 2026 AutoServe. Built for African businesses.</p>
+
+          <div className="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>© 2026 AutoServe. Built for African businesses.</p>
+            <div className="flex gap-4">
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
