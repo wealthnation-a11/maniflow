@@ -30,20 +30,6 @@ import {
 } from "recharts";
 import { useLoadingState } from "@/hooks/use-loading";
 import { DashboardSkeleton } from "@/components/Skeletons";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-} from "recharts";
 
 const stats = [
   { label: "Revenue", value: "₦2,450,000", change: "+12%", icon: DollarSign, color: "text-primary" },
