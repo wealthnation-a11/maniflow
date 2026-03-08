@@ -127,6 +127,7 @@ export default function Orders() {
                 <th className="px-4 py-3 font-medium hidden sm:table-cell">Platform</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Payment</th>
+                <th className="px-4 py-3 font-medium text-center">Invoice</th>
               </tr>
             </thead>
             <tbody>
