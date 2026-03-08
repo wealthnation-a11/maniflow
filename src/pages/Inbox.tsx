@@ -90,6 +90,7 @@ const getAIResponse = (input: string, customerName: string): string => {
 };
 
 export default function Inbox() {
+  const loading = useLoadingState();
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [selected, setSelected] = useState<Message>(mockMessages[0]);
   const [search, setSearch] = useState("");
