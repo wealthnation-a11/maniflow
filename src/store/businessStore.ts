@@ -1,12 +1,3 @@
-import { create } from "zustand";
-
-interface BusinessStore {
-  logoUrl: string | null;
-  businessName: string;
-  setLogoUrl: (url: string | null) => void;
-  setBusinessName: (name: string) => void;
-}
-
 // Simple store using module-level state (no external deps needed)
 let listeners: Array<() => void> = [];
 let state: { logoUrl: string | null; businessName: string } = {
