@@ -207,7 +207,7 @@ export default function Products() {
                 <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => openEdit(p)}>
                   <Pencil className="h-3 w-3 mr-1" /> Edit
                 </Button>
-                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => deleteProduct(p.id)}>
+                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(p.id)}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
