@@ -331,7 +331,7 @@ export default function Landing() {
                 <Zap className="h-6 w-6 text-primary" />
                 <span className="font-heading font-bold text-lg">ManyFlow</span>
               </div>
-              <p className="text-sm text-muted-foreground">AI-powered business automation for African businesses and beyond.</p>
+              <p className="text-sm text-muted-foreground">Many channels, one flow. AI-powered business automation.</p>
             </div>
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
