@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import Inbox from "./pages/Inbox";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
+import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -23,11 +25,13 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/products" element={<Products />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

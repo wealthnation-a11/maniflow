@@ -8,38 +8,80 @@ import {
   Bot,
   ArrowRight,
   CheckCircle2,
+  Globe,
+  Bell,
+  BarChart3,
+  Shield,
+  Clock,
+  Users,
+  Repeat,
+  Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const features = [
   {
+    icon: Globe,
+    title: "1-Click Social Connect",
+    desc: "Connect WhatsApp, Instagram & Facebook in seconds via Meta Business API. Auto token refresh — no repeated logins.",
+  },
+  {
     icon: MessageSquare,
     title: "Unified Inbox",
-    desc: "All your WhatsApp, Instagram & Facebook messages in one place.",
+    desc: "All messages from every platform in one dashboard. AI auto-replies while you focus on growing your business.",
   },
   {
     icon: Bot,
-    title: "AI Auto-Reply",
-    desc: "AI reads messages, checks your catalog, and replies instantly.",
+    title: "AI Sales Assistant",
+    desc: "Handles price queries, availability, recommendations, and follow-ups — across all platforms without separate config.",
   },
   {
     icon: ShoppingCart,
-    title: "Order Capture",
-    desc: "AI captures orders from conversations and tracks them for you.",
+    title: "Smart Order Capture",
+    desc: "AI captures orders from conversations: customer name, contact, product, quantity — all tracked automatically.",
   },
   {
     icon: CreditCard,
     title: "Instant Payments",
-    desc: "Auto-generate Paystack or Flutterwave payment links.",
+    desc: "Auto-generate Paystack or Flutterwave payment links. Payment confirms → order updates → receipt sent automatically.",
+  },
+  {
+    icon: BarChart3,
+    title: "Dashboard & Analytics",
+    desc: "Revenue, orders, platform performance — all visualized. Filter by platform, product, or date. Mobile-first design.",
+  },
+  {
+    icon: Repeat,
+    title: "Follow-Up Automation",
+    desc: "AI schedules follow-ups for abandoned orders and sends promotions automatically to re-engage customers.",
+  },
+  {
+    icon: Bell,
+    title: "Smart Notifications",
+    desc: "Get alerted for new messages, pending payments, and completed orders via email, SMS, or push notifications.",
   },
 ];
 
 const steps = [
-  "Customer sends a message on WhatsApp, IG or Facebook",
-  "AI reads the message and checks your product catalog",
-  "AI replies with product info and asks to confirm order",
-  "Customer confirms → AI sends payment link",
-  "Payment confirmed → Order updated in your dashboard",
+  { num: "1", title: "Sign Up & Connect", desc: "Create your account and connect WhatsApp, Instagram & Facebook in 1–2 clicks." },
+  { num: "2", title: "Add Your Products", desc: "Upload your product catalog with images, prices, and descriptions. Bulk CSV upload supported." },
+  { num: "3", title: "AI Takes Over", desc: "AI replies to customers, captures orders, sends payment links — all automatically across every platform." },
+  { num: "4", title: "Track & Grow", desc: "Monitor sales, orders, and customer engagement from your unified dashboard." },
+];
+
+const platforms = [
+  { name: "WhatsApp", color: "bg-success/10 text-success" },
+  { name: "Instagram", color: "bg-pink-100 text-pink-600" },
+  { name: "Facebook", color: "bg-info/10 text-info" },
+  { name: "LinkedIn", color: "bg-info/10 text-info", soon: true },
+  { name: "TikTok", color: "bg-foreground/10 text-foreground", soon: true },
+];
+
+const benefits = [
+  { icon: Clock, text: "Set up in under 5 minutes" },
+  { icon: Shield, text: "Secure payment processing" },
+  { icon: Users, text: "Built for African businesses" },
+  { icon: Smartphone, text: "Mobile-first design" },
 ];
 
 const fadeUp = {
@@ -47,7 +89,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.5 },
+    transition: { delay: i * 0.08, duration: 0.5 },
   }),
 };
 
@@ -73,13 +115,20 @@ export default function Landing() {
       {/* Hero */}
       <section className="gradient-hero text-primary-foreground py-20 md:py-32 px-4">
         <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 text-sm font-medium mb-6"
+          >
+            <Bot className="h-4 w-4" /> AI-Powered Business Automation
+          </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="font-heading text-4xl md:text-6xl font-bold leading-tight mb-6"
           >
-            Automate Your Business
+            Sell on Autopilot
             <br />
             <span className="text-primary">Across Every Channel</span>
           </motion.h1>
@@ -87,27 +136,60 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.6 }}
-            className="text-lg md:text-xl opacity-80 max-w-2xl mx-auto mb-10"
+            className="text-lg md:text-xl opacity-80 max-w-2xl mx-auto mb-8"
           >
-            AI-powered replies, automatic order capture, and instant payment links — all from WhatsApp, Instagram, and Facebook in one dashboard.
+            AI replies to customers, captures orders, and sends payment links — all from WhatsApp, Instagram, and Facebook in one dashboard. Your customers never leave their favorite app.
           </motion.p>
+          
+          {/* Platform badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="flex flex-wrap justify-center gap-2 mb-8"
+          >
+            {platforms.map((p) => (
+              <span key={p.name} className={`text-xs font-medium px-3 py-1.5 rounded-full ${p.color} ${p.soon ? 'opacity-50' : ''}`}>
+                {p.name} {p.soon && "(Soon)"}
+              </span>
+            ))}
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-3 justify-center"
           >
             <Link to="/auth?mode=signup">
               <Button size="lg" className="gradient-primary text-primary-foreground font-semibold text-base px-8 py-6 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
                 Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <p className="mt-4 text-sm opacity-60">No credit card required · Set up in 5 minutes</p>
+            <Link to="/dashboard">
+              <Button size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground font-semibold text-base px-8 py-6 rounded-xl hover:bg-primary-foreground/10">
+                View Demo Dashboard
+              </Button>
+            </Link>
           </motion.div>
+          <p className="mt-4 text-sm opacity-60">No credit card required · Set up in 5 minutes</p>
+        </div>
+      </section>
+
+      {/* Benefits strip */}
+      <section className="py-6 border-b bg-card">
+        <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-6 md:gap-10 px-4">
+          {benefits.map((b, i) => (
+            <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <b.icon className="h-4 w-4 text-primary" />
+              <span>{b.text}</span>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 px-4 max-w-6xl mx-auto">
+      <section className="py-20 px-4 max-w-6xl mx-auto" id="features">
         <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">
           Everything You Need to Sell on Autopilot
         </h2>
@@ -137,11 +219,14 @@ export default function Landing() {
 
       {/* How it works */}
       <section className="py-20 px-4 bg-muted/50">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-12">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">
             How It Works
           </h2>
-          <div className="space-y-4">
+          <p className="text-center text-muted-foreground mb-12 max-w-lg mx-auto">
+            From sign-up to your first automated sale in under 5 minutes. No coding required.
+          </p>
+          <div className="grid md:grid-cols-2 gap-6">
             {steps.map((step, i) => (
               <motion.div
                 key={i}
@@ -150,11 +235,50 @@ export default function Landing() {
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
-                className="flex items-start gap-4 bg-card rounded-xl p-4 shadow-card"
+                className="flex items-start gap-4 bg-card rounded-xl p-5 shadow-card"
               >
-                <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-primary-foreground text-sm font-bold">{i + 1}</span>
+                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary-foreground text-sm font-bold">{step.num}</span>
                 </div>
+                <div>
+                  <h3 className="font-heading font-semibold mb-1">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AI Workflow */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">
+            The AI Sales Workflow
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-lg mx-auto">
+            Your AI assistant handles the entire sales process — customers never leave their favorite app.
+          </p>
+          <div className="space-y-3">
+            {[
+              "Customer sends a message on WhatsApp, Instagram, or Facebook",
+              "Platform receives → AI detects which channel it came from",
+              "AI reads message and checks your product catalog",
+              "AI replies with product info, pricing, or recommendations",
+              "Customer confirms order → AI sends Paystack/Flutterwave payment link",
+              "Payment confirmed → Order status auto-updates in dashboard",
+              "AI sends receipt and follow-up on the same platform",
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                className="flex items-center gap-3 bg-card rounded-xl p-4 shadow-card"
+              >
+                <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
                 <p className="text-sm md:text-base">{step}</p>
               </motion.div>
             ))}
@@ -163,13 +287,13 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4">
-        <div className="max-w-2xl mx-auto text-center">
+      <section className="py-20 px-4 gradient-hero">
+        <div className="max-w-2xl mx-auto text-center text-primary-foreground">
           <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
             Ready to Automate Your Sales?
           </h2>
-          <p className="text-muted-foreground mb-8">
-            Join thousands of businesses across Africa using AI to serve customers faster.
+          <p className="opacity-80 mb-8">
+            Join thousands of businesses across Africa using AI to serve customers faster. Set up in 5 minutes — no coding required.
           </p>
           <Link to="/auth?mode=signup">
             <Button size="lg" className="gradient-primary text-primary-foreground font-semibold px-8 py-6 rounded-xl">
