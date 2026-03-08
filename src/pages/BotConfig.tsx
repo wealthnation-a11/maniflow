@@ -123,13 +123,13 @@ export default function BotConfig() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 md:space-y-6 max-w-4xl">
       <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2">
-          <Bot className="h-7 w-7 text-primary" />
+        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2">
+          <Bot className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
           Bot Configuration
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
           Set up your AI sales bot — define Q&A, pricing rules, and payment details
         </p>
       </div>
