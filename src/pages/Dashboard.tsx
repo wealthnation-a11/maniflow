@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign,
   ShoppingCart,
@@ -12,6 +12,10 @@ import {
   Clock,
   AlertCircle,
   X,
+  Bot,
+  Handshake,
+  Percent,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -252,7 +256,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Sales trend + AI activity */}
+      {/* Sales trend + Bot Analytics */}
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Weekly sales trend */}
         <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
@@ -296,6 +300,60 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Bot Negotiation Analytics */}
+      <div className="bg-card rounded-xl shadow-card p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-5">
+          <Bot className="h-5 w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-lg">Bot Negotiation Analytics</h2>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "Total Conversations", value: "1,247", icon: MessageSquare, color: "text-primary", subtext: "This month" },
+            { label: "Successful Negotiations", value: "89", icon: Handshake, color: "text-success", subtext: "Deals closed by bot" },
+            { label: "Avg. Discount Given", value: "12.4%", icon: Percent, color: "text-warning", subtext: "From listed price" },
+            { label: "Conversion Rate", value: "34%", icon: Target, color: "text-accent", subtext: "Message → Sale" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-muted/50 rounded-xl p-4 space-y-2"
+            >
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              <p className="font-heading text-2xl font-bold">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-[10px] text-muted-foreground/70">{stat.subtext}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Negotiation breakdown */}
+        <div className="grid sm:grid-cols-3 gap-4 mt-5">
+          {[
+            { label: "Auto-Accepted", value: 42, total: 89, color: "bg-success" },
+            { label: "Counter-Offered → Accepted", value: 31, total: 89, color: "bg-primary" },
+            { label: "Rejected (Below Min)", value: 16, total: 89, color: "bg-destructive" },
+          ].map((item) => (
+            <div key={item.label} className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{item.label}</span>
+                <span className="font-medium">{item.value}</span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(item.value / item.total) * 100}%` }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                  className={`h-full ${item.color} rounded-full`}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">{Math.round((item.value / item.total) * 100)}% of negotiations</p>
+            </div>
+          ))}
         </div>
       </div>
 
