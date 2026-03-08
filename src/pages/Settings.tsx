@@ -183,10 +183,27 @@ export default function Settings() {
           <div>
             <Label className="text-sm">Business Logo</Label>
             <div className="mt-2 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-                <Upload className="h-6 w-6" />
+              {logoUrl ? (
+                <div className="relative group">
+                  <img src={logoUrl} alt="Business Logo" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                  <button
+                    onClick={handleRemoveLogo}
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                  <Upload className="h-6 w-6" />
+                </div>
+              )}
+              <div>
+                <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={handleLogoUpload} />
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => fileInputRef.current?.click()}>
+                  {logoUrl ? "Change Logo" : "Upload Logo"}
+                </Button>
               </div>
-              <Button variant="outline" size="sm" className="text-xs">Upload Logo</Button>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">PNG or JPG, max 2MB</p>
           </div>

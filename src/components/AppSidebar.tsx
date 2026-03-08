@@ -64,9 +64,13 @@ export default function AppSidebar() {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:static lg:z-auto`}
       >
-        <div className="flex items-center gap-2 px-5 h-16 border-b border-sidebar-border">
-          <Zap className="h-7 w-7 text-primary" />
-          <span className="font-heading font-bold text-sidebar-foreground text-xl tracking-tight">AutoServe</span>
+        <div className="flex items-center gap-2.5 px-5 h-16 border-b border-sidebar-border">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+          ) : (
+            <Zap className="h-7 w-7 text-primary" />
+          )}
+          <span className="font-heading font-bold text-sidebar-foreground text-xl tracking-tight">{businessName}</span>
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1">

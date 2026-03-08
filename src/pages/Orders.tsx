@@ -132,7 +132,7 @@ export default function Orders() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No orders match your filters</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No orders match your filters</td></tr>
               ) : filtered.map((o, i) => (
                 <motion.tr key={o.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{o.id}</td>
@@ -149,12 +149,19 @@ export default function Orders() {
                   <td className="px-4 py-3">
                     <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${paymentStyles[o.payment]}`}>{o.payment}</span>
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => setInvoiceOrder(o)}>
+                      <FileText className="h-3.5 w-3.5" /> Invoice
+                    </Button>
+                  </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      <InvoiceDialog order={invoiceOrder} open={invoiceOrder !== null} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
     </div>
   );
 }
