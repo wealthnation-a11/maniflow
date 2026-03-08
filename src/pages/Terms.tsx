@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 
 export default function Terms() {
   return (
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <Zap className="h-7 w-7 text-primary" />
+          <ManyFlowLogo className="h-7 w-7" />
           <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
       </nav>

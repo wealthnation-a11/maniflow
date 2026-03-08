@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Zap, Mail, Lock, Building2, Phone } from "lucide-react";
+import { Mail, Lock, Building2, Phone } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +21,8 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <Zap className="h-8 w-8 text-primary" />
-            <span className="font-heading font-bold text-2xl">AutoServe</span>
+            <ManyFlowLogo className="h-8 w-8" />
+            <span className="font-heading font-bold text-2xl">ManyFlow</span>
           </Link>
           <h1 className="font-heading text-2xl font-bold">
             {isSignup ? "Create your account" : "Welcome back"}

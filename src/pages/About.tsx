@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Zap, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 
 export default function About() {
@@ -7,7 +8,7 @@ export default function About() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <Zap className="h-7 w-7 text-primary" />
+          <ManyFlowLogo className="h-7 w-7" />
           <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>
@@ -44,7 +45,7 @@ function Footer() {
     <footer className="border-t py-8 px-4">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
+          <ManyFlowLogo className="h-5 w-5" />
           <span className="font-heading font-semibold text-foreground">ManyFlow</span>
         </div>
         <p>© 2026 ManyFlow. Built for African businesses.</p>

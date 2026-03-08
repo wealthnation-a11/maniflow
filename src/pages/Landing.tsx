@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Zap, MessageSquare, ShoppingCart, CreditCard, Bot, ArrowRight, CheckCircle2, Globe, Bell,
+  MessageSquare, ShoppingCart, CreditCard, Bot, ArrowRight, CheckCircle2, Globe, Bell,
   BarChart3, Shield, Clock, Users, Repeat, Smartphone, Menu, X, Star, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { useState } from "react";
 
 const features = [
@@ -102,7 +103,7 @@ export default function Landing() {
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
-            <Zap className="h-7 w-7 text-primary" />
+            <ManyFlowLogo className="h-7 w-7" />
             <span className="font-heading font-bold text-xl tracking-tight">ManyFlow</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
@@ -328,7 +329,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
-                <Zap className="h-6 w-6 text-primary" />
+                <ManyFlowLogo className="h-6 w-6" />
                 <span className="font-heading font-bold text-lg">ManyFlow</span>
               </div>
               <p className="text-sm text-muted-foreground">Many channels, one flow. AI-powered business automation.</p>

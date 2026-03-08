@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Zap, Search, ChevronRight } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,7 @@ export default function Help() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <Zap className="h-7 w-7 text-primary" />
+          <ManyFlowLogo className="h-7 w-7" />
           <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/contact"><Button variant="outline" size="sm">Contact Support</Button></Link>

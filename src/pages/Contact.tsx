@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Zap, Send, MapPin, Mail, Phone } from "lucide-react";
+import { Send, MapPin, Mail, Phone } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +21,7 @@ export default function Contact() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <Zap className="h-7 w-7 text-primary" />
+          <ManyFlowLogo className="h-7 w-7" />
           <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>

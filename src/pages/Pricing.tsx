@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Zap, Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 
 const plans = [
@@ -37,7 +38,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <Zap className="h-7 w-7 text-primary" />
+          <ManyFlowLogo className="h-7 w-7" />
           <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/auth"><Button variant="ghost" size="sm">Log in</Button></Link>

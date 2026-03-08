@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, CheckCircle2, ArrowRight, ArrowLeft, MessageSquare, Package, Bot } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, MessageSquare, Package, Bot } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +63,7 @@ export default function Onboarding() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Zap className="h-8 w-8 text-primary" />
+          <ManyFlowLogo className="h-8 w-8" />
           <span className="font-heading font-bold text-2xl">ManyFlow</span>
         </div>
 
