@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bot, MessageSquare, DollarSign, CreditCard, Settings2, Plus, Trash2, Save, GripVertical } from "lucide-react";
+import { Bot, MessageSquare, DollarSign, CreditCard, Settings2, Plus, Trash2, Save, GripVertical, Send, TestTube2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
