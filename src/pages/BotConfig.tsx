@@ -446,7 +446,7 @@ export default function BotConfig() {
             </Button>
           </div>
 
-          <div className="bg-card rounded-xl shadow-card overflow-hidden flex flex-col" style={{ height: "450px" }}>
+          <div className="bg-card rounded-xl shadow-card overflow-hidden flex flex-col" style={{ height: "min(450px, calc(100vh - 300px))" }}>
             {/* Chat header */}
             <div className="px-4 py-3 border-b flex items-center gap-2">
               <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
