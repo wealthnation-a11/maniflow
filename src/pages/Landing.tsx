@@ -66,15 +66,15 @@ const footerLinks = {
 };
 
 const testimonials = [
-  { name: "Adaeze Obi", role: "Owner, Adaeze Beauty", quote: "AutoServe tripled my sales in 2 months. I no longer miss customer messages, and the AI handles orders while I sleep!", avatar: "AO" },
+  { name: "Adaeze Obi", role: "Owner, Adaeze Beauty", quote: "ManyFlow tripled my sales in 2 months. I no longer miss customer messages, and the AI handles orders while I sleep!", avatar: "AO" },
   { name: "Tunde Adeyemi", role: "Founder, TundeStyles", quote: "The unified inbox changed everything. I used to switch between 3 apps — now it's all in one place with AI auto-replies.", avatar: "TA" },
   { name: "Halima Mohammed", role: "CEO, Halima's Kitchen", quote: "Payment links from chat? Game changer. My customers pay instantly and I get notified right away. Revenue up 40%.", avatar: "HM" },
-  { name: "Kelechi Nnadi", role: "Manager, KeKe Fashion", quote: "We were losing orders on Instagram DMs. AutoServe captures every single one now. Best investment for my business.", avatar: "KN" },
+  { name: "Kelechi Nnadi", role: "Manager, KeKe Fashion", quote: "We were losing orders on Instagram DMs. ManyFlow captures every single one now. Best investment for my business.", avatar: "KN" },
 ];
 
 const faqs = [
   { q: "How does the AI know about my products?", a: "You upload your product catalog (names, prices, descriptions) and the AI uses this information to answer customer questions, recommend products, and capture orders — all automatically." },
-  { q: "Which platforms does AutoServe support?", a: "Currently WhatsApp, Instagram, and Facebook via Meta Business API. LinkedIn and TikTok support are coming soon. All messages flow into one unified inbox." },
+  { q: "Which platforms does ManyFlow support?", a: "Currently WhatsApp, Instagram, and Facebook via Meta Business API. LinkedIn and TikTok support are coming soon. All messages flow into one unified inbox." },
   { q: "Is my data secure?", a: "Absolutely. We use industry-standard encryption, secure payment processing via Paystack and Flutterwave, and never share your customer data with third parties." },
   { q: "Can I override the AI and reply manually?", a: "Yes! You can toggle between AI auto-reply and manual mode for any conversation. The AI handles routine queries while you focus on high-value conversations." },
   { q: "How much does it cost?", a: "We offer a free trial to get started. Paid plans start at affordable rates designed for small businesses. Visit our pricing page for details." },
@@ -103,7 +103,7 @@ export default function Landing() {
         <div className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
             <Zap className="h-7 w-7 text-primary" />
-            <span className="font-heading font-bold text-xl tracking-tight">AutoServe</span>
+            <span className="font-heading font-bold text-xl tracking-tight">ManyFlow</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             {headerLinks.map((link) =>
@@ -144,7 +144,7 @@ export default function Landing() {
       <section className="gradient-hero text-primary-foreground py-20 md:py-32 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 text-sm font-medium mb-6">
-            <Bot className="h-4 w-4" /> AI-Powered Business Automation
+            <Bot className="h-4 w-4" /> Many Channels, One Flow
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="font-heading text-4xl md:text-6xl font-bold leading-tight mb-6">
             Sell on Autopilot<br /><span className="text-primary">Across Every Channel</span>
@@ -287,7 +287,7 @@ export default function Landing() {
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-center mb-4">Frequently Asked Questions</h2>
-          <p className="text-center text-muted-foreground mb-12">Everything you need to know about AutoServe.</p>
+          <p className="text-center text-muted-foreground mb-12">Everything you need to know about ManyFlow.</p>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <motion.div key={i} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
@@ -329,9 +329,9 @@ export default function Landing() {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="h-6 w-6 text-primary" />
-                <span className="font-heading font-bold text-lg">AutoServe</span>
+                <span className="font-heading font-bold text-lg">ManyFlow</span>
               </div>
-              <p className="text-sm text-muted-foreground">AI-powered business automation for African businesses and beyond.</p>
+              <p className="text-sm text-muted-foreground">Many channels, one flow. AI-powered business automation.</p>
             </div>
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
@@ -351,7 +351,7 @@ export default function Landing() {
             ))}
           </div>
           <div className="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© 2026 AutoServe. Built for African businesses.</p>
+            <p>© 2026 ManyFlow. Built for African businesses.</p>
             <div className="flex gap-4">
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

@@ -40,7 +40,7 @@ export default function AppSidebar() {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-sidebar border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-2">
           <Zap className="h-6 w-6 text-primary" />
-          <span className="font-heading font-bold text-sidebar-foreground text-lg">AutoServe</span>
+          <span className="font-heading font-bold text-sidebar-foreground text-lg">ManyFlow</span>
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/inbox" className="relative p-1 text-sidebar-foreground">

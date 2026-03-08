@@ -21,7 +21,7 @@ export default function Contact() {
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Zap className="h-7 w-7 text-primary" />
-          <span className="font-heading font-bold text-xl">AutoServe</span>
+          <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>
       </nav>
@@ -36,14 +36,14 @@ export default function Contact() {
               <Mail className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Email</p>
-                <p className="text-sm text-muted-foreground">hello@autoserve.co</p>
+                <p className="text-sm text-muted-foreground">hello@manyflow.co</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Phone className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Phone</p>
-                <p className="text-sm text-muted-foreground">+234 800 AUTO SERVE</p>
+                <p className="text-sm text-muted-foreground">+234 800 MANY FLOW</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

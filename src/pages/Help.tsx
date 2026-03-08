@@ -57,7 +57,7 @@ export default function Help() {
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Zap className="h-7 w-7 text-primary" />
-          <span className="font-heading font-bold text-xl">AutoServe</span>
+          <span className="font-heading font-bold text-xl">ManyFlow</span>
         </Link>
         <Link to="/contact"><Button variant="outline" size="sm">Contact Support</Button></Link>
       </nav>
@@ -65,7 +65,7 @@ export default function Help() {
       <div className="gradient-hero text-primary-foreground py-16 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h1 className="font-heading text-3xl md:text-4xl font-bold mb-4">Help Center</h1>
-          <p className="opacity-80 mb-6">Find answers to common questions about AutoServe</p>
+          <p className="opacity-80 mb-6">Find answers to common questions about ManyFlow</p>
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
