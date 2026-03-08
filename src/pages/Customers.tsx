@@ -1,0 +1,232 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Search, Users, TrendingUp, Star, ShoppingCart, Eye, Filter, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+type Customer = {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  platform: "WhatsApp" | "Instagram" | "Facebook";
+  totalOrders: number;
+  totalSpent: number;
+  lastOrder: string;
+  status: "active" | "inactive" | "new";
+  preferences: string[];
+  firstSeen: string;
+};
+
+const customers: Customer[] = [
+  { id: 1, name: "Amina Bello", phone: "+234 812 345 6789", email: "amina@email.com", platform: "WhatsApp", totalOrders: 12, totalSpent: 185000, lastOrder: "2 days ago", status: "active", preferences: ["Hair Care", "Skincare"], firstSeen: "Jan 2026" },
+  { id: 2, name: "Chidi Okafor", phone: "+234 803 456 7890", email: "chidi@email.com", platform: "Instagram", totalOrders: 5, totalSpent: 62500, lastOrder: "1 week ago", status: "active", preferences: ["Skincare"], firstSeen: "Feb 2026" },
+  { id: 3, name: "Fatima Yusuf", phone: "+234 706 567 8901", email: "fatima@email.com", platform: "Facebook", totalOrders: 8, totalSpent: 176000, lastOrder: "3 days ago", status: "active", preferences: ["Fashion", "Hair Care"], firstSeen: "Dec 2025" },
+  { id: 4, name: "Emeka Nwachukwu", phone: "+234 901 678 9012", email: "emeka@email.com", platform: "WhatsApp", totalOrders: 2, totalSpent: 24000, lastOrder: "3 weeks ago", status: "inactive", preferences: ["Skincare"], firstSeen: "Feb 2026" },
+  { id: 5, name: "Ngozi Eze", phone: "+234 810 789 0123", email: "ngozi@email.com", platform: "Instagram", totalOrders: 15, totalSpent: 225000, lastOrder: "1 day ago", status: "active", preferences: ["Hair Care", "Skincare", "Fashion"], firstSeen: "Nov 2025" },
+  { id: 6, name: "Yusuf Abdullahi", phone: "+234 805 890 1234", email: "yusuf@email.com", platform: "WhatsApp", totalOrders: 1, totalSpent: 5000, lastOrder: "Today", status: "new", preferences: ["Skincare"], firstSeen: "Mar 2026" },
+  { id: 7, name: "Blessing Obi", phone: "+234 816 901 2345", email: "blessing@email.com", platform: "Facebook", totalOrders: 7, totalSpent: 98000, lastOrder: "5 days ago", status: "active", preferences: ["Fashion"], firstSeen: "Jan 2026" },
+  { id: 8, name: "Ibrahim Musa", phone: "+234 809 012 3456", email: "ibrahim@email.com", platform: "WhatsApp", totalOrders: 3, totalSpent: 41500, lastOrder: "2 weeks ago", status: "inactive", preferences: ["Hair Care"], firstSeen: "Jan 2026" },
+];
+
+const platformColors: Record<string, string> = {
+  WhatsApp: "bg-success/10 text-success",
+  Instagram: "bg-pink-100 text-pink-600",
+  Facebook: "bg-info/10 text-info",
+};
+
+const statusStyles: Record<string, string> = {
+  active: "bg-success/10 text-success",
+  inactive: "bg-muted text-muted-foreground",
+  new: "bg-primary/10 text-primary",
+};
+
+type SortKey = "name" | "totalSpent" | "totalOrders" | "lastOrder";
+
+export default function Customers() {
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortKey>("totalSpent");
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  const filtered = customers
+    .filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === "totalSpent") return b.totalSpent - a.totalSpent;
+      if (sortBy === "totalOrders") return b.totalOrders - a.totalOrders;
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return 0;
+    });
+
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter((c) => c.status === "active").length;
+  const totalLTV = customers.reduce((a, c) => a + c.totalSpent, 0);
+  const avgLTV = Math.round(totalLTV / totalCustomers);
+  const repeatBuyers = customers.filter((c) => c.totalOrders > 1).length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold">Customers</h1>
+          <p className="text-muted-foreground text-sm mt-1">Track repeat buyers, preferences, and lifetime value</p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Total Customers", value: totalCustomers, icon: Users, color: "text-primary" },
+          { label: "Active Customers", value: activeCustomers, icon: TrendingUp, color: "text-success" },
+          { label: "Repeat Buyers", value: repeatBuyers, icon: Star, color: "text-warning" },
+          { label: "Avg. Lifetime Value", value: `₦${avgLTV.toLocaleString()}`, icon: ShoppingCart, color: "text-info" },
+        ].map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08 }}
+            className="bg-card rounded-xl p-4 shadow-card"
+          >
+            <s.icon className={`h-5 w-5 ${s.color} mb-2`} />
+            <p className="font-heading text-xl md:text-2xl font-bold">{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Search and sort */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search customers…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <div className="flex gap-2">
+          {(["totalSpent", "totalOrders", "name"] as SortKey[]).map((key) => (
+            <Button
+              key={key}
+              variant={sortBy === key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortBy(key)}
+              className={sortBy === key ? "gradient-primary text-primary-foreground" : ""}
+            >
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1" />
+              {key === "totalSpent" ? "LTV" : key === "totalOrders" ? "Orders" : "Name"}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Customer table */}
+      <div className="bg-card rounded-xl shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted-foreground border-b">
+                <th className="px-4 py-3 font-medium">Customer</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Platform</th>
+                <th className="px-4 py-3 font-medium">Orders</th>
+                <th className="px-4 py-3 font-medium">Lifetime Value</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Last Order</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Preferences</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((c, i) => (
+                <motion.tr
+                  key={c.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-xs text-muted-foreground hidden sm:block">{c.phone}</div>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${platformColors[c.platform]}`}>
+                      {c.platform}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-medium">{c.totalOrders}</td>
+                  <td className="px-4 py-3 font-medium text-primary">₦{c.totalSpent.toLocaleString()}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{c.lastOrder}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <div className="flex gap-1 flex-wrap">
+                      {c.preferences.map((p) => (
+                        <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{p}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${statusStyles[c.status]}`}>
+                      {c.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedCustomer(c)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Customer detail modal */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 z-50 bg-foreground/40 flex items-center justify-center p-4" onClick={() => setSelectedCustomer(null)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card rounded-xl shadow-card-hover p-6 w-full max-w-md space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading font-semibold text-lg">{selectedCustomer.name}</h2>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${statusStyles[selectedCustomer.status]}`}>
+                {selectedCustomer.status}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted rounded-lg p-3 text-center">
+                <p className="font-heading text-xl font-bold text-primary">₦{selectedCustomer.totalSpent.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Lifetime Value</p>
+              </div>
+              <div className="bg-muted rounded-lg p-3 text-center">
+                <p className="font-heading text-xl font-bold">{selectedCustomer.totalOrders}</p>
+                <p className="text-xs text-muted-foreground">Total Orders</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span>{selectedCustomer.phone}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{selectedCustomer.email}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Primary Platform</span>
+                <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${platformColors[selectedCustomer.platform]}`}>{selectedCustomer.platform}</span>
+              </div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Customer Since</span><span>{selectedCustomer.firstSeen}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Last Order</span><span>{selectedCustomer.lastOrder}</span></div>
+            </div>
+
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">Preferences</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {selectedCustomer.preferences.map((p) => (
+                  <span key={p} className="text-xs px-2 py-1 rounded-lg bg-primary/10 text-primary font-medium">{p}</span>
+                ))}
+              </div>
+            </div>
+
+            <Button className="w-full" variant="outline" onClick={() => setSelectedCustomer(null)}>Close</Button>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
