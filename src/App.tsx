@@ -13,6 +13,7 @@ import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
+import BotConfig from "./pages/BotConfig";
 import Onboarding from "./pages/Onboarding";
 import About from "./pages/About";
 import Pricing from "./pages/Pricing";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/orders" element={<Orders />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/campaigns" element={<Campaigns />} />
+            <Route path="/bot-config" element={<BotConfig />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />

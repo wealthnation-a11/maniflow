@@ -121,14 +121,26 @@ export default function Settings() {
         </div>
         <div className="space-y-3">
           <div>
-            <Label className="text-sm">Paystack Public Key</Label>
+            <Label className="text-sm">Bank Name</Label>
+            <Input placeholder="e.g. GTBank" className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-sm">Account Number</Label>
+            <Input placeholder="e.g. 0123456789" className="mt-1 font-mono text-xs" />
+          </div>
+          <div>
+            <Label className="text-sm">Account Name</Label>
+            <Input placeholder="e.g. My Business Ltd" className="mt-1" />
+          </div>
+          <p className="text-xs text-muted-foreground">These details are shared by the AI bot after a price is agreed. You can also configure them in Bot Config.</p>
+          <div>
+            <Label className="text-sm mt-3">Paystack Public Key</Label>
             <Input placeholder="pk_live_..." className="mt-1 font-mono text-xs" />
           </div>
           <div>
             <Label className="text-sm">Flutterwave Public Key</Label>
             <Input placeholder="FLWPUBK-..." className="mt-1 font-mono text-xs" />
           </div>
-          <p className="text-xs text-muted-foreground">AI will auto-generate payment links using your connected provider.</p>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLoadingState } from "@/hooks/use-loading";
 import { InboxSkeleton } from "@/components/Skeletons";
+import { useBotConfig, generateAIResponse } from "@/store/botConfig";
 
 type ConvMessage = { role: "customer" | "ai" | "manual"; text: string; time: string };
 
@@ -72,25 +73,11 @@ const mockMessages: Message[] = [
   },
 ];
 
-const getAIResponse = (input: string, customerName: string): string => {
-  const lower = input.toLowerCase();
-  if (lower.includes("price") || lower.includes("how much") || lower.includes("cost")) {
-    return `Great question! Let me check our catalog for you. Our popular items are:\n\n• Hair Cream Set — ₦15,000\n• Shea Butter (1kg) — ₦8,500\n• Ankara Bundle — ₦22,000\n• Body Oil Set — ₦12,000\n\nWould you like to order any of these? 😊`;
-  }
-  if (lower.includes("order") || lower.includes("buy") || lower.includes("want") || lower.includes("yes")) {
-    return `Wonderful! 🎉 I've prepared your order. Here's your payment link:\n\npay.autoserve.co/${customerName.toLowerCase().replace(' ', '-')}-order\n\nOnce payment is confirmed, we'll ship it right away!`;
-  }
-  if (lower.includes("delivery") || lower.includes("ship")) {
-    return `We deliver within 2-3 business days across Nigeria! 🚚 Delivery is free for orders above ₦20,000. Would you like to place an order?`;
-  }
-  if (lower.includes("thank") || lower.includes("thanks")) {
-    return `You're welcome, ${customerName}! 🙏 Don't hesitate to reach out anytime. Happy shopping! ✨`;
-  }
-  return `Thanks for your message, ${customerName}! 😊 I'm here to help. You can ask about our products, pricing, or place an order directly. What would you like to know?`;
-};
+// AI response now powered by configurable bot engine
 
 export default function Inbox() {
   const loading = useLoadingState();
+  const { config } = useBotConfig();
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [selected, setSelected] = useState<Message>(mockMessages[0]);
   const [search, setSearch] = useState("");
@@ -142,7 +129,7 @@ export default function Inbox() {
       setTimeout(() => {
         const aiReply: ConvMessage = {
           role: "ai",
-          text: getAIResponse(userMsg, selected.customer),
+          text: generateAIResponse(userMsg, selected.customer, config, selected.id),
           time: now(),
         };
         setMessages((prev) =>
