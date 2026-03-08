@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 
 export default function Privacy() {
   return (
