@@ -10,6 +10,7 @@ import Inbox from "./pages/Inbox";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
+import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import About from "./pages/About";
