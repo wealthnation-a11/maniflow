@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Filter, Download, Search, X } from "lucide-react";
+import { Filter, Download, Search, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/lib/csv";
 import { toast } from "sonner";
 import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
+import InvoiceDialog from "@/components/InvoiceDialog";
 
 const orders = [
   { id: "#ORD-001", customer: "Amina Bello", phone: "+234 812 345 6789", product: "Hair Cream Set", amount: "₦15,000", amountNum: 15000, platform: "WhatsApp", status: "delivered", payment: "paid" },
