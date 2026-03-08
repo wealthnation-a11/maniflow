@@ -21,7 +21,7 @@ export default function Onboarding() {
 
   const steps = [
     {
-      title: "Welcome to AutoServe! 🚀",
+      title: "Welcome to ManyFlow! 🚀",
       subtitle: "Let's get your business automated in under 5 minutes",
     },
     {
