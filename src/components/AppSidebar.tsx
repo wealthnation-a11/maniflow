@@ -10,7 +10,6 @@ import {
   Megaphone,
   Menu,
   X,
-  Zap,
   LogOut,
   Settings,
   Bell,
