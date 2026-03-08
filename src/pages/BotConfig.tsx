@@ -135,7 +135,7 @@ export default function BotConfig() {
       </div>
 
       <Tabs defaultValue="qa" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="qa" className="text-xs sm:text-sm">
             <MessageSquare className="h-4 w-4 mr-1 hidden sm:inline" /> Q&A
           </TabsTrigger>
@@ -147,6 +147,9 @@ export default function BotConfig() {
           </TabsTrigger>
           <TabsTrigger value="settings" className="text-xs sm:text-sm">
             <Settings2 className="h-4 w-4 mr-1 hidden sm:inline" /> General
+          </TabsTrigger>
+          <TabsTrigger value="preview" className="text-xs sm:text-sm">
+            <TestTube2 className="h-4 w-4 mr-1 hidden sm:inline" /> Test
           </TabsTrigger>
         </TabsList>
 
