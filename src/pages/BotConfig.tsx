@@ -135,21 +135,21 @@ export default function BotConfig() {
       </div>
 
       <Tabs defaultValue="qa" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="qa" className="text-xs sm:text-sm">
-            <MessageSquare className="h-4 w-4 mr-1 hidden sm:inline" /> Q&A
+        <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsTrigger value="qa" className="text-[10px] sm:text-sm px-1 sm:px-3 py-2">
+            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" /> <span className="hidden sm:inline">Q&A</span>
           </TabsTrigger>
-          <TabsTrigger value="negotiation" className="text-xs sm:text-sm">
-            <DollarSign className="h-4 w-4 mr-1 hidden sm:inline" /> Pricing
+          <TabsTrigger value="negotiation" className="text-[10px] sm:text-sm px-1 sm:px-3 py-2">
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" /> <span className="hidden sm:inline">Pricing</span>
           </TabsTrigger>
-          <TabsTrigger value="payment" className="text-xs sm:text-sm">
-            <CreditCard className="h-4 w-4 mr-1 hidden sm:inline" /> Payment
+          <TabsTrigger value="payment" className="text-[10px] sm:text-sm px-1 sm:px-3 py-2">
+            <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" /> <span className="hidden sm:inline">Payment</span>
           </TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm">
-            <Settings2 className="h-4 w-4 mr-1 hidden sm:inline" /> General
+          <TabsTrigger value="settings" className="text-[10px] sm:text-sm px-1 sm:px-3 py-2">
+            <Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" /> <span className="hidden sm:inline">General</span>
           </TabsTrigger>
-          <TabsTrigger value="preview" className="text-xs sm:text-sm">
-            <TestTube2 className="h-4 w-4 mr-1 hidden sm:inline" /> Test
+          <TabsTrigger value="preview" className="text-[10px] sm:text-sm px-1 sm:px-3 py-2">
+            <TestTube2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1" /> <span className="hidden sm:inline">Test</span>
           </TabsTrigger>
         </TabsList>
 
