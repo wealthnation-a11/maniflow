@@ -21,7 +21,7 @@ export default function Terms() {
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">3. User Responsibilities</h2>
           <p>You are responsible for the accuracy of your product catalog, maintaining appropriate social platform connections, and complying with platform-specific policies.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">4. Payment Terms</h2>
-          <p>Subscription fees are billed monthly. Payment processing via Paystack or Flutterwave is subject to their respective terms. AutoServe charges no additional transaction fees.</p>
+          <p>Subscription fees are billed monthly. Payment processing via Paystack or Flutterwave is subject to their respective terms. ManyFlow charges no additional transaction fees.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">5. AI Disclaimer</h2>
           <p>AI-generated replies are designed to be helpful and accurate, but we recommend monitoring conversations. AutoServe is not liable for AI response errors.</p>
           <h2 className="font-heading text-lg font-semibold text-foreground pt-4">6. Termination</h2>
