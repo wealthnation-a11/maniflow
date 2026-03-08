@@ -144,7 +144,7 @@ export default function Landing() {
       <section className="gradient-hero text-primary-foreground py-20 md:py-32 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 text-sm font-medium mb-6">
-            <Bot className="h-4 w-4" /> AI-Powered Business Automation
+            <Bot className="h-4 w-4" /> Many Channels, One Flow
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="font-heading text-4xl md:text-6xl font-bold leading-tight mb-6">
             Sell on Autopilot<br /><span className="text-primary">Across Every Channel</span>
