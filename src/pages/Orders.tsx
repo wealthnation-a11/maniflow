@@ -41,6 +41,7 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [invoiceOrder, setInvoiceOrder] = useState<typeof orders[0] | null>(null);
 
   if (loading) return <TableSkeleton />;
 
