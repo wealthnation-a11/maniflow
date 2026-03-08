@@ -22,6 +22,33 @@ export default function Settings() {
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
+  const { logoUrl, businessName } = useBusiness();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File too large. Max 2MB.");
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
+      toast.error("Only PNG, JPG, or WebP files allowed.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      setLogoUrl(url);
+      toast.success("Logo uploaded successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoUrl(null);
+    toast.success("Logo removed");
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
