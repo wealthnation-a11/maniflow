@@ -329,7 +329,7 @@ export default function Landing() {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="h-6 w-6 text-primary" />
-                <span className="font-heading font-bold text-lg">AutoServe</span>
+                <span className="font-heading font-bold text-lg">ManyFlow</span>
               </div>
               <p className="text-sm text-muted-foreground">AI-powered business automation for African businesses and beyond.</p>
             </div>
