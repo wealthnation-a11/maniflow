@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Zap, Search, ChevronRight } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
+import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
