@@ -6,6 +6,7 @@ import {
   Package,
   ShoppingCart,
   Users,
+  Megaphone,
   Menu,
   X,
   Zap,
@@ -20,6 +21,7 @@ const navItems = [
   { label: "Products", icon: Package, path: "/products" },
   { label: "Orders", icon: ShoppingCart, path: "/orders", badge: 3 },
   { label: "Customers", icon: Users, path: "/customers" },
+  { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
 ];
 
 export default function AppSidebar() {
