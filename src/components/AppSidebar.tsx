@@ -16,6 +16,7 @@ import {
   Settings,
   Bell,
   Bot,
+  Sparkles,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import ManyFlowLogo from "./ManyFlowLogo";
@@ -24,6 +25,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", badgeKey: null },
   { label: "Inbox", icon: MessageSquare, path: "/inbox", badgeKey: "inbox" as const },
   { label: "Bot Config", icon: Bot, path: "/bot-config", badgeKey: null },
+  { label: "AI Assistant", icon: Sparkles, path: "/chat", badgeKey: null },
   { label: "Products", icon: Package, path: "/products", badgeKey: null },
   { label: "Orders", icon: ShoppingCart, path: "/orders", badgeKey: null },
   { label: "Customers", icon: Users, path: "/customers", badgeKey: null },
