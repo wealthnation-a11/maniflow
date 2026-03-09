@@ -10,14 +10,7 @@ import { TableSkeleton } from "@/components/Skeletons";
 import InvoiceDialog from "@/components/InvoiceDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const orders = [
-  { id: "#ORD-001", customer: "Amina Bello", phone: "+234 812 345 6789", product: "Hair Cream Set", amount: "₦15,000", amountNum: 15000, platform: "WhatsApp", status: "delivered", payment: "paid" },
-  { id: "#ORD-002", customer: "Chidi Okafor", phone: "+234 803 456 7890", product: "Shea Butter (1kg)", amount: "₦8,500", amountNum: 8500, platform: "Instagram", status: "processing", payment: "pending" },
-  { id: "#ORD-003", customer: "Fatima Yusuf", phone: "+234 706 567 8901", product: "Ankara Bundle", amount: "₦22,000", amountNum: 22000, platform: "Facebook", status: "shipped", payment: "paid" },
-  { id: "#ORD-004", customer: "Emeka Nwachukwu", phone: "+234 901 678 9012", product: "Body Oil Set", amount: "₦12,000", amountNum: 12000, platform: "WhatsApp", status: "pending", payment: "failed" },
-  { id: "#ORD-005", customer: "Ngozi Eze", phone: "+234 810 789 0123", product: "Hair Cream Set", amount: "₦15,000", amountNum: 15000, platform: "Instagram", status: "delivered", payment: "paid" },
-  { id: "#ORD-006", customer: "Yusuf Abdullahi", phone: "+234 805 890 1234", product: "Shea Butter (500g)", amount: "₦5,000", amountNum: 5000, platform: "WhatsApp", status: "processing", payment: "paid" },
-];
+const orders: { id: string; customer: string; phone: string; product: string; amount: string; amountNum: number; platform: string; status: string; payment: string }[] = [];
 
 const statusStyles: Record<string, string> = {
   delivered: "bg-success/10 text-success",
