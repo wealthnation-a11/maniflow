@@ -68,8 +68,8 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md text-center">
           <div className="flex justify-center mb-6">
-            <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <CheckCircle className="h-8 w-8 text-primary" />
             </div>
           </div>
           <h1 className="font-heading text-2xl font-bold mb-2">Password Updated!</h1>
