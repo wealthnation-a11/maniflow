@@ -46,13 +46,13 @@ export function useBotConfigDB() {
         });
       } else {
         // Create default config in DB
-        await supabase.from("bot_configs").insert({
+        await supabase.from("bot_configs").insert([{
           user_id: user.id,
-          qa_rules: DEFAULT_CONFIG.qaRules as unknown as Record<string, unknown>[],
-          negotiation_rules: DEFAULT_CONFIG.negotiationRules as unknown as Record<string, unknown>[],
-          payment_details: DEFAULT_CONFIG.paymentDetails as unknown as Record<string, unknown>,
-          bot_settings: DEFAULT_CONFIG.botSettings as unknown as Record<string, unknown>,
-        });
+          qa_rules: JSON.parse(JSON.stringify(DEFAULT_CONFIG.qaRules)) as Json,
+          negotiation_rules: JSON.parse(JSON.stringify(DEFAULT_CONFIG.negotiationRules)) as Json,
+          payment_details: JSON.parse(JSON.stringify(DEFAULT_CONFIG.paymentDetails)) as Json,
+          bot_settings: JSON.parse(JSON.stringify(DEFAULT_CONFIG.botSettings)) as Json,
+        }]);
       }
       setLoading(false);
     };
