@@ -21,10 +21,10 @@ import ManyFlowLogo from "./ManyFlowLogo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Inbox", icon: MessageSquare, path: "/inbox", badge: 12 },
+  { label: "Inbox", icon: MessageSquare, path: "/inbox" },
   { label: "Bot Config", icon: Bot, path: "/bot-config" },
   { label: "Products", icon: Package, path: "/products" },
-  { label: "Orders", icon: ShoppingCart, path: "/orders", badge: 3 },
+  { label: "Orders", icon: ShoppingCart, path: "/orders" },
   { label: "Customers", icon: Users, path: "/customers" },
   { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
   { label: "Notifications", icon: Bell, path: "/notifications" },
@@ -97,11 +97,6 @@ export default function AppSidebar() {
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 <span className="flex-1">{item.label}</span>
-                {item.badge && (
-                  <span className="gradient-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
               </Link>
             );
           })}
