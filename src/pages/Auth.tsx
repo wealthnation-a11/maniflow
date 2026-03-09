@@ -61,15 +61,35 @@ export default function Auth() {
               <div>
                 <Label htmlFor="business" className="text-sm font-medium">Business Name</Label>
                 <div className="relative mt-1">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="business" placeholder="Your Business Name" className="pl-10" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input 
+                    id="business" 
+                    name="business"
+                    placeholder="Your Business Name" 
+                    className="pl-10" 
+                    value={businessName} 
+                    onChange={(e) => setBusinessName(e.target.value)} 
+                    autoComplete="organization"
+                    autoCapitalize="words"
+                    required 
+                  />
                 </div>
               </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
                 <div className="relative mt-1">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="phone" placeholder="+234 800 000 0000" className="pl-10" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input 
+                    id="phone" 
+                    name="phone"
+                    type="tel"
+                    inputMode="tel"
+                    placeholder="+234 800 000 0000" 
+                    className="pl-10" 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                    autoComplete="tel"
+                  />
                 </div>
               </div>
             </>
@@ -77,15 +97,41 @@ export default function Auth() {
           <div>
             <Label htmlFor="email" className="text-sm font-medium">Email</Label>
             <div className="relative mt-1">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="you@business.com" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input 
+                id="email" 
+                name="email"
+                type="email" 
+                inputMode="email"
+                placeholder="you@business.com" 
+                className="pl-10" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                required 
+              />
             </div>
           </div>
           <div>
             <Label htmlFor="password" className="text-sm font-medium">Password</Label>
             <div className="relative mt-1">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input id="password" type="password" placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input 
+                id="password" 
+                name="password"
+                type="password" 
+                placeholder="••••••••" 
+                className="pl-10" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                autoCapitalize="none"
+                autoCorrect="off"
+                required 
+                minLength={6} 
+              />
             </div>
           </div>
 
