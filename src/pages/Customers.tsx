@@ -72,7 +72,7 @@ export default function Customers() {
   const totalCustomers = customers.length;
   const activeCustomers = customers.filter((c) => c.status === "active").length;
   const totalLTV = customers.reduce((a, c) => a + c.totalSpent, 0);
-  const avgLTV = Math.round(totalLTV / totalCustomers);
+  const avgLTV = totalCustomers > 0 ? Math.round(totalLTV / totalCustomers) : 0;
   const repeatBuyers = customers.filter((c) => c.totalOrders > 1).length;
 
   const handleExport = () => {
