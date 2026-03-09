@@ -12,6 +12,8 @@ import { setLogoUrl, setBusinessName } from "@/store/businessStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type PlatformConnection = {
   id: string;
