@@ -121,13 +121,13 @@ export default function AppSidebar() {
             <Settings className="h-5 w-5" />
             <span>Settings</span>
           </Link>
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full"
           >
             <LogOut className="h-5 w-5" />
             <span>Sign Out</span>
-          </Link>
+          </button>
         </div>
       </aside>
     </>
