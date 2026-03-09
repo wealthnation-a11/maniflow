@@ -24,18 +24,7 @@ interface Notification {
   read: boolean;
 }
 
-const initialNotifications: Notification[] = [
-  { id: 1, type: "message", title: "New message", text: "Amina Bello sent a message on WhatsApp", time: "2m ago", read: false },
-  { id: 2, type: "payment", title: "Payment confirmed", text: "₦22,000 received from Fatima Yusuf", time: "15m ago", read: false },
-  { id: 3, type: "order", title: "New order captured", text: "Order #ORD-007 captured by AI assistant", time: "1h ago", read: true },
-  { id: 4, type: "system", title: "Follow-up sent", text: "Auto follow-up sent to Chidi Okafor (abandoned order)", time: "2h ago", read: true },
-  { id: 5, type: "payment", title: "Payment failed", text: "₦12,000 payment from Emeka Nwachukwu failed", time: "3h ago", read: false },
-  { id: 6, type: "message", title: "New message", text: "Blessing Adekunle asked about delivery on Instagram", time: "4h ago", read: true },
-  { id: 7, type: "order", title: "Order shipped", text: "Order #ORD-005 marked as shipped", time: "5h ago", read: true },
-  { id: 8, type: "system", title: "Bot config updated", text: "Negotiation rules updated for Hair Cream Set", time: "6h ago", read: true },
-  { id: 9, type: "payment", title: "Payment confirmed", text: "₦15,000 received from Amina Bello", time: "1d ago", read: true },
-  { id: 10, type: "message", title: "New message", text: "Kemi Adeyemi inquired about bulk pricing on Facebook", time: "1d ago", read: true },
-];
+const initialNotifications: Notification[] = [];
 
 const categoryIcons: Record<string, typeof Bell> = {
   message: MessageSquare,

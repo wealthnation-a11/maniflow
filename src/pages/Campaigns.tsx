@@ -26,12 +26,7 @@ type Campaign = {
   sentAt?: string;
 };
 
-const mockCampaigns: Campaign[] = [
-  { id: 1, name: "March Flash Sale 🔥", message: "Hi {name}! 🎉 Flash Sale Alert!\n\nGet 20% OFF all Hair Care products this weekend only!\n\nUse code: FLASH20\n\nShop now before stock runs out! 💇‍♀️", platforms: ["WhatsApp", "Instagram"], audience: "All Customers", status: "sent", recipients: 156, opened: 134, replied: 42, sentAt: "Mar 5, 2026" },
-  { id: 2, name: "New Arrivals Alert", message: "Hey {name}! 👋\n\nWe just restocked our best sellers:\n\n✨ Ankara Bundle (6 yards) — ₦22,000\n✨ Whipped Shea Butter — ₦6,500\n\nOrder now before they sell out! 🛍️", platforms: ["WhatsApp", "Facebook"], audience: "Repeat Buyers", status: "active", recipients: 89, opened: 72, replied: 28, sentAt: "Mar 7, 2026" },
-  { id: 3, name: "Win-Back Campaign", message: "Hi {name}, we miss you! 💛\n\nIt's been a while since your last order. Here's a special 15% discount just for you:\n\nCode: COMEBACK15\n\nValid for 48 hours only! ⏰", platforms: ["WhatsApp"], audience: "Inactive Customers", status: "scheduled", recipients: 34, opened: 0, replied: 0, scheduledAt: "Mar 10, 2026" },
-  { id: 4, name: "Valentine's Bundle Promo", message: "Hey {name}! 💕\n\nTreat yourself or someone special with our Valentine's Bundle:\n\n🎁 Body Oil Set + Hair Cream Set — ₦24,000 (save ₦3,000!)\n\nLimited stock available!", platforms: ["WhatsApp", "Instagram", "Facebook"], audience: "All Customers", status: "sent", recipients: 201, opened: 178, replied: 67, sentAt: "Feb 12, 2026" },
-];
+const mockCampaigns: Campaign[] = [];
 
 const audiences = ["All Customers", "Repeat Buyers", "Inactive Customers", "New Customers", "High-Value Customers"];
 const platformOptions = [

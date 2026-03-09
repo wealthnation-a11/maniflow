@@ -73,10 +73,10 @@ export default function Orders() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total Orders", value: "184" },
-          { label: "Paid", value: "156" },
-          { label: "Pending", value: "21" },
-          { label: "Failed", value: "7" },
+          { label: "Total Orders", value: orders.length },
+          { label: "Paid", value: orders.filter(o => o.payment === "paid").length },
+          { label: "Pending", value: orders.filter(o => o.payment === "pending").length },
+          { label: "Failed", value: orders.filter(o => o.payment === "failed").length },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="bg-card rounded-xl p-3 sm:p-4 shadow-card text-center">
             <p className="font-heading text-lg sm:text-2xl font-bold">{s.value}</p>

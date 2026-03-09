@@ -47,12 +47,7 @@ type Product = {
   variants: Variant[];
 };
 
-const initialProducts: Product[] = [
-  { id: 1, name: "Hair Cream Set", price: "₦15,000", priceNum: 15000, description: "Leave-in conditioner, edge control & deep treatment mask", image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=200&h=200&fit=crop", stock: 24, category: "Hair Care", variants: [{ id: 1, name: "Small (100ml)", price: "8000", stock: "12" }, { id: 2, name: "Large (250ml)", price: "15000", stock: "12" }] },
-  { id: 2, name: "Raw Shea Butter (1kg)", price: "₦8,500", priceNum: 8500, description: "100% pure unrefined shea butter from Northern Ghana", image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=200&h=200&fit=crop", stock: 50, category: "Skincare", variants: [] },
-  { id: 3, name: "Ankara Bundle (6 yards)", price: "₦22,000", priceNum: 22000, description: "Premium Ankara fabric, vibrant patterns, 100% cotton", image: "https://images.unsplash.com/photo-1590735213920-68192a487bc2?w=200&h=200&fit=crop", stock: 12, category: "Fashion", variants: [{ id: 1, name: "3 yards", price: "12000", stock: "8" }, { id: 2, name: "6 yards", price: "22000", stock: "4" }] },
-  { id: 4, name: "Body Oil Set", price: "₦12,000", priceNum: 12000, description: "Coconut oil, argan oil, and vitamin E blend set", image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=200&h=200&fit=crop", stock: 35, category: "Skincare", variants: [] },
-];
+const initialProducts: Product[] = [];
 
 export default function Products() {
   const loading = useLoadingState();

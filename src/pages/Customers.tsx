@@ -23,16 +23,7 @@ type Customer = {
   firstSeen: string;
 };
 
-const customers: Customer[] = [
-  { id: 1, name: "Amina Bello", phone: "+234 812 345 6789", email: "amina@email.com", platform: "WhatsApp", totalOrders: 12, totalSpent: 185000, lastOrder: "2 days ago", status: "active", preferences: ["Hair Care", "Skincare"], firstSeen: "Jan 2026" },
-  { id: 2, name: "Chidi Okafor", phone: "+234 803 456 7890", email: "chidi@email.com", platform: "Instagram", totalOrders: 5, totalSpent: 62500, lastOrder: "1 week ago", status: "active", preferences: ["Skincare"], firstSeen: "Feb 2026" },
-  { id: 3, name: "Fatima Yusuf", phone: "+234 706 567 8901", email: "fatima@email.com", platform: "Facebook", totalOrders: 8, totalSpent: 176000, lastOrder: "3 days ago", status: "active", preferences: ["Fashion", "Hair Care"], firstSeen: "Dec 2025" },
-  { id: 4, name: "Emeka Nwachukwu", phone: "+234 901 678 9012", email: "emeka@email.com", platform: "WhatsApp", totalOrders: 2, totalSpent: 24000, lastOrder: "3 weeks ago", status: "inactive", preferences: ["Skincare"], firstSeen: "Feb 2026" },
-  { id: 5, name: "Ngozi Eze", phone: "+234 810 789 0123", email: "ngozi@email.com", platform: "Instagram", totalOrders: 15, totalSpent: 225000, lastOrder: "1 day ago", status: "active", preferences: ["Hair Care", "Skincare", "Fashion"], firstSeen: "Nov 2025" },
-  { id: 6, name: "Yusuf Abdullahi", phone: "+234 805 890 1234", email: "yusuf@email.com", platform: "WhatsApp", totalOrders: 1, totalSpent: 5000, lastOrder: "Today", status: "new", preferences: ["Skincare"], firstSeen: "Mar 2026" },
-  { id: 7, name: "Blessing Obi", phone: "+234 816 901 2345", email: "blessing@email.com", platform: "Facebook", totalOrders: 7, totalSpent: 98000, lastOrder: "5 days ago", status: "active", preferences: ["Fashion"], firstSeen: "Jan 2026" },
-  { id: 8, name: "Ibrahim Musa", phone: "+234 809 012 3456", email: "ibrahim@email.com", platform: "WhatsApp", totalOrders: 3, totalSpent: 41500, lastOrder: "2 weeks ago", status: "inactive", preferences: ["Hair Care"], firstSeen: "Jan 2026" },
-];
+const customers: Customer[] = [];
 
 const platformColors: Record<string, string> = {
   WhatsApp: "bg-success/10 text-success",
