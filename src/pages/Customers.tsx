@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
 import { useIsMobile } from "@/hooks/use-mobile";
+import EmptyState from "@/components/EmptyState";
 
 type Customer = {
   id: number;
