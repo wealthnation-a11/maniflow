@@ -12,7 +12,7 @@ import { generateAIResponse, type QARule, type NegotiationRule } from "@/store/b
 import { useBotConfigDB } from "@/hooks/useBotConfigDB";
 
 export default function BotConfig() {
-  const { config, setConfig } = useBotConfig();
+  const { config, setConfig, loading: configLoading } = useBotConfigDB();
   const [newKeyword, setNewKeyword] = useState("");
 
   // ── Chat Preview State ──

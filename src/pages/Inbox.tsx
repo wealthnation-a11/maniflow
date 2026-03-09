@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLoadingState } from "@/hooks/use-loading";
 import { InboxSkeleton } from "@/components/Skeletons";
-import { useBotConfig, generateAIResponse } from "@/store/botConfig";
+import { useBotConfigDB } from "@/hooks/useBotConfigDB";
+import { generateAIResponse } from "@/store/botConfig";
+import { useConversations, useMessages, type Conversation } from "@/hooks/useConversations";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type ConvMessage = { role: "customer" | "ai" | "manual"; text: string; time: string };
