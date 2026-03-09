@@ -104,7 +104,7 @@ export default function Settings() {
       .from("platform_connections")
       .delete()
       .eq("user_id", user.id)
-      .eq("platform", platform);
+      .eq("platform", platform as "whatsapp" | "instagram" | "facebook");
     setConnections((prev) => prev.filter((c) => c.platform !== platform));
     toast.success(`${platform} disconnected`);
     setDisconnectPlatform(null);
