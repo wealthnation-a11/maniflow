@@ -14,6 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_configs: {
+        Row: {
+          bot_settings: Json
+          created_at: string
+          id: string
+          negotiation_rules: Json
+          payment_details: Json
+          qa_rules: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_settings?: Json
+          created_at?: string
+          id?: string
+          negotiation_rules?: Json
+          payment_details?: Json
+          qa_rules?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_settings?: Json
+          created_at?: string
+          id?: string
+          negotiation_rules?: Json
+          payment_details?: Json
+          qa_rules?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          customer_platform_id: string | null
+          id: string
+          last_message_at: string
+          platform: Database["public"]["Enums"]["platform_type"]
+          platform_conversation_id: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          tags: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          customer_platform_id?: string | null
+          id?: string
+          last_message_at?: string
+          platform: Database["public"]["Enums"]["platform_type"]
+          platform_conversation_id?: string | null
+          status?: Database["public"]["Enums"]["conversation_status"]
+          tags?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          customer_platform_id?: string | null
+          id?: string
+          last_message_at?: string
+          platform?: Database["public"]["Enums"]["platform_type"]
+          platform_conversation_id?: string | null
+          status?: Database["public"]["Enums"]["conversation_status"]
+          tags?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          platform_message_id: string | null
+          role: Database["public"]["Enums"]["message_role"]
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          platform_message_id?: string | null
+          role: Database["public"]["Enums"]["message_role"]
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          platform_message_id?: string | null
+          role?: Database["public"]["Enums"]["message_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_connections: {
+        Row: {
+          access_token: string
+          business_account_id: string | null
+          connected_at: string
+          id: string
+          page_id: string | null
+          phone_number_id: string | null
+          platform: Database["public"]["Enums"]["platform_type"]
+          updated_at: string
+          user_id: string
+          webhook_verify_token: string
+        }
+        Insert: {
+          access_token: string
+          business_account_id?: string | null
+          connected_at?: string
+          id?: string
+          page_id?: string | null
+          phone_number_id?: string | null
+          platform: Database["public"]["Enums"]["platform_type"]
+          updated_at?: string
+          user_id: string
+          webhook_verify_token?: string
+        }
+        Update: {
+          access_token?: string
+          business_account_id?: string | null
+          connected_at?: string
+          id?: string
+          page_id?: string | null
+          phone_number_id?: string | null
+          platform?: Database["public"]["Enums"]["platform_type"]
+          updated_at?: string
+          user_id?: string
+          webhook_verify_token?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ai_tone: string | null
@@ -58,7 +207,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      conversation_status: "active" | "closed" | "archived"
+      message_role: "customer" | "ai" | "manual"
+      platform_type: "whatsapp" | "instagram" | "facebook"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -185,6 +336,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      conversation_status: ["active", "closed", "archived"],
+      message_role: ["customer", "ai", "manual"],
+      platform_type: ["whatsapp", "instagram", "facebook"],
+    },
   },
 } as const
