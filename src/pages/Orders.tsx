@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Download, Search, X, FileText } from "lucide-react";
+import { Download, Search, X, FileText, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/lib/csv";
@@ -9,6 +9,7 @@ import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
 import InvoiceDialog from "@/components/InvoiceDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import EmptyState from "@/components/EmptyState";
 
 const orders: { id: string; customer: string; phone: string; product: string; amount: string; amountNum: number; platform: string; status: string; payment: string }[] = [];
 
@@ -57,6 +58,24 @@ export default function Orders() {
 
   const hasFilters = statusFilter !== "all" || platformFilter !== "all" || paymentFilter !== "all" || search;
   const clearFilters = () => { setStatusFilter("all"); setPlatformFilter("all"); setPaymentFilter("all"); setSearch(""); };
+
+  if (orders.length === 0) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <div>
+          <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Orders</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Track all orders and payments</p>
+        </div>
+        <div className="bg-card rounded-xl shadow-card">
+          <EmptyState
+            icon={ShoppingCart}
+            title="No orders yet"
+            description="Orders will appear here when customers complete purchases through your connected platforms."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
