@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useBusiness } from "@/hooks/use-business";
 import { useAuth } from "@/hooks/useAuth";
+import { useSidebarCounts } from "@/hooks/useSidebarCounts";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -20,14 +21,14 @@ import { ThemeToggle } from "./ThemeToggle";
 import ManyFlowLogo from "./ManyFlowLogo";
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Inbox", icon: MessageSquare, path: "/inbox" },
-  { label: "Bot Config", icon: Bot, path: "/bot-config" },
-  { label: "Products", icon: Package, path: "/products" },
-  { label: "Orders", icon: ShoppingCart, path: "/orders" },
-  { label: "Customers", icon: Users, path: "/customers" },
-  { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
-  { label: "Notifications", icon: Bell, path: "/notifications" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", badgeKey: null },
+  { label: "Inbox", icon: MessageSquare, path: "/inbox", badgeKey: "inbox" as const },
+  { label: "Bot Config", icon: Bot, path: "/bot-config", badgeKey: null },
+  { label: "Products", icon: Package, path: "/products", badgeKey: null },
+  { label: "Orders", icon: ShoppingCart, path: "/orders", badgeKey: null },
+  { label: "Customers", icon: Users, path: "/customers", badgeKey: null },
+  { label: "Campaigns", icon: Megaphone, path: "/campaigns", badgeKey: null },
+  { label: "Notifications", icon: Bell, path: "/notifications", badgeKey: "notifications" as const },
 ];
 
 export default function AppSidebar() {
@@ -36,10 +37,16 @@ export default function AppSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logoUrl, businessName } = useBusiness();
   const { signOut } = useAuth();
+  const counts = useSidebarCounts();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const getBadgeCount = (badgeKey: string | null): number => {
+    if (!badgeKey) return 0;
+    return counts[badgeKey as keyof typeof counts] ?? 0;
   };
 
   return (
@@ -53,7 +60,11 @@ export default function AppSidebar() {
         <div className="flex items-center gap-2">
           <Link to="/inbox" className="relative p-1 text-sidebar-foreground">
             <Bell className="h-5 w-5" />
-            <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full gradient-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">3</span>
+            {counts.inbox > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full gradient-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                {counts.inbox > 99 ? "99+" : counts.inbox}
+              </span>
+            )}
           </Link>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-sidebar-foreground p-1">
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -84,6 +95,7 @@ export default function AppSidebar() {
         <nav className="flex-1 py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const active = location.pathname === item.path;
+            const badgeCount = getBadgeCount(item.badgeKey);
             return (
               <Link
                 key={item.path}
@@ -97,6 +109,11 @@ export default function AppSidebar() {
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 <span className="flex-1">{item.label}</span>
+                {badgeCount > 0 && (
+                  <span className="gradient-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                    {badgeCount > 99 ? "99+" : badgeCount}
+                  </span>
+                )}
               </Link>
             );
           })}
