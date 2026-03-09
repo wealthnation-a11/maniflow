@@ -12,6 +12,8 @@ import { setLogoUrl, setBusinessName } from "@/store/businessStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type PlatformConnection = {
   id: string;
@@ -30,6 +32,103 @@ const platformMeta = [
 ];
 
 export default function Settings() {
+function ConnectFormContent({
+  connectDialog,
+  connectForm,
+  setConnectForm,
+  connecting,
+  webhookUrl,
+  copyToClipboard,
+  onCancel,
+  onConnect,
+}: {
+  connectDialog: string | null;
+  connectForm: { access_token: string; page_id: string; phone_number_id: string };
+  setConnectForm: (v: any) => void;
+  connecting: boolean;
+  webhookUrl: (platform: string) => string;
+  copyToClipboard: (text: string) => void;
+  onCancel: () => void;
+  onConnect: () => void;
+}) {
+  return (
+    <div className="space-y-4 mt-2 px-1">
+      {connectDialog && (
+        <div className="bg-muted rounded-lg p-3">
+          <Label className="text-xs text-muted-foreground">Webhook URL (paste into Meta Dashboard)</Label>
+          <div className="flex items-center gap-2 mt-1">
+            <code className="text-[10px] sm:text-xs bg-background px-2 py-1 rounded flex-1 truncate border">
+              {webhookUrl(connectDialog)}
+            </code>
+            <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0" onClick={() => copyToClipboard(webhookUrl(connectDialog))}>
+              <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {connectDialog === "whatsapp" && (
+        <div>
+          <Label className="text-xs sm:text-sm">Phone Number ID</Label>
+          <Input
+            className="mt-1 font-mono text-xs"
+            placeholder="e.g. 123456789012345"
+            value={connectForm.phone_number_id}
+            onChange={(e) => setConnectForm({ ...connectForm, phone_number_id: e.target.value })}
+          />
+        </div>
+      )}
+
+      {(connectDialog === "instagram" || connectDialog === "facebook") && (
+        <div>
+          <Label className="text-xs sm:text-sm">Page ID</Label>
+          <Input
+            className="mt-1 font-mono text-xs"
+            placeholder="e.g. 123456789012345"
+            value={connectForm.page_id}
+            onChange={(e) => setConnectForm({ ...connectForm, page_id: e.target.value })}
+          />
+        </div>
+      )}
+
+      <div>
+        <Label className="text-xs sm:text-sm">Access Token</Label>
+        <Input
+          className="mt-1 font-mono text-xs"
+          type="password"
+          placeholder="Permanent page access token"
+          value={connectForm.access_token}
+          onChange={(e) => setConnectForm({ ...connectForm, access_token: e.target.value })}
+        />
+      </div>
+
+      <div className="bg-muted/50 rounded-lg p-3">
+        <p className="text-[10px] text-muted-foreground">
+          📋 <strong>Setup steps:</strong><br />
+          1. Go to <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline">developers.facebook.com</a><br />
+          2. Create or select your Meta App<br />
+          3. Add the {connectDialog === "whatsapp" ? "WhatsApp" : "Messenger"} product<br />
+          4. Copy the webhook URL above into your webhook settings<br />
+          5. Paste your access token and {connectDialog === "whatsapp" ? "Phone Number ID" : "Page ID"} below
+        </p>
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button
+          size="sm"
+          className="gradient-primary text-primary-foreground"
+          disabled={!connectForm.access_token || connecting}
+          onClick={onConnect}
+        >
+          {connecting ? "Connecting…" : "Connect"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
@@ -337,91 +436,50 @@ export default function Settings() {
         confirmLabel="Disconnect"
       />
 
-      {/* Connect platform dialog */}
-      <Dialog open={connectDialog !== null} onOpenChange={(open) => !open && setConnectDialog(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Connect {platformMeta.find((p) => p.key === connectDialog)?.name}</DialogTitle>
-            <DialogDescription>
-              Enter your API credentials to connect. You'll get these from your Meta Developer dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            {/* Webhook URL */}
-            {connectDialog && (
-              <div className="bg-muted rounded-lg p-3">
-                <Label className="text-xs text-muted-foreground">Webhook URL (paste into Meta Dashboard)</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="text-xs bg-background px-2 py-1 rounded flex-1 truncate border">
-                    {webhookUrl(connectDialog)}
-                  </code>
-                  <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyToClipboard(webhookUrl(connectDialog!))}>
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {connectDialog === "whatsapp" && (
-              <div>
-                <Label className="text-xs sm:text-sm">Phone Number ID</Label>
-                <Input
-                  className="mt-1 font-mono text-xs"
-                  placeholder="e.g. 123456789012345"
-                  value={connectForm.phone_number_id}
-                  onChange={(e) => setConnectForm({ ...connectForm, phone_number_id: e.target.value })}
-                />
-              </div>
-            )}
-
-            {(connectDialog === "instagram" || connectDialog === "facebook") && (
-              <div>
-                <Label className="text-xs sm:text-sm">Page ID</Label>
-                <Input
-                  className="mt-1 font-mono text-xs"
-                  placeholder="e.g. 123456789012345"
-                  value={connectForm.page_id}
-                  onChange={(e) => setConnectForm({ ...connectForm, page_id: e.target.value })}
-                />
-              </div>
-            )}
-
-            <div>
-              <Label className="text-xs sm:text-sm">Access Token</Label>
-              <Input
-                className="mt-1 font-mono text-xs"
-                type="password"
-                placeholder="Permanent page access token"
-                value={connectForm.access_token}
-                onChange={(e) => setConnectForm({ ...connectForm, access_token: e.target.value })}
-              />
-            </div>
-
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-[10px] text-muted-foreground">
-                📋 <strong>Setup steps:</strong><br />
-                1. Go to <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline">developers.facebook.com</a><br />
-                2. Create or select your Meta App<br />
-                3. Add the {connectDialog === "whatsapp" ? "WhatsApp" : "Messenger"} product<br />
-                4. Copy the webhook URL above into your webhook settings<br />
-                5. Paste your access token and {connectDialog === "whatsapp" ? "Phone Number ID" : "Page ID"} below
-              </p>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => setConnectDialog(null)}>Cancel</Button>
-              <Button
-                size="sm"
-                className="gradient-primary text-primary-foreground"
-                disabled={!connectForm.access_token || connecting}
-                onClick={() => connectDialog && handleConnect(connectDialog)}
-              >
-                {connecting ? "Connecting…" : "Connect"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Connect platform dialog - responsive */}
+      {isMobile ? (
+        <Drawer open={connectDialog !== null} onOpenChange={(open) => !open && setConnectDialog(null)}>
+          <DrawerContent className="px-4 pb-6">
+            <DrawerHeader className="text-left">
+              <DrawerTitle>Connect {platformMeta.find((p) => p.key === connectDialog)?.name}</DrawerTitle>
+              <DrawerDescription>
+                Enter your API credentials to connect. You'll get these from your Meta Developer dashboard.
+              </DrawerDescription>
+            </DrawerHeader>
+            <ConnectFormContent
+              connectDialog={connectDialog}
+              connectForm={connectForm}
+              setConnectForm={setConnectForm}
+              connecting={connecting}
+              webhookUrl={webhookUrl}
+              copyToClipboard={copyToClipboard}
+              onCancel={() => setConnectDialog(null)}
+              onConnect={() => connectDialog && handleConnect(connectDialog)}
+            />
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={connectDialog !== null} onOpenChange={(open) => !open && setConnectDialog(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Connect {platformMeta.find((p) => p.key === connectDialog)?.name}</DialogTitle>
+              <DialogDescription>
+                Enter your API credentials to connect. You'll get these from your Meta Developer dashboard.
+              </DialogDescription>
+            </DialogHeader>
+            <ConnectFormContent
+              connectDialog={connectDialog}
+              connectForm={connectForm}
+              setConnectForm={setConnectForm}
+              connecting={connecting}
+              webhookUrl={webhookUrl}
+              copyToClipboard={copyToClipboard}
+              onCancel={() => setConnectDialog(null)}
+              onConnect={() => connectDialog && handleConnect(connectDialog)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
