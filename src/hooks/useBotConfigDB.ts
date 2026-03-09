@@ -68,10 +68,10 @@ export function useBotConfigDB() {
           supabase
             .from("bot_configs")
             .update({
-              qa_rules: next.qaRules as unknown as Record<string, unknown>[],
-              negotiation_rules: next.negotiationRules as unknown as Record<string, unknown>[],
-              payment_details: next.paymentDetails as unknown as Record<string, unknown>,
-              bot_settings: next.botSettings as unknown as Record<string, unknown>,
+              qa_rules: JSON.parse(JSON.stringify(next.qaRules)) as Json,
+              negotiation_rules: JSON.parse(JSON.stringify(next.negotiationRules)) as Json,
+              payment_details: JSON.parse(JSON.stringify(next.paymentDetails)) as Json,
+              bot_settings: JSON.parse(JSON.stringify(next.botSettings)) as Json,
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", user.id)
