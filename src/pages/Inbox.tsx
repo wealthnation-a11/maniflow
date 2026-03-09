@@ -1,85 +1,37 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Search, ToggleLeft, ToggleRight, Clock, ArrowLeft } from "lucide-react";
+import { Send, Bot, User, Search, ToggleLeft, ToggleRight, Clock, ArrowLeft, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLoadingState } from "@/hooks/use-loading";
 import { InboxSkeleton } from "@/components/Skeletons";
-import { useBotConfig, generateAIResponse } from "@/store/botConfig";
+import { useBotConfigDB } from "@/hooks/useBotConfigDB";
+import { generateAIResponse } from "@/store/botConfig";
+import { useConversations, useMessages, type Conversation } from "@/hooks/useConversations";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type ConvMessage = { role: "customer" | "ai" | "manual"; text: string; time: string };
-
-type Message = {
-  id: number;
-  customer: string;
-  platform: "WhatsApp" | "Instagram" | "Facebook";
-  lastMessage: string;
-  time: string;
-  unread: boolean;
-  tags: string[];
-  conversation: ConvMessage[];
-};
-
 const platformColors: Record<string, string> = {
-  WhatsApp: "bg-success/10 text-success",
-  Instagram: "bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400",
-  Facebook: "bg-info/10 text-info",
+  whatsapp: "bg-success/10 text-success",
+  instagram: "bg-pink-100 text-pink-600 dark:bg-pink-950 dark:text-pink-400",
+  facebook: "bg-info/10 text-info",
 };
 
-const mockMessages: Message[] = [
-  {
-    id: 1, customer: "Amina Bello", platform: "WhatsApp",
-    lastMessage: "How much is the hair cream set?", time: "2m ago", unread: true,
-    tags: ["price-query", "hot-lead"],
-    conversation: [
-      { role: "customer", text: "Hi! How much is the hair cream set?", time: "10:02 AM" },
-      { role: "ai", text: "Hello Amina! 😊 Our Hair Cream Set is ₦15,000. It includes a leave-in conditioner, edge control, and deep treatment mask. Would you like to place an order?", time: "10:02 AM" },
-      { role: "customer", text: "Yes I want to order!", time: "10:03 AM" },
-      { role: "ai", text: "Great choice! 🎉 I've prepared your order. Here's your payment link: pay.manyflow.co/amina-hc15k\n\nOnce payment is confirmed, we'll process your order immediately!", time: "10:03 AM" },
-    ],
-  },
-  {
-    id: 2, customer: "Chidi Okafor", platform: "Instagram",
-    lastMessage: "Do you have shea butter?", time: "15m ago", unread: true,
-    tags: ["availability"],
-    conversation: [
-      { role: "customer", text: "Do you have shea butter in stock?", time: "9:45 AM" },
-      { role: "ai", text: "Hi Chidi! Yes we do! 🧴 We have:\n\n• Raw Shea Butter (500g) — ₦5,000\n• Raw Shea Butter (1kg) — ₦8,500\n• Whipped Shea Butter — ₦6,500\n\nWhich one would you like?", time: "9:45 AM" },
-    ],
-  },
-  {
-    id: 3, customer: "Fatima Yusuf", platform: "Facebook",
-    lastMessage: "Thanks! Payment sent", time: "1h ago", unread: false,
-    tags: ["order-complete"],
-    conversation: [
-      { role: "customer", text: "I want the Ankara bundle", time: "8:30 AM" },
-      { role: "ai", text: "Hi Fatima! Our Ankara Bundle (6 yards) is ₦22,000. Shall I prepare your order?", time: "8:30 AM" },
-      { role: "customer", text: "Yes please!", time: "8:31 AM" },
-      { role: "ai", text: "Order confirmed! Here's your payment link: pay.manyflow.co/fatima-ank22k 🛍️", time: "8:31 AM" },
-      { role: "customer", text: "Thanks! Payment sent", time: "8:45 AM" },
-      { role: "ai", text: "Payment received! ✅ Your order is now being processed. You'll get a delivery update soon. Thank you, Fatima! 🙏", time: "8:45 AM" },
-    ],
-  },
-  {
-    id: 4, customer: "Ngozi Eze", platform: "WhatsApp",
-    lastMessage: "I'll think about it", time: "3h ago", unread: false,
-    tags: ["abandoned", "follow-up-scheduled"],
-    conversation: [
-      { role: "customer", text: "What hair products do you sell?", time: "6:10 AM" },
-      { role: "ai", text: "Hi Ngozi! 👋 We have:\n\n• Hair Cream Set — ₦15,000\n• Body Oil Set — ₦12,000\n\nWould you like to order any?", time: "6:10 AM" },
-      { role: "customer", text: "I'll think about it", time: "6:15 AM" },
-      { role: "ai", text: "No problem at all, Ngozi! Take your time 😊 I'll check back with you later. Feel free to message anytime!", time: "6:15 AM" },
-    ],
-  },
-];
+const platformLabels: Record<string, string> = {
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  facebook: "Facebook",
+};
 
 export default function Inbox() {
-  const loading = useLoadingState();
+  const pageLoading = useLoadingState();
   const isMobile = useIsMobile();
-  const { config } = useBotConfig();
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
-  const [selected, setSelected] = useState<Message>(mockMessages[0]);
+  const { user } = useAuth();
+  const { config } = useBotConfigDB();
+  const { conversations, loading: convsLoading } = useConversations();
+  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
+  const { messages, sendMessage } = useMessages(selectedConv?.id ?? null);
   const [search, setSearch] = useState("");
   const [input, setInput] = useState("");
   const [aiAutoReply, setAiAutoReply] = useState(true);
@@ -87,97 +39,81 @@ export default function Inbox() {
   const [mobileChat, setMobileChat] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const filtered = messages.filter((m) =>
-    m.customer.toLowerCase().includes(search.toLowerCase())
+  // Auto-select first conversation
+  useEffect(() => {
+    if (!selectedConv && conversations.length > 0) {
+      setSelectedConv(conversations[0]);
+    }
+  }, [conversations, selectedConv]);
+
+  const filtered = conversations.filter((c) =>
+    c.customer_name.toLowerCase().includes(search.toLowerCase())
   );
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selected.conversation.length, isTyping]);
+  }, [messages.length, isTyping]);
 
   const now = () => {
     const d = new Date();
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const selectConversation = (m: Message) => {
-    setSelected(m);
+  const selectConversation = (c: Conversation) => {
+    setSelectedConv(c);
     setMobileChat(true);
   };
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || !selectedConv) return;
     const userMsg = input.trim();
     setInput("");
 
     if (aiAutoReply) {
-      const customerMsg: ConvMessage = { role: "customer", text: userMsg, time: now() };
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === selected.id
-            ? { ...m, conversation: [...m.conversation, customerMsg], lastMessage: userMsg }
-            : m
-        )
-      );
-      setSelected((prev) => ({
-        ...prev,
-        conversation: [...prev.conversation, customerMsg],
-        lastMessage: userMsg,
-      }));
+      // Simulate customer message + AI reply
+      await sendMessage("customer", userMsg);
 
       setIsTyping(true);
-      setTimeout(() => {
-        const aiReply: ConvMessage = {
-          role: "ai",
-          text: generateAIResponse(userMsg, selected.customer, config, selected.id),
-          time: now(),
-        };
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === selected.id
-              ? { ...m, conversation: [...m.conversation, customerMsg, aiReply] }
-              : m
-          )
-        );
-        setSelected((prev) => ({
-          ...prev,
-          conversation: [...prev.conversation, aiReply],
-        }));
+      setTimeout(async () => {
+        const aiReply = generateAIResponse(userMsg, selectedConv.customer_name, config, Date.now());
+        await sendMessage("ai", aiReply);
         setIsTyping(false);
       }, 1200);
     } else {
-      const manualMsg: ConvMessage = { role: "manual", text: userMsg, time: now() };
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === selected.id
-            ? { ...m, conversation: [...m.conversation, manualMsg], lastMessage: userMsg }
-            : m
-        )
-      );
-      setSelected((prev) => ({
-        ...prev,
-        conversation: [...prev.conversation, manualMsg],
-        lastMessage: userMsg,
-      }));
+      await sendMessage("manual", userMsg);
     }
   };
 
-  const chatArea = (
+  const formatTime = (ts: string) => {
+    const d = new Date(ts);
+    const diff = Date.now() - d.getTime();
+    if (diff < 60000) return "now";
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return d.toLocaleDateString();
+  };
+
+  const emptyState = (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-4" />
+      <h3 className="font-medium text-muted-foreground mb-1">No conversations yet</h3>
+      <p className="text-xs text-muted-foreground max-w-xs">
+        Conversations will appear here when customers message you on WhatsApp, Instagram, or Facebook.
+      </p>
+    </div>
+  );
+
+  const chatArea = selectedConv ? (
     <div className="flex flex-1 flex-col min-h-0">
       <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <button onClick={() => setMobileChat(false)} className="md:hidden p-1 -ml-1 text-muted-foreground flex-shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <span className="font-medium text-sm sm:text-base truncate">{selected.customer}</span>
-          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${platformColors[selected.platform]}`}>
-            {selected.platform}
+          <span className="font-medium text-sm sm:text-base truncate">{selectedConv.customer_name}</span>
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${platformColors[selectedConv.platform] || ""}`}>
+            {platformLabels[selectedConv.platform] || selectedConv.platform}
           </span>
-          {!isMobile && selected.tags.includes("follow-up-scheduled") && (
-            <span className="flex items-center text-[10px] text-warning gap-0.5 flex-shrink-0">
-              <Clock className="h-3 w-3" /> Follow-up
-            </span>
-          )}
         </div>
         <button
           onClick={() => setAiAutoReply(!aiAutoReply)}
@@ -191,9 +127,9 @@ export default function Inbox() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 sm:space-y-3">
-        {selected.conversation.map((msg, i) => (
+        {messages.map((msg, i) => (
           <motion.div
-            key={i}
+            key={msg.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.03 }}
@@ -220,10 +156,11 @@ export default function Inbox() {
                     : "bg-muted"
                 }`}
               >
-                {msg.text}
+                {msg.content}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1 px-1">
-                {msg.time} {msg.role === "ai" && "· AI"} {msg.role === "manual" && "· Manual"}
+                {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {msg.role === "ai" && " · AI"} {msg.role === "manual" && " · Manual"}
               </p>
             </div>
             {msg.role === "customer" && (
@@ -274,9 +211,9 @@ export default function Inbox() {
         </p>
       </div>
     </div>
-  );
+  ) : emptyState;
 
-  if (loading) return <InboxSkeleton />;
+  if (pageLoading || convsLoading) return <InboxSkeleton />;
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -300,38 +237,40 @@ export default function Inbox() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {filtered.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => selectConversation(m)}
-                className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 border-b transition-colors ${
-                  selected.id === m.id ? "bg-muted" : "hover:bg-muted/50"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-xs sm:text-sm flex items-center gap-1.5">
-                    {m.customer}
-                    {m.unread && <span className="w-2 h-2 rounded-full bg-primary" />}
-                  </span>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground">{m.time}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate mr-2">{m.lastMessage}</p>
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${platformColors[m.platform]}`}>
-                    {m.platform}
-                  </span>
-                </div>
-                {m.tags.length > 0 && (
-                  <div className="flex gap-1 mt-1 sm:mt-1.5">
-                    {m.tags.slice(0, 2).map((tag) => (
-                      <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                        {tag}
-                      </span>
-                    ))}
+            {filtered.length === 0 ? (
+              <div className="p-6 text-center text-xs text-muted-foreground">
+                No conversations yet
+              </div>
+            ) : (
+              filtered.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => selectConversation(c)}
+                  className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 border-b transition-colors ${
+                    selectedConv?.id === c.id ? "bg-muted" : "hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-xs sm:text-sm">{c.customer_name}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{formatTime(c.last_message_at)}</span>
                   </div>
-                )}
-              </button>
-            ))}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${platformColors[c.platform] || ""}`}>
+                      {platformLabels[c.platform] || c.platform}
+                    </span>
+                  </div>
+                  {c.tags.length > 0 && (
+                    <div className="flex gap-1 mt-1 sm:mt-1.5">
+                      {c.tags.slice(0, 2).map((tag) => (
+                        <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              ))
+            )}
           </div>
         </div>
 

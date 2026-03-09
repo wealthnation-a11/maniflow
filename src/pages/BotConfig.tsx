@@ -8,10 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useBotConfig, generateAIResponse, type QARule, type NegotiationRule } from "@/store/botConfig";
+import { generateAIResponse, type QARule, type NegotiationRule } from "@/store/botConfig";
+import { useBotConfigDB } from "@/hooks/useBotConfigDB";
 
 export default function BotConfig() {
-  const { config, setConfig } = useBotConfig();
+  const { config, setConfig, loading: configLoading } = useBotConfigDB();
   const [newKeyword, setNewKeyword] = useState("");
 
   // ── Chat Preview State ──
