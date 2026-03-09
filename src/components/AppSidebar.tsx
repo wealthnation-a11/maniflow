@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useBusiness } from "@/hooks/use-business";
+import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard,
   MessageSquare,
