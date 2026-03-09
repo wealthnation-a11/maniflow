@@ -16,6 +16,7 @@ import Customers from "./pages/Customers";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import BotConfig from "./pages/BotConfig";
+import ChatAssistant from "./pages/ChatAssistant";
 import Onboarding from "./pages/Onboarding";
 import About from "./pages/About";
 import Pricing from "./pages/Pricing";
