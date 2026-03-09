@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { Json } from "@/integrations/supabase/types";
 import type { BotConfig, QARule, NegotiationRule, PaymentDetails, BotSettings } from "@/store/botConfig";
 
 const DEFAULT_CONFIG: BotConfig = {
