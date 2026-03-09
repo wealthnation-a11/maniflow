@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,33 +9,112 @@ import { toast } from "sonner";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useBusiness } from "@/hooks/use-business";
 import { setLogoUrl, setBusinessName } from "@/store/businessStore";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-const platforms = [
-  { name: "WhatsApp", connected: true, icon: "💬" },
-  { name: "Instagram", connected: true, icon: "📸" },
-  { name: "Facebook", connected: false, icon: "👥" },
-  { name: "LinkedIn", connected: false, icon: "💼", soon: true },
-  { name: "TikTok", connected: false, icon: "🎵", soon: true },
+type PlatformConnection = {
+  id: string;
+  platform: string;
+  access_token: string;
+  page_id: string | null;
+  phone_number_id: string | null;
+  webhook_verify_token: string;
+  connected_at: string;
+};
+
+const platformMeta = [
+  { key: "whatsapp", name: "WhatsApp", icon: "💬", fields: ["phone_number_id", "access_token"] },
+  { key: "instagram", name: "Instagram", icon: "📸", fields: ["page_id", "access_token"] },
+  { key: "facebook", name: "Facebook", icon: "👥", fields: ["page_id", "access_token"] },
 ];
 
 export default function Settings() {
+  const { user } = useAuth();
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const { logoUrl, businessName } = useBusiness();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Platform connections state
+  const [connections, setConnections] = useState<PlatformConnection[]>([]);
+  const [connectDialog, setConnectDialog] = useState<string | null>(null);
+  const [connectForm, setConnectForm] = useState({ access_token: "", page_id: "", phone_number_id: "" });
+  const [connecting, setConnecting] = useState(false);
+
+  // Load connections
+  useEffect(() => {
+    if (!user) return;
+    const loadConnections = async () => {
+      const { data } = await supabase
+        .from("platform_connections")
+        .select("*")
+        .eq("user_id", user.id);
+      if (data) setConnections(data as PlatformConnection[]);
+    };
+    loadConnections();
+  }, [user]);
+
+  const getConnection = (platform: string) => connections.find((c) => c.platform === platform);
+
+  const webhookUrl = (platform: string) => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    if (platform === "whatsapp") {
+      return `https://${projectId}.supabase.co/functions/v1/whatsapp-webhook`;
+    }
+    return `https://${projectId}.supabase.co/functions/v1/meta-webhook`;
+  };
+
+  const handleConnect = async (platform: string) => {
+    if (!user) return;
+    setConnecting(true);
+    try {
+      const insertData: any = {
+        user_id: user.id,
+        platform,
+        access_token: connectForm.access_token,
+      };
+      if (platform === "whatsapp") {
+        insertData.phone_number_id = connectForm.phone_number_id;
+      } else {
+        insertData.page_id = connectForm.page_id;
+      }
+
+      const { data, error } = await supabase
+        .from("platform_connections")
+        .upsert(insertData, { onConflict: "user_id,platform" })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setConnections((prev) => [...prev.filter((c) => c.platform !== platform), data as PlatformConnection]);
+      toast.success(`${platform} connected successfully!`);
+      setConnectDialog(null);
+      setConnectForm({ access_token: "", page_id: "", phone_number_id: "" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to connect");
+    }
+    setConnecting(false);
+  };
+
+  const handleDisconnect = async (platform: string) => {
+    if (!user) return;
+    await supabase
+      .from("platform_connections")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("platform", platform);
+    setConnections((prev) => prev.filter((c) => c.platform !== platform));
+    toast.success(`${platform} disconnected`);
+    setDisconnectPlatform(null);
+  };
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("File too large. Max 2MB.");
-      return;
-    }
-    if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
-      toast.error("Only PNG, JPG, or WebP files allowed.");
-      return;
-    }
+    if (file.size > 2 * 1024 * 1024) { toast.error("File too large. Max 2MB."); return; }
+    if (!["image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) { toast.error("Only PNG, JPG, or WebP files allowed."); return; }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const url = ev.target?.result as string;
@@ -45,9 +124,11 @@ export default function Settings() {
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveLogo = () => {
-    setLogoUrl(null);
-    toast.success("Logo removed");
+  const handleRemoveLogo = () => { setLogoUrl(null); toast.success("Logo removed"); };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
   };
 
   return (
@@ -64,26 +145,34 @@ export default function Settings() {
           <h2 className="font-heading font-semibold text-sm sm:text-lg">Social Connections</h2>
         </div>
         <div className="space-y-2 sm:space-y-3">
-          {platforms.map((p) => (
-            <div key={p.name} className="flex items-center justify-between py-2 border-b last:border-0">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-lg sm:text-xl">{p.icon}</span>
-                <span className="font-medium text-xs sm:text-sm">{p.name}</span>
-                {p.soon && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Soon</span>}
-              </div>
-              {p.soon ? (
-                <span className="text-xs text-muted-foreground">—</span>
-              ) : p.connected ? (
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
-                  <span className="text-[10px] sm:text-xs text-success hidden sm:inline">Connected</span>
-                  <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-destructive h-6 sm:h-7 px-1.5 sm:px-2" onClick={() => setDisconnectPlatform(p.name)}>Disconnect</Button>
+          {platformMeta.map((p) => {
+            const conn = getConnection(p.key);
+            return (
+              <div key={p.key} className="flex items-center justify-between py-2 border-b last:border-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-lg sm:text-xl">{p.icon}</span>
+                  <span className="font-medium text-xs sm:text-sm">{p.name}</span>
                 </div>
-              ) : (
-                <Button size="sm" className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7">Connect</Button>
-              )}
-            </div>
-          ))}
+                {conn ? (
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
+                    <span className="text-[10px] sm:text-xs text-success hidden sm:inline">Connected</span>
+                    <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-destructive h-6 sm:h-7 px-1.5 sm:px-2" onClick={() => setDisconnectPlatform(p.key)}>
+                      Disconnect
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7"
+                    onClick={() => setConnectDialog(p.key)}
+                  >
+                    Connect
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -112,7 +201,7 @@ export default function Settings() {
           </div>
           <div>
             <Label className="text-xs sm:text-sm">Business Name (shown in AI replies)</Label>
-            <Input defaultValue="My Business" className="mt-1" />
+            <Input defaultValue={businessName || "My Business"} className="mt-1" />
           </div>
         </div>
       </div>
@@ -162,14 +251,6 @@ export default function Settings() {
             <Input placeholder="e.g. My Business Ltd" className="mt-1" />
           </div>
           <p className="text-[10px] sm:text-xs text-muted-foreground">These details are shared by the AI bot after a price is agreed.</p>
-          <div>
-            <Label className="text-xs sm:text-sm mt-3">Paystack Public Key</Label>
-            <Input placeholder="pk_live_..." className="mt-1 font-mono text-xs" />
-          </div>
-          <div>
-            <Label className="text-xs sm:text-sm">Flutterwave Public Key</Label>
-            <Input placeholder="FLWPUBK-..." className="mt-1 font-mono text-xs" />
-          </div>
         </div>
       </div>
 
@@ -246,17 +327,101 @@ export default function Settings() {
         <Save className="h-4 w-4 mr-2" /> Save Changes
       </Button>
 
+      {/* Disconnect confirm */}
       <ConfirmDialog
         open={disconnectPlatform !== null}
         onOpenChange={(open) => !open && setDisconnectPlatform(null)}
         title={`Disconnect ${disconnectPlatform}?`}
         description={`You will stop receiving messages from ${disconnectPlatform}. You can reconnect anytime.`}
-        onConfirm={() => {
-          toast.success(`${disconnectPlatform} disconnected`);
-          setDisconnectPlatform(null);
-        }}
+        onConfirm={() => disconnectPlatform && handleDisconnect(disconnectPlatform)}
         confirmLabel="Disconnect"
       />
+
+      {/* Connect platform dialog */}
+      <Dialog open={connectDialog !== null} onOpenChange={(open) => !open && setConnectDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Connect {platformMeta.find((p) => p.key === connectDialog)?.name}</DialogTitle>
+            <DialogDescription>
+              Enter your API credentials to connect. You'll get these from your Meta Developer dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {/* Webhook URL */}
+            {connectDialog && (
+              <div className="bg-muted rounded-lg p-3">
+                <Label className="text-xs text-muted-foreground">Webhook URL (paste into Meta Dashboard)</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="text-xs bg-background px-2 py-1 rounded flex-1 truncate border">
+                    {webhookUrl(connectDialog)}
+                  </code>
+                  <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyToClipboard(webhookUrl(connectDialog!))}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {connectDialog === "whatsapp" && (
+              <div>
+                <Label className="text-xs sm:text-sm">Phone Number ID</Label>
+                <Input
+                  className="mt-1 font-mono text-xs"
+                  placeholder="e.g. 123456789012345"
+                  value={connectForm.phone_number_id}
+                  onChange={(e) => setConnectForm({ ...connectForm, phone_number_id: e.target.value })}
+                />
+              </div>
+            )}
+
+            {(connectDialog === "instagram" || connectDialog === "facebook") && (
+              <div>
+                <Label className="text-xs sm:text-sm">Page ID</Label>
+                <Input
+                  className="mt-1 font-mono text-xs"
+                  placeholder="e.g. 123456789012345"
+                  value={connectForm.page_id}
+                  onChange={(e) => setConnectForm({ ...connectForm, page_id: e.target.value })}
+                />
+              </div>
+            )}
+
+            <div>
+              <Label className="text-xs sm:text-sm">Access Token</Label>
+              <Input
+                className="mt-1 font-mono text-xs"
+                type="password"
+                placeholder="Permanent page access token"
+                value={connectForm.access_token}
+                onChange={(e) => setConnectForm({ ...connectForm, access_token: e.target.value })}
+              />
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-3">
+              <p className="text-[10px] text-muted-foreground">
+                📋 <strong>Setup steps:</strong><br />
+                1. Go to <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline">developers.facebook.com</a><br />
+                2. Create or select your Meta App<br />
+                3. Add the {connectDialog === "whatsapp" ? "WhatsApp" : "Messenger"} product<br />
+                4. Copy the webhook URL above into your webhook settings<br />
+                5. Paste your access token and {connectDialog === "whatsapp" ? "Phone Number ID" : "Page ID"} below
+              </p>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setConnectDialog(null)}>Cancel</Button>
+              <Button
+                size="sm"
+                className="gradient-primary text-primary-foreground"
+                disabled={!connectForm.access_token || connecting}
+                onClick={() => connectDialog && handleConnect(connectDialog)}
+              >
+                {connecting ? "Connecting…" : "Connect"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
