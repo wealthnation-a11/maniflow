@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Download, Search, X, FileText } from "lucide-react";
+import { Download, Search, X, FileText, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/lib/csv";
@@ -9,6 +9,7 @@ import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
 import InvoiceDialog from "@/components/InvoiceDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import EmptyState from "@/components/EmptyState";
 
 const orders: { id: string; customer: string; phone: string; product: string; amount: string; amountNum: number; platform: string; status: string; payment: string }[] = [];
 
