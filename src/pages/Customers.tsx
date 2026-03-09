@@ -86,6 +86,24 @@ export default function Customers() {
   const hasFilters = platformFilter !== "all" || statusFilter !== "all" || prefFilter !== "all" || search;
   const clearFilters = () => { setPlatformFilter("all"); setStatusFilter("all"); setPrefFilter("all"); setSearch(""); };
 
+  if (customers.length === 0) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <div>
+          <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Customers</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Track repeat buyers, preferences, and lifetime value</p>
+        </div>
+        <div className="bg-card rounded-xl shadow-card">
+          <EmptyState
+            icon={Users}
+            title="No customers yet"
+            description="Customer profiles will be created automatically when people message you on your connected platforms."
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
