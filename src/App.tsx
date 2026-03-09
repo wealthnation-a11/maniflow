@@ -57,6 +57,7 @@ const App = () => (
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/campaigns" element={<Campaigns />} />
                   <Route path="/bot-config" element={<BotConfig />} />
+                  <Route path="/chat" element={<ChatAssistant />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/settings" element={<Settings />} />
                 </Route>
