@@ -21,10 +21,10 @@ import ManyFlowLogo from "./ManyFlowLogo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Inbox", icon: MessageSquare, path: "/inbox", badge: 12 },
+  { label: "Inbox", icon: MessageSquare, path: "/inbox" },
   { label: "Bot Config", icon: Bot, path: "/bot-config" },
   { label: "Products", icon: Package, path: "/products" },
-  { label: "Orders", icon: ShoppingCart, path: "/orders", badge: 3 },
+  { label: "Orders", icon: ShoppingCart, path: "/orders" },
   { label: "Customers", icon: Users, path: "/customers" },
   { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
   { label: "Notifications", icon: Bell, path: "/notifications" },
