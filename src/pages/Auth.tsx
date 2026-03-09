@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Mail, Lock, Building2, Phone, Loader2 } from "lucide-react";
+import { Mail, Lock, Building2, Phone, Loader2, ArrowLeft } from "lucide-react";
 import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function Auth() {
@@ -13,6 +14,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [isSignup, setIsSignup] = useState(searchParams.get("mode") === "signup");
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,6 +40,83 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset email sent!", {
+        description: "Check your inbox for the reset link.",
+      });
+      setIsForgotPassword(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-2 mb-6">
+              <ManyFlowLogo className="h-8 w-8" />
+              <span className="font-heading font-bold text-2xl">ManyFlow</span>
+            </Link>
+            <h1 className="font-heading text-2xl font-bold">Reset your password</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Enter your email and we'll send you a reset link
+            </p>
+          </div>
+
+          <form onSubmit={handleForgotPassword} className="bg-card rounded-xl shadow-card p-6 space-y-4">
+            <div>
+              <Label htmlFor="reset-email" className="text-sm font-medium">Email</Label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="reset-email"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  placeholder="you@business.com"
+                  className="pl-10"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  required
+                />
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold py-5 rounded-lg" disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Reset Link"}
+            </Button>
+          </form>
+
+          <button
+            onClick={() => setIsForgotPassword(false)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mt-6 mx-auto"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -115,7 +194,18 @@ export default function Auth() {
             </div>
           </div>
           <div>
-            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              {!isSignup && (
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPassword(true)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <div className="relative mt-1">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input 
