@@ -32,6 +32,7 @@ const platformMeta = [
 ];
 
 export default function Settings() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
   const [aiTone, setAiTone] = useState("friendly");
