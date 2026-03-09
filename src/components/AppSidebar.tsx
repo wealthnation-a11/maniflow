@@ -16,6 +16,7 @@ import {
   Settings,
   Bell,
   Bot,
+  Sparkles,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import ManyFlowLogo from "./ManyFlowLogo";
