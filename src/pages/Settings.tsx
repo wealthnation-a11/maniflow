@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X, Copy, ExternalLink } from "lucide-react";
+import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,7 @@ import { useBusiness } from "@/hooks/use-business";
 import { setLogoUrl, setBusinessName } from "@/store/businessStore";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type PlatformConnection = {
@@ -26,108 +25,13 @@ type PlatformConnection = {
 };
 
 const platformMeta = [
-  { key: "whatsapp", name: "WhatsApp", icon: "💬", fields: ["phone_number_id", "access_token"] },
-  { key: "instagram", name: "Instagram", icon: "📸", fields: ["page_id", "access_token"] },
-  { key: "facebook", name: "Facebook", icon: "👥", fields: ["page_id", "access_token"] },
+  { key: "whatsapp", name: "WhatsApp", icon: "💬", scopes: "whatsapp_business_management,whatsapp_business_messaging,business_management" },
+  { key: "facebook", name: "Facebook", icon: "👥", scopes: "pages_messaging,pages_manage_metadata,pages_read_engagement" },
+  { key: "instagram", name: "Instagram", icon: "📸", scopes: "instagram_manage_messages,pages_manage_metadata,instagram_basic" },
+  { key: "tiktok", name: "TikTok", icon: "🎵", scopes: "", comingSoon: true },
 ];
 
 export default function Settings() {
-function ConnectFormContent({
-  connectDialog,
-  connectForm,
-  setConnectForm,
-  connecting,
-  webhookUrl,
-  copyToClipboard,
-  onCancel,
-  onConnect,
-}: {
-  connectDialog: string | null;
-  connectForm: { access_token: string; page_id: string; phone_number_id: string };
-  setConnectForm: (v: any) => void;
-  connecting: boolean;
-  webhookUrl: (platform: string) => string;
-  copyToClipboard: (text: string) => void;
-  onCancel: () => void;
-  onConnect: () => void;
-}) {
-  return (
-    <div className="space-y-4 mt-2 px-1">
-      {connectDialog && (
-        <div className="bg-muted rounded-lg p-3">
-          <Label className="text-xs text-muted-foreground">Webhook URL (paste into Meta Dashboard)</Label>
-          <div className="flex items-center gap-2 mt-1">
-            <code className="text-[10px] sm:text-xs bg-background px-2 py-1 rounded flex-1 truncate border">
-              {webhookUrl(connectDialog)}
-            </code>
-            <Button variant="ghost" size="sm" className="h-7 px-2 shrink-0" onClick={() => copyToClipboard(webhookUrl(connectDialog))}>
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {connectDialog === "whatsapp" && (
-        <div>
-          <Label className="text-xs sm:text-sm">Phone Number ID</Label>
-          <Input
-            className="mt-1 font-mono text-xs"
-            placeholder="e.g. 123456789012345"
-            value={connectForm.phone_number_id}
-            onChange={(e) => setConnectForm({ ...connectForm, phone_number_id: e.target.value })}
-          />
-        </div>
-      )}
-
-      {(connectDialog === "instagram" || connectDialog === "facebook") && (
-        <div>
-          <Label className="text-xs sm:text-sm">Page ID</Label>
-          <Input
-            className="mt-1 font-mono text-xs"
-            placeholder="e.g. 123456789012345"
-            value={connectForm.page_id}
-            onChange={(e) => setConnectForm({ ...connectForm, page_id: e.target.value })}
-          />
-        </div>
-      )}
-
-      <div>
-        <Label className="text-xs sm:text-sm">Access Token</Label>
-        <Input
-          className="mt-1 font-mono text-xs"
-          type="password"
-          placeholder="Permanent page access token"
-          value={connectForm.access_token}
-          onChange={(e) => setConnectForm({ ...connectForm, access_token: e.target.value })}
-        />
-      </div>
-
-      <div className="bg-muted/50 rounded-lg p-3">
-        <p className="text-[10px] text-muted-foreground">
-          📋 <strong>Setup steps:</strong><br />
-          1. Go to <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline">developers.facebook.com</a><br />
-          2. Create or select your Meta App<br />
-          3. Add the {connectDialog === "whatsapp" ? "WhatsApp" : "Messenger"} product<br />
-          4. Copy the webhook URL above into your webhook settings<br />
-          5. Paste your access token and {connectDialog === "whatsapp" ? "Phone Number ID" : "Page ID"} below
-        </p>
-      </div>
-
-      <div className="flex gap-2 justify-end">
-        <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button
-          size="sm"
-          className="gradient-primary text-primary-foreground"
-          disabled={!connectForm.access_token || connecting}
-          onClick={onConnect}
-        >
-          {connecting ? "Connecting…" : "Connect"}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [notifs, setNotifs] = useState({ messages: true, payments: true, orders: true, email: false, sms: false });
@@ -135,12 +39,7 @@ function ConnectFormContent({
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const { logoUrl, businessName } = useBusiness();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Platform connections state
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
-  const [connectDialog, setConnectDialog] = useState<string | null>(null);
-  const [connectForm, setConnectForm] = useState({ access_token: "", page_id: "", phone_number_id: "" });
-  const [connecting, setConnecting] = useState(false);
 
   // Load connections
   useEffect(() => {
@@ -155,46 +54,53 @@ function ConnectFormContent({
     loadConnections();
   }, [user]);
 
+  // Handle OAuth redirect result
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("oauth_success");
+    const error = params.get("oauth_error");
+    if (success) {
+      toast.success(`${success} connected successfully!`);
+      window.history.replaceState({}, "", window.location.pathname);
+      // Reload connections
+      if (user) {
+        supabase
+          .from("platform_connections")
+          .select("*")
+          .eq("user_id", user.id)
+          .then(({ data }) => {
+            if (data) setConnections(data as PlatformConnection[]);
+          });
+      }
+    } else if (error) {
+      toast.error(`Connection failed: ${error}`);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [user]);
+
   const getConnection = (platform: string) => connections.find((c) => c.platform === platform);
 
-  const webhookUrl = (platform: string) => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    if (platform === "whatsapp") {
-      return `https://${projectId}.supabase.co/functions/v1/whatsapp-webhook`;
-    }
-    return `https://${projectId}.supabase.co/functions/v1/meta-webhook`;
-  };
-
-  const handleConnect = async (platform: string) => {
+  const handleOAuthConnect = (platform: string, scopes: string) => {
     if (!user) return;
-    setConnecting(true);
-    try {
-      const insertData: any = {
-        user_id: user.id,
-        platform,
-        access_token: connectForm.access_token,
-      };
-      if (platform === "whatsapp") {
-        insertData.phone_number_id = connectForm.phone_number_id;
-      } else {
-        insertData.page_id = connectForm.page_id;
-      }
 
-      const { data, error } = await supabase
-        .from("platform_connections")
-        .upsert(insertData, { onConflict: "user_id,platform" })
-        .select()
-        .single();
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const redirectUri = `https://${projectId}.supabase.co/functions/v1/meta-oauth`;
+    const appId = import.meta.env.VITE_META_APP_ID;
 
-      if (error) throw error;
-      setConnections((prev) => [...prev.filter((c) => c.platform !== platform), data as PlatformConnection]);
-      toast.success(`${platform} connected successfully!`);
-      setConnectDialog(null);
-      setConnectForm({ access_token: "", page_id: "", phone_number_id: "" });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to connect");
+    if (!appId) {
+      toast.error("Meta App ID not configured. Please add it to your environment.");
+      return;
     }
-    setConnecting(false);
+
+    const state = btoa(JSON.stringify({
+      user_id: user.id,
+      platform,
+      redirect_url: window.location.origin + "/settings",
+    }));
+
+    const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${state}&response_type=code`;
+
+    window.location.href = oauthUrl;
   };
 
   const handleDisconnect = async (platform: string) => {
@@ -225,11 +131,6 @@ function ConnectFormContent({
 
   const handleRemoveLogo = () => { setLogoUrl(null); toast.success("Logo removed"); };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
-  };
-
   return (
     <div className="space-y-4 md:space-y-6 max-w-3xl">
       <div>
@@ -243,16 +144,30 @@ function ConnectFormContent({
           <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           <h2 className="font-heading font-semibold text-sm sm:text-lg">Social Connections</h2>
         </div>
+        <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
+          Connect your social platforms with one click. You'll be redirected to authorize access.
+        </p>
         <div className="space-y-2 sm:space-y-3">
           {platformMeta.map((p) => {
             const conn = getConnection(p.key);
+            const isComingSoon = "comingSoon" in p && p.comingSoon;
             return (
               <div key={p.key} className="flex items-center justify-between py-2 border-b last:border-0">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span className="text-lg sm:text-xl">{p.icon}</span>
                   <span className="font-medium text-xs sm:text-sm">{p.name}</span>
+                  {isComingSoon && (
+                    <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0.5">
+                      <Clock className="h-2.5 w-2.5 mr-0.5" />
+                      Coming Soon
+                    </Badge>
+                  )}
                 </div>
-                {conn ? (
+                {isComingSoon ? (
+                  <Button size="sm" disabled className="text-[10px] sm:text-xs h-6 sm:h-7 opacity-50">
+                    Connect
+                  </Button>
+                ) : conn ? (
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
                     <span className="text-[10px] sm:text-xs text-success hidden sm:inline">Connected</span>
@@ -264,8 +179,9 @@ function ConnectFormContent({
                   <Button
                     size="sm"
                     className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7"
-                    onClick={() => setConnectDialog(p.key)}
+                    onClick={() => handleOAuthConnect(p.key, p.scopes)}
                   >
+                    <ExternalLink className="h-3 w-3 mr-1" />
                     Connect
                   </Button>
                 )}
@@ -435,51 +351,6 @@ function ConnectFormContent({
         onConfirm={() => disconnectPlatform && handleDisconnect(disconnectPlatform)}
         confirmLabel="Disconnect"
       />
-
-      {/* Connect platform dialog - responsive */}
-      {isMobile ? (
-        <Drawer open={connectDialog !== null} onOpenChange={(open) => !open && setConnectDialog(null)}>
-          <DrawerContent className="px-4 pb-6">
-            <DrawerHeader className="text-left">
-              <DrawerTitle>Connect {platformMeta.find((p) => p.key === connectDialog)?.name}</DrawerTitle>
-              <DrawerDescription>
-                Enter your API credentials to connect. You'll get these from your Meta Developer dashboard.
-              </DrawerDescription>
-            </DrawerHeader>
-            <ConnectFormContent
-              connectDialog={connectDialog}
-              connectForm={connectForm}
-              setConnectForm={setConnectForm}
-              connecting={connecting}
-              webhookUrl={webhookUrl}
-              copyToClipboard={copyToClipboard}
-              onCancel={() => setConnectDialog(null)}
-              onConnect={() => connectDialog && handleConnect(connectDialog)}
-            />
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={connectDialog !== null} onOpenChange={(open) => !open && setConnectDialog(null)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Connect {platformMeta.find((p) => p.key === connectDialog)?.name}</DialogTitle>
-              <DialogDescription>
-                Enter your API credentials to connect. You'll get these from your Meta Developer dashboard.
-              </DialogDescription>
-            </DialogHeader>
-            <ConnectFormContent
-              connectDialog={connectDialog}
-              connectForm={connectForm}
-              setConnectForm={setConnectForm}
-              connecting={connecting}
-              webhookUrl={webhookUrl}
-              copyToClipboard={copyToClipboard}
-              onCancel={() => setConnectDialog(null)}
-              onConnect={() => connectDialog && handleConnect(connectDialog)}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
