@@ -80,27 +80,27 @@ export default function Settings() {
 
   const getConnection = (platform: string) => connections.find((c) => c.platform === platform);
 
-  const handleOAuthConnect = (platform: string, scopes: string) => {
+  const handleOAuthConnect = async (platform: string) => {
     if (!user) return;
 
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const redirectUri = `https://${projectId}.supabase.co/functions/v1/meta-oauth`;
-    const appId = import.meta.env.VITE_META_APP_ID;
+    try {
+      const { data, error } = await supabase.functions.invoke("meta-oauth-url", {
+        body: {
+          platform,
+          user_id: user.id,
+          redirect_url: window.location.origin + "/settings",
+        },
+      });
 
-    if (!appId) {
-      toast.error("Meta App ID not configured. Please add it to your environment.");
-      return;
+      if (error || !data?.url) {
+        toast.error("Failed to start connection. Please try again.");
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch {
+      toast.error("Failed to start connection. Please try again.");
     }
-
-    const state = btoa(JSON.stringify({
-      user_id: user.id,
-      platform,
-      redirect_url: window.location.origin + "/settings",
-    }));
-
-    const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&state=${state}&response_type=code`;
-
-    window.location.href = oauthUrl;
   };
 
   const handleDisconnect = async (platform: string) => {
