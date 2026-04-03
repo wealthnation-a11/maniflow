@@ -25,10 +25,10 @@ type PlatformConnection = {
 };
 
 const platformMeta = [
-  { key: "whatsapp", name: "WhatsApp", icon: "💬", scopes: "whatsapp_business_management,whatsapp_business_messaging,business_management" },
-  { key: "facebook", name: "Facebook", icon: "👥", scopes: "pages_messaging,pages_manage_metadata,pages_read_engagement" },
-  { key: "instagram", name: "Instagram", icon: "📸", scopes: "instagram_manage_messages,pages_manage_metadata,instagram_basic" },
-  { key: "tiktok", name: "TikTok", icon: "🎵", scopes: "", comingSoon: true },
+  { key: "whatsapp", name: "WhatsApp", icon: "💬" },
+  { key: "facebook", name: "Facebook", icon: "👥" },
+  { key: "instagram", name: "Instagram", icon: "📸" },
+  { key: "tiktok", name: "TikTok", icon: "🎵", comingSoon: true },
 ];
 
 export default function Settings() {
