@@ -209,7 +209,7 @@ export type Database = {
     Enums: {
       conversation_status: "active" | "closed" | "archived"
       message_role: "customer" | "ai" | "manual"
-      platform_type: "whatsapp" | "instagram" | "facebook"
+      platform_type: "whatsapp" | "instagram" | "facebook" | "tiktok"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -339,7 +339,7 @@ export const Constants = {
     Enums: {
       conversation_status: ["active", "closed", "archived"],
       message_role: ["customer", "ai", "manual"],
-      platform_type: ["whatsapp", "instagram", "facebook"],
+      platform_type: ["whatsapp", "instagram", "facebook", "tiktok"],
     },
   },
 } as const
