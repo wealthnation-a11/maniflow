@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.meta-oauth]
 verify_jwt = false
+
+[functions.meta-oauth-url]
+verify_jwt = false

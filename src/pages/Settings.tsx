@@ -179,7 +179,7 @@ export default function Settings() {
                   <Button
                     size="sm"
                     className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7"
-                    onClick={() => handleOAuthConnect(p.key, p.scopes)}
+                    onClick={() => handleOAuthConnect(p.key)}
                   >
                     <ExternalLink className="h-3 w-3 mr-1" />
                     Connect
