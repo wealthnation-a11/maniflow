@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Mail, Lock, Building2, Phone, Loader2, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Building2, Phone, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import ManyFlowLogo from "@/components/ManyFlowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,9 +212,9 @@ export default function Auth() {
               <Input 
                 id="password" 
                 name="password"
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="••••••••" 
-                className="pl-10" 
+                className="pl-10 pr-10" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 autoComplete={isSignup ? "new-password" : "current-password"}
@@ -222,6 +223,14 @@ export default function Auth() {
                 required 
                 minLength={6} 
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
