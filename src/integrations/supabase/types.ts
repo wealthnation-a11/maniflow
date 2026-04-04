@@ -47,6 +47,57 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          audience: string | null
+          created_at: string
+          id: string
+          message: string
+          name: string
+          opened: number
+          platforms: string[]
+          recipients: number
+          replied: number
+          scheduled_at: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          opened?: number
+          platforms?: string[]
+          recipients?: number
+          replied?: number
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          opened?: number
+          platforms?: string[]
+          recipients?: number
+          replied?: number
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -89,6 +140,54 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_seen: string | null
+          id: string
+          last_order_at: string | null
+          name: string
+          phone: string | null
+          platform: Database["public"]["Enums"]["platform_type"]
+          preferences: string[]
+          status: Database["public"]["Enums"]["customer_status"]
+          total_orders: number
+          total_spent: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_seen?: string | null
+          id?: string
+          last_order_at?: string | null
+          name?: string
+          phone?: string | null
+          platform?: Database["public"]["Enums"]["platform_type"]
+          preferences?: string[]
+          status?: Database["public"]["Enums"]["customer_status"]
+          total_orders?: number
+          total_spent?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_seen?: string | null
+          id?: string
+          last_order_at?: string | null
+          name?: string
+          phone?: string | null
+          platform?: Database["public"]["Enums"]["platform_type"]
+          preferences?: string[]
+          status?: Database["public"]["Enums"]["customer_status"]
+          total_orders?: number
+          total_spent?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -123,6 +222,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      orders: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          platform: Database["public"]["Enums"]["platform_type"]
+          product_name: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          platform?: Database["public"]["Enums"]["platform_type"]
+          product_name?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          platform?: Database["public"]["Enums"]["platform_type"]
+          product_name?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       platform_connections: {
         Row: {
@@ -163,6 +304,48 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          stock: number
+          updated_at: string
+          user_id: string
+          variants: Json
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+          stock?: number
+          updated_at?: string
+          user_id: string
+          variants?: Json
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          stock?: number
+          updated_at?: string
+          user_id?: string
+          variants?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ai_tone: string | null
@@ -171,6 +354,7 @@ export type Database = {
           currency: string | null
           id: string
           logo_url: string | null
+          payment_details: Json
           phone: string | null
           timezone: string | null
           updated_at: string
@@ -182,6 +366,7 @@ export type Database = {
           currency?: string | null
           id: string
           logo_url?: string | null
+          payment_details?: Json
           phone?: string | null
           timezone?: string | null
           updated_at?: string
@@ -193,6 +378,7 @@ export type Database = {
           currency?: string | null
           id?: string
           logo_url?: string | null
+          payment_details?: Json
           phone?: string | null
           timezone?: string | null
           updated_at?: string
@@ -207,8 +393,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      campaign_status: "draft" | "scheduled" | "sent" | "active"
       conversation_status: "active" | "closed" | "archived"
+      customer_status: "active" | "inactive" | "new"
       message_role: "customer" | "ai" | "manual"
+      order_status: "pending" | "processing" | "shipped" | "delivered"
+      payment_status: "pending" | "paid" | "failed"
       platform_type: "whatsapp" | "instagram" | "facebook" | "tiktok"
     }
     CompositeTypes: {
@@ -337,8 +527,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      campaign_status: ["draft", "scheduled", "sent", "active"],
       conversation_status: ["active", "closed", "archived"],
+      customer_status: ["active", "inactive", "new"],
       message_role: ["customer", "ai", "manual"],
+      order_status: ["pending", "processing", "shipped", "delivered"],
+      payment_status: ["pending", "paid", "failed"],
       platform_type: ["whatsapp", "instagram", "facebook", "tiktok"],
     },
   },
