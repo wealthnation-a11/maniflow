@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Send, Users, CheckCircle2, Clock, Megaphone, Plus, X, Calendar, BarChart3, Search, Download,
@@ -11,22 +11,22 @@ import { toast } from "sonner";
 import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Campaign = {
-  id: number;
+  id: string;
   name: string;
   message: string;
   platforms: string[];
   audience: string;
-  status: "draft" | "scheduled" | "sent" | "active";
+  status: string;
   recipients: number;
   opened: number;
   replied: number;
   scheduledAt?: string;
   sentAt?: string;
 };
-
-const mockCampaigns: Campaign[] = [];
 
 const audiences = ["All Customers", "Repeat Buyers", "Inactive Customers", "New Customers", "High-Value Customers"];
 const platformOptions = [
@@ -54,14 +54,34 @@ const allPlatforms = ["all", "WhatsApp", "Instagram", "Facebook"];
 export default function Campaigns() {
   const loading = useLoadingState();
   const isMobile = useIsMobile();
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const { user } = useAuth();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
   const [form, setForm] = useState({ name: "", message: "", platforms: [] as string[], audience: "All Customers", schedule: "" });
+  const [saving, setSaving] = useState(false);
 
-  if (loading) return <TableSkeleton />;
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const { data } = await supabase.from("campaigns").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      if (data) {
+        setCampaigns(data.map((c: any) => ({
+          id: c.id, name: c.name, message: c.message, platforms: c.platforms || [],
+          audience: c.audience || "All Customers", status: c.status,
+          recipients: c.recipients, opened: c.opened, replied: c.replied,
+          scheduledAt: c.scheduled_at, sentAt: c.sent_at,
+        })));
+      }
+      setDbLoading(false);
+    };
+    load();
+  }, [user]);
+
+  if (loading || dbLoading) return <TableSkeleton />;
 
   const filtered = campaigns.filter((c) => {
     if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -87,18 +107,30 @@ export default function Campaigns() {
     setForm((prev) => ({ ...prev, message: prev.message + `{${variable}}` }));
   };
 
-  const handleSend = (asDraft: boolean) => {
+  const handleSend = async (asDraft: boolean) => {
     if (!form.name.trim() || !form.message.trim()) { toast.error("Campaign name and message are required"); return; }
     if (form.platforms.length === 0) { toast.error("Select at least one platform"); return; }
+    if (!user) return;
 
-    const newCampaign: Campaign = {
-      id: Date.now(), name: form.name, message: form.message, platforms: form.platforms, audience: form.audience,
-      status: asDraft ? "draft" : form.schedule ? "scheduled" : "sent",
-      recipients: asDraft ? 0 : Math.floor(Math.random() * 100) + 50, opened: 0, replied: 0,
-      scheduledAt: form.schedule || undefined, sentAt: !asDraft && !form.schedule ? "Just now" : undefined,
+    setSaving(true);
+    const status = asDraft ? "draft" : form.schedule ? "scheduled" : "sent";
+    const row = {
+      user_id: user.id, name: form.name, message: form.message, platforms: form.platforms,
+      audience: form.audience, status: status as any,
+      recipients: 0, opened: 0, replied: 0,
+      scheduled_at: form.schedule || null, sent_at: !asDraft && !form.schedule ? new Date().toISOString() : null,
     };
 
-    setCampaigns((prev) => [newCampaign, ...prev]);
+    const { data, error } = await supabase.from("campaigns").insert(row).select().single();
+    setSaving(false);
+    if (error || !data) { toast.error("Failed to create campaign"); return; }
+
+    setCampaigns((prev) => [{
+      id: data.id, name: data.name, message: data.message, platforms: data.platforms || [],
+      audience: data.audience || "All Customers", status: data.status,
+      recipients: data.recipients, opened: data.opened, replied: data.replied,
+      scheduledAt: data.scheduled_at, sentAt: data.sent_at,
+    }, ...prev]);
     setForm({ name: "", message: "", platforms: [], audience: "All Customers", schedule: "" });
     setShowForm(false);
     toast.success(asDraft ? "Campaign saved as draft" : form.schedule ? "Campaign scheduled!" : "Campaign sent! 🚀");
@@ -119,7 +151,6 @@ export default function Campaigns() {
         </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: "Total Campaigns", value: campaigns.length, icon: Megaphone, color: "text-primary" },
@@ -135,7 +166,6 @@ export default function Campaigns() {
         ))}
       </div>
 
-      {/* Search & Filters */}
       <div className="flex flex-col gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -149,14 +179,11 @@ export default function Campaigns() {
             {allPlatforms.map((p) => <option key={p} value={p}>{p === "all" ? "Platform" : p}</option>)}
           </select>
           {hasFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground h-9">
-              <X className="h-4 w-4 mr-1" /> Clear
-            </Button>
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground h-9"><X className="h-4 w-4 mr-1" /> Clear</Button>
           )}
         </div>
       </div>
 
-      {/* New Campaign Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 bg-foreground/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowForm(false)}>
           <motion.div initial={{ opacity: 0, y: isMobile ? 100 : 0, scale: isMobile ? 1 : 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="bg-card rounded-t-2xl sm:rounded-xl shadow-card-hover p-5 sm:p-6 w-full sm:max-w-lg space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -201,8 +228,8 @@ export default function Campaigns() {
               </div>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1 text-xs sm:text-sm" onClick={() => handleSend(true)}>Save Draft</Button>
-              <Button className="flex-1 gradient-primary text-primary-foreground text-xs sm:text-sm" onClick={() => handleSend(false)}>
+              <Button variant="outline" className="flex-1 text-xs sm:text-sm" onClick={() => handleSend(true)} disabled={saving}>Save Draft</Button>
+              <Button className="flex-1 gradient-primary text-primary-foreground text-xs sm:text-sm" onClick={() => handleSend(false)} disabled={saving}>
                 {form.schedule ? <><Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" /> Schedule</> : <><Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" /> Send Now</>}
               </Button>
             </div>
@@ -210,10 +237,11 @@ export default function Campaigns() {
         </div>
       )}
 
-      {/* Campaigns list */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="bg-card rounded-xl shadow-card p-8 sm:p-12 text-center text-muted-foreground text-sm">No campaigns match your filters</div>
+          <div className="bg-card rounded-xl shadow-card p-8 sm:p-12 text-center text-muted-foreground text-sm">
+            {campaigns.length === 0 ? "Create your first campaign to reach customers across all platforms." : "No campaigns match your filters"}
+          </div>
         ) : filtered.map((c, i) => (
           <motion.div key={c.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="bg-card rounded-xl shadow-card p-3 sm:p-4 md:p-5">
             <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
@@ -224,11 +252,11 @@ export default function Campaigns() {
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 mt-1 flex-wrap">
                   {c.platforms.map((p) => (
-                    <span key={p} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${platformBadgeColors[p]}`}>{p}</span>
+                    <span key={p} className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${platformBadgeColors[p] || "bg-muted text-muted-foreground"}`}>{p}</span>
                   ))}
                   <span className="text-[10px] text-muted-foreground">· {c.audience}</span>
-                  {c.sentAt && <span className="text-[10px] text-muted-foreground hidden sm:inline">· Sent {c.sentAt}</span>}
-                  {c.scheduledAt && <span className="text-[10px] text-warning flex items-center gap-0.5"><Clock className="h-3 w-3" /> {c.scheduledAt}</span>}
+                  {c.sentAt && <span className="text-[10px] text-muted-foreground hidden sm:inline">· Sent {new Date(c.sentAt).toLocaleDateString()}</span>}
+                  {c.scheduledAt && <span className="text-[10px] text-warning flex items-center gap-0.5"><Clock className="h-3 w-3" /> {new Date(c.scheduledAt).toLocaleDateString()}</span>}
                 </div>
               </div>
             </div>
