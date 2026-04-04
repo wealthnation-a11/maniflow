@@ -1,76 +1,73 @@
 
 
-## Simplified Social Platform Connection Flow
+## Plan: Database Tables + Settings Persistence + ConfirmDialog Fix
 
-### What You Want
-- WhatsApp: connect using just a phone number
-- Facebook & TikTok: one-click OAuth "Connect" buttons
-- All channels feed into the Inbox for manual or AI-powered replies
+### 1. Create database tables for Products, Orders, Customers, and Campaigns
 
-### Important Reality Check
+**Migration** creates four new tables, all with `user_id` referencing `auth.uid()` and RLS policies:
 
-These platforms require **developer API credentials** to send/receive messages programmatically. Here's what's feasible:
+**`products`** table:
+- `id` (uuid, PK), `user_id` (uuid), `name` (text), `description` (text), `price` (numeric), `image_url` (text), `stock` (integer, default 0), `category` (text), `variants` (jsonb, default `[]`), `created_at`, `updated_at`
 
-**WhatsApp** -- Meta's WhatsApp Cloud API requires a Meta Business account, an App, and API tokens. We *cannot* connect with just a phone number. However, Meta offers an **Embedded Signup** flow that simplifies onboarding: the user clicks "Connect WhatsApp," a Meta popup walks them through authorization, and we receive the tokens automatically. This is the simplest experience possible.
+**`orders`** table:
+- `id` (uuid, PK), `user_id` (uuid), `customer_name` (text), `customer_phone` (text), `product_name` (text), `amount` (numeric), `platform` (platform_type), `status` (new enum: `pending`, `processing`, `shipped`, `delivered`), `payment_status` (new enum: `pending`, `paid`, `failed`), `created_at`, `updated_at`
 
-**Facebook** -- We can implement **Facebook Login OAuth**. User clicks "Connect," authorizes page messaging permissions in a Meta popup, and we receive page tokens automatically. No manual token/page ID entry needed.
+**`customers`** table:
+- `id` (uuid, PK), `user_id` (uuid), `name` (text), `phone` (text), `email` (text), `platform` (platform_type), `total_orders` (integer, default 0), `total_spent` (numeric, default 0), `status` (new enum: `active`, `inactive`, `new`), `preferences` (text[], default `{}`), `first_seen` (timestamptz), `last_order_at` (timestamptz), `created_at`
 
-**TikTok** -- TikTok's messaging API is **very limited** and not openly available for third-party inbox tools. TikTok for Business API focuses on ads/analytics, not DM management. This is not feasible to implement currently.
+**`campaigns`** table:
+- `id` (uuid, PK), `user_id` (uuid), `name` (text), `message` (text), `platforms` (text[]), `audience` (text), `status` (new enum: `draft`, `scheduled`, `sent`, `active`), `recipients` (integer, default 0), `opened` (integer, default 0), `replied` (integer, default 0), `scheduled_at` (timestamptz), `sent_at` (timestamptz), `created_at`, `updated_at`
 
-### Proposed Plan
+All tables get RLS: `authenticated` users can ALL where `user_id = auth.uid()`.
 
-#### 1. Add Meta App credentials as secrets
-- Store `META_APP_ID` and `META_APP_SECRET` as backend secrets
-- These are needed for both WhatsApp Embedded Signup and Facebook OAuth
+Also add a `payment_details` jsonb column to `profiles` for bank info, and add realtime for orders.
 
-#### 2. Create an OAuth edge function (`meta-oauth`)
-- Handles the OAuth callback from Meta
-- Exchanges auth codes for long-lived page/WhatsApp tokens
-- Stores tokens in `platform_connections` automatically
+### 2. Connect Products page to database
 
-#### 3. Simplify WhatsApp connection UI
-- Replace the manual form with a "Connect WhatsApp" button
-- Opens Meta's Embedded Signup flow (or simplified OAuth)
-- User authorizes their WhatsApp Business account in the popup
-- Tokens and phone_number_id are saved automatically
+- Replace `initialProducts` with a Supabase query
+- CRUD operations (add, edit, delete) use Supabase inserts/updates/deletes
+- Product type updated to use uuid IDs
 
-#### 4. Simplify Facebook connection UI
-- Replace the manual form with a "Connect Facebook" button
-- Opens Facebook Login OAuth popup requesting `pages_messaging` permission
-- User selects their page, tokens are saved automatically
+### 3. Connect Orders page to database
 
-#### 5. Update Settings page UI
-- Each platform shows a card with a single "Connect" button
-- Connected platforms show status + "Disconnect" option
-- Remove manual token/page ID input fields
+- Replace `const orders = []` with a Supabase query
+- Remove hardcoded type, use database rows
+- Stats computed from real data
 
-#### 6. Add TikTok as "Coming Soon"
-- Show TikTok card with a disabled "Coming Soon" badge
-- No implementation until TikTok opens their messaging API
+### 4. Connect Customers page to database
+
+- Replace `const customers = []` with a Supabase query
+- Stats computed from real data
+
+### 5. Connect Campaigns page to database
+
+- Replace `const mockCampaigns = []` with a Supabase query
+- CRUD operations for creating/editing campaigns
+
+### 6. Persist Settings to database
+
+- On mount, load profile data from `profiles` table (ai_tone, business_name, timezone, currency, phone, logo_url)
+- Populate form fields with loaded values
+- "Save Changes" button writes all values back to `profiles` table via `supabase.update()`
+- Payment details saved to `profiles.payment_details` jsonb or to `bot_configs.payment_details`
+- Logo upload: create a `logos` storage bucket, upload file, save public URL to `profiles.logo_url`
+- Remove dependency on `businessStore.ts` localStorage
+
+### 7. Fix ConfirmDialog ref warning
+
+- Wrap `ConfirmDialog` with `React.forwardRef` or wrap inner elements properly to suppress the console warning
 
 ### Technical Details
 
-**Database**: Add `tiktok` to the `platform_type` enum for future use. No other schema changes needed -- `platform_connections` already has the right columns.
+**Files to create/edit:**
+- `supabase/migrations/...` -- new migration for 4 tables + enums + RLS + profiles column
+- `src/pages/Products.tsx` -- replace local state with Supabase CRUD
+- `src/pages/Orders.tsx` -- replace empty array with Supabase query
+- `src/pages/Customers.tsx` -- replace empty array with Supabase query
+- `src/pages/Campaigns.tsx` -- replace mock data with Supabase CRUD
+- `src/pages/Settings.tsx` -- load/save profile data from database
+- `src/components/ConfirmDialog.tsx` -- fix ref warning
+- `src/store/businessStore.ts` -- update to sync with DB instead of localStorage
 
-**Edge Function** (`supabase/functions/meta-oauth/index.ts`):
-- Receives OAuth redirect with auth code
-- Calls Meta Graph API to exchange for access token
-- Fetches user's pages/WhatsApp accounts
-- Inserts into `platform_connections`
-- Redirects back to Settings page with success status
-
-**Frontend OAuth flow**:
-- Opens `https://www.facebook.com/v18.0/dialog/oauth?client_id=...&redirect_uri=...&scope=pages_messaging,whatsapp_business_management`
-- Redirect URI points to the meta-oauth edge function
-- Edge function processes and redirects back to app
-
-**Files to create**: `supabase/functions/meta-oauth/index.ts`
-**Files to edit**: `src/pages/Settings.tsx`
-
-### Prerequisites
-You'll need to provide:
-1. A **Meta App ID** from developers.facebook.com
-2. A **Meta App Secret** from the same dashboard
-
-These are required for any OAuth-based connection with Meta platforms.
+**Storage bucket:** Create `logos` bucket for logo uploads (public access).
 
