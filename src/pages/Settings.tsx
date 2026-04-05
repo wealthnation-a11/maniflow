@@ -105,7 +105,7 @@ export default function Settings() {
         body: { platform, user_id: user.id, redirect_url: window.location.origin + "/settings" },
       });
       if (error || !data?.url) { toast.error("Failed to start connection. Please try again."); return; }
-      window.location.href = data.url;
+      window.open(data.url, "_blank");
     } catch { toast.error("Failed to start connection. Please try again."); }
   };
 
