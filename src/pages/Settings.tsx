@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { setLogoUrl as setStoreLogoUrl, setBusinessName as setStoreBusinessName } from "@/store/businessStore";
+import CreditsPanel from "@/components/CreditsPanel";
 
 type PlatformConnection = {
   id: string;
@@ -168,6 +169,8 @@ export default function Settings() {
         <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">Manage your account, connections, and preferences</p>
       </div>
+
+      <CreditsPanel />
 
       {/* Platform connections */}
       <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
