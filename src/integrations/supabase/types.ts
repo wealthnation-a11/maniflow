@@ -140,6 +140,33 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          amount: number
+          conversation_id: string | null
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
@@ -351,36 +378,48 @@ export type Database = {
           ai_tone: string | null
           business_name: string
           created_at: string
+          credits_balance: number
           currency: string | null
           id: string
           logo_url: string | null
           payment_details: Json
           phone: string | null
+          plan: string
+          plan_purchased_at: string | null
           timezone: string | null
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
           ai_tone?: string | null
           business_name?: string
           created_at?: string
+          credits_balance?: number
           currency?: string | null
           id: string
           logo_url?: string | null
           payment_details?: Json
           phone?: string | null
+          plan?: string
+          plan_purchased_at?: string | null
           timezone?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
           ai_tone?: string | null
           business_name?: string
           created_at?: string
+          credits_balance?: number
           currency?: string | null
           id?: string
           logo_url?: string | null
           payment_details?: Json
           phone?: string | null
+          plan?: string
+          plan_purchased_at?: string | null
           timezone?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -390,7 +429,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      deduct_credits: {
+        Args: {
+          p_amount: number
+          p_conversation_id?: string
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      grant_plan_credits: {
+        Args: { p_plan: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       campaign_status: "draft" | "scheduled" | "sent" | "active"
