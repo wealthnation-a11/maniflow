@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useBusiness } from "@/hooks/use-business";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebarCounts } from "@/hooks/useSidebarCounts";
+import { useCredits } from "@/hooks/useCredits";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -17,6 +18,7 @@ import {
   Bell,
   Bot,
   Sparkles,
+  Coins,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import ManyFlowLogo from "./ManyFlowLogo";
@@ -40,6 +42,7 @@ export default function AppSidebar() {
   const { logoUrl, businessName } = useBusiness();
   const { signOut } = useAuth();
   const counts = useSidebarCounts();
+  const { info: credits } = useCredits();
 
   const handleSignOut = async () => {
     await signOut();
@@ -122,6 +125,22 @@ export default function AppSidebar() {
         </nav>
 
         <div className="p-3 border-t border-sidebar-border space-y-1">
+          {credits && (
+            <Link
+              to="/settings"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm bg-sidebar-accent/40 hover:bg-sidebar-accent transition-colors"
+            >
+              <Coins className="h-4 w-4 text-primary flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-sidebar-foreground/70 leading-tight">Credits</p>
+                <p className="text-sm font-semibold text-sidebar-foreground leading-tight">
+                  {credits.credits_balance.toLocaleString()}
+                </p>
+              </div>
+              <span className="text-[10px] text-primary font-medium">Top up</span>
+            </Link>
+          )}
           <ThemeToggle />
           <Link
             to="/settings"
