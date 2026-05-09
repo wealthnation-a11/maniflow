@@ -79,13 +79,17 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      // Refund the credits since AI call failed
-      await supabaseAdmin.from("credit_transactions").insert({
-        user_id: user.id, amount: COST, reason: "ai_reply_refund",
-      });
-      await supabaseAdmin.rpc("grant_plan_credits", { p_user_id: user.id, p_plan: "__refund__" }).catch(() => {});
-      // Simple direct refund:
-      await supabaseAdmin.from("profiles").update({ credits_balance: undefined }).eq("id", user.id);
+      // Refund the credits since the AI call failed
+      const { data: prof } = await supabaseAdmin
+        .from("profiles").select("credits_balance").eq("id", user.id).maybeSingle();
+      if (prof) {
+        await supabaseAdmin.from("profiles")
+          .update({ credits_balance: (prof.credits_balance || 0) + COST })
+          .eq("id", user.id);
+        await supabaseAdmin.from("credit_transactions").insert({
+          user_id: user.id, amount: COST, reason: "ai_reply_refund",
+        });
+      }
 
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait and try again." }), {
