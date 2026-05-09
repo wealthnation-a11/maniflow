@@ -1,73 +1,89 @@
+# Plan: Credit-Based Pricing & AI Message Billing
+
+## New Pricing Structure
 
 
-## Plan: Database Tables + Settings Persistence + ConfirmDialog Fix
+| Plan     | Price   | Type        | Credits        | Notes                                                                               |
+| -------- | ------- | ----------- | -------------- | ----------------------------------------------------------------------------------- |
+| Free     | ₦0      | 3-day trial | 100 (trial)    | Auto-expires after 3 days                                                           |
+| Growth   | ₦10,000 | One-time    | 7,000 credits  | Credits expires after the credit is finish and the user is prompted to resubscribed |
+| Business | ₦30,000 | One-time    | 20,000 credits | Credits expires after the credit is finish and the user is prompted to resubscribed |
 
-### 1. Create database tables for Products, Orders, Customers, and Campaigns
 
-**Migration** creates four new tables, all with `user_id` referencing `auth.uid()` and RLS policies:
+**Credit cost per AI reply sent to a customer: 20 credits**
+(7,000 credits ≈ 350 AI replies; 20,000 credits ≈ 1,000 AI replies)
 
-**`products`** table:
-- `id` (uuid, PK), `user_id` (uuid), `name` (text), `description` (text), `price` (numeric), `image_url` (text), `stock` (integer, default 0), `category` (text), `variants` (jsonb, default `[]`), `created_at`, `updated_at`
+## What Will Change
 
-**`orders`** table:
-- `id` (uuid, PK), `user_id` (uuid), `customer_name` (text), `customer_phone` (text), `product_name` (text), `amount` (numeric), `platform` (platform_type), `status` (new enum: `pending`, `processing`, `shipped`, `delivered`), `payment_status` (new enum: `pending`, `paid`, `failed`), `created_at`, `updated_at`
+### 1. Database (migration)
 
-**`customers`** table:
-- `id` (uuid, PK), `user_id` (uuid), `name` (text), `phone` (text), `email` (text), `platform` (platform_type), `total_orders` (integer, default 0), `total_spent` (numeric, default 0), `status` (new enum: `active`, `inactive`, `new`), `preferences` (text[], default `{}`), `first_seen` (timestamptz), `last_order_at` (timestamptz), `created_at`
+Add to `profiles` table:
 
-**`campaigns`** table:
-- `id` (uuid, PK), `user_id` (uuid), `name` (text), `message` (text), `platforms` (text[]), `audience` (text), `status` (new enum: `draft`, `scheduled`, `sent`, `active`), `recipients` (integer, default 0), `opened` (integer, default 0), `replied` (integer, default 0), `scheduled_at` (timestamptz), `sent_at` (timestamptz), `created_at`, `updated_at`
+- `plan` (text: `free` | `growth` | `business`, default `free`)
+- `credits_balance` (integer, default 100)
+- `trial_ends_at` (timestamptz, default `now() + 3 days` for new users)
+- `plan_purchased_at` (timestamptz, nullable)
 
-All tables get RLS: `authenticated` users can ALL where `user_id = auth.uid()`.
+New table `credit_transactions`:
 
-Also add a `payment_details` jsonb column to `profiles` for bank info, and add realtime for orders.
+- `user_id`, `amount` (signed int), `reason` (text: `trial_grant` | `purchase` | `ai_reply`), `conversation_id` (nullable), `created_at`
 
-### 2. Connect Products page to database
+Update `handle_new_user()` to seed `plan='free'`, `credits_balance=100`, `trial_ends_at = now() + interval '3 days'`.
 
-- Replace `initialProducts` with a Supabase query
-- CRUD operations (add, edit, delete) use Supabase inserts/updates/deletes
-- Product type updated to use uuid IDs
+DB function `deduct_credits(p_user_id, p_amount, p_reason, p_conversation_id)`:
 
-### 3. Connect Orders page to database
+- Atomically checks balance, decrements, logs transaction. Returns success boolean.
 
-- Replace `const orders = []` with a Supabase query
-- Remove hardcoded type, use database rows
-- Stats computed from real data
+### 2. AI Bot Engine — enforce credits
 
-### 4. Connect Customers page to database
+Wherever an AI reply is generated and sent (the AI response engine in webhooks / chat / bot test simulator), before sending:
 
-- Replace `const customers = []` with a Supabase query
-- Stats computed from real data
+1. Check if user has active access: `plan != 'free'` OR `trial_ends_at > now()`.
+2. Check `credits_balance >= 20`.
+3. If both pass → send reply, then call `deduct_credits(user_id, 20, 'ai_reply', conversation_id)`.
+4. If not → skip AI reply (optionally log a "credits exhausted" system message; do not send to customer).
 
-### 5. Connect Campaigns page to database
+Files affected: `supabase/functions/chat/index.ts`, `supabase/functions/whatsapp-webhook/index.ts`, `supabase/functions/meta-webhook/index.ts`, and any bot-config test handler.
 
-- Replace `const mockCampaigns = []` with a Supabase query
-- CRUD operations for creating/editing campaigns
+### 3. Pricing Page (`src/pages/Pricing.tsx`)
 
-### 6. Persist Settings to database
+Rewrite the three plan cards:
 
-- On mount, load profile data from `profiles` table (ai_tone, business_name, timezone, currency, phone, logo_url)
-- Populate form fields with loaded values
-- "Save Changes" button writes all values back to `profiles` table via `supabase.update()`
-- Payment details saved to `profiles.payment_details` jsonb or to `bot_configs.payment_details`
-- Logo upload: create a `logos` storage bucket, upload file, save public URL to `profiles.logo_url`
-- Remove dependency on `businessStore.ts` localStorage
+- **Free** — "₦0 · 3-day trial" — 100 credits, all features, expires in 3 days. CTA: "Start Free Trial".
+- **Growth** — "₦10,000 one-time" — 7,000 credits (~350 AI replies), no expiry. CTA: "Buy Growth".
+- **Business** — "₦30,000 one-time" — 20,000 credits (~1,000 AI replies), no expiry. CTA: "Buy Business". Marked highlighted.
 
-### 7. Fix ConfirmDialog ref warning
+Add a small note: "Each AI reply costs 20 credits. Credits never expire on paid plans."
 
-- Wrap `ConfirmDialog` with `React.forwardRef` or wrap inner elements properly to suppress the console warning
+### 4. Checkout / Payment
 
-### Technical Details
+**Question for you:** how should users actually pay for Growth / Business?
 
-**Files to create/edit:**
-- `supabase/migrations/...` -- new migration for 4 tables + enums + RLS + profiles column
-- `src/pages/Products.tsx` -- replace local state with Supabase CRUD
-- `src/pages/Orders.tsx` -- replace empty array with Supabase query
-- `src/pages/Customers.tsx` -- replace empty array with Supabase query
-- `src/pages/Campaigns.tsx` -- replace mock data with Supabase CRUD
-- `src/pages/Settings.tsx` -- load/save profile data from database
-- `src/components/ConfirmDialog.tsx` -- fix ref warning
-- `src/store/businessStore.ts` -- update to sync with DB instead of localStorage
+Options (pick one — see questions below):
 
-**Storage bucket:** Create `logos` bucket for logo uploads (public access).
+- **A. Lovable Cloud Payments (Paddle/Stripe)** — proper checkout, requires enabling payments integration (Pro plan required on Lovable).
+- **B. Manual bank transfer** — show your bank details, user uploads proof, you/admin manually credit them in DB.
+- **C. Placeholder for now** — just wire the UI + credit logic; payment hooked up later.
 
+On successful payment: set `plan`, add credits via `credit_transactions` (+7000 or +20000), set `plan_purchased_at`.
+
+### 5. UI surfacing
+
+- Show **credits balance** in the sidebar / topbar (small badge).
+- On Dashboard, add a "Credits remaining" stat card.
+- When trial expired or balance < 20, show a banner: "Top up to keep your AI bot replying" → links to /pricing.
+- In Settings, add a "Plan & Credits" section showing current plan, balance, and a transactions list.
+
+### 6. Files Touched
+
+- `supabase/migrations/<new>.sql` (schema + function + trigger update)
+- `supabase/functions/chat/index.ts`, `whatsapp-webhook/index.ts`, `meta-webhook/index.ts` (credit gate + deduct)
+- `src/pages/Pricing.tsx` (new plan cards)
+- `src/pages/Settings.tsx` (plan & credits section, top-up button)
+- `src/components/AppSidebar.tsx` or topbar (credits badge)
+- `src/pages/Dashboard.tsx` (credits stat + trial/low-balance banner)
+- `src/hooks/useCredits.ts` (new) — fetch balance + realtime subscribe
+
+---
+
+## Please confirm before I implement:
