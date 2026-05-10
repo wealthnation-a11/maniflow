@@ -5,8 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const COST = 20;
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -14,8 +12,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -27,8 +24,7 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -37,21 +33,25 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Deduct 20 credits up front (atomic). If it fails, no AI call is made.
-    const { data: ok, error: dedErr } = await supabaseAdmin.rpc("deduct_credits", {
-      p_user_id: user.id,
-      p_amount: COST,
-      p_reason: "ai_reply",
-      p_conversation_id: null,
-    });
-    if (dedErr) throw dedErr;
-    if (!ok) {
+    // Pre-flight credit check (no deduction yet)
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("plan, trial_ends_at, credits_balance, cost_per_ai_reply")
+      .eq("id", user.id).maybeSingle();
+
+    const cost = profile?.cost_per_ai_reply ?? 20;
+    const trialActive = profile?.trial_ends_at && new Date(profile.trial_ends_at as string) > new Date();
+    const planActive = profile && (profile.plan !== "free" || trialActive);
+    const hasBalance = (profile?.credits_balance ?? 0) >= cost;
+
+    if (!planActive || !hasBalance) {
       return new Response(JSON.stringify({
-        error: "Out of credits. Please top up your plan to keep using the AI assistant.",
+        error: !planActive
+          ? "Your free trial has ended. Top up to keep using the AI assistant."
+          : "Out of credits. Please top up your plan to keep using the AI assistant.",
         code: "no_credits",
       }), {
-        status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -61,10 +61,7 @@ Deno.serve(async (req) => {
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
@@ -79,18 +76,6 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      // Refund the credits since the AI call failed
-      const { data: prof } = await supabaseAdmin
-        .from("profiles").select("credits_balance").eq("id", user.id).maybeSingle();
-      if (prof) {
-        await supabaseAdmin.from("profiles")
-          .update({ credits_balance: (prof.credits_balance || 0) + COST })
-          .eq("id", user.id);
-        await supabaseAdmin.from("credit_transactions").insert({
-          user_id: user.id, amount: COST, reason: "ai_reply_refund",
-        });
-      }
-
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait and try again." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -103,7 +88,37 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(response.body, {
+    // Tee the stream so we can deduct after success without delaying client output
+    const [clientStream, monitorStream] = response.body!.tee();
+    (async () => {
+      try {
+        const reader = monitorStream.getReader();
+        // Drain the monitor stream to confirm completion
+        // eslint-disable-next-line no-constant-condition
+        while (true) { const { done } = await reader.read(); if (done) break; }
+        await supabaseAdmin.rpc("deduct_credits", {
+          p_user_id: user.id, p_amount: cost, p_reason: "ai_reply", p_conversation_id: null,
+        });
+        const newBal = (profile?.credits_balance ?? 0) - cost;
+        if (newBal < cost * 5) {
+          const { data: prof } = await supabaseAdmin.from("profiles")
+            .select("low_credits_alert_sent_at").eq("id", user.id).maybeSingle();
+          const last = prof?.low_credits_alert_sent_at ? new Date(prof.low_credits_alert_sent_at).getTime() : 0;
+          if (Date.now() - last > 12 * 3600 * 1000) {
+            await supabaseAdmin.from("notifications").insert({
+              user_id: user.id, type: "low_credits",
+              title: "Credits running low",
+              body: `You have ${newBal} credits left. Top up to avoid interruption.`,
+            });
+            await supabaseAdmin.from("profiles")
+              .update({ low_credits_alert_sent_at: new Date().toISOString() })
+              .eq("id", user.id);
+          }
+        }
+      } catch (e) { console.error("post-stream deduct failed:", e); }
+    })();
+
+    return new Response(clientStream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
