@@ -243,6 +243,8 @@ export default function Settings() {
               Each AI reply sent to a customer deducts this many credits. Default: 20.
             </p>
           </div>
+        </div>
+      </div>
 
       {/* Notification settings */}
       <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
