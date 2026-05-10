@@ -6,7 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const COST = 20;
+const ALERT_COOLDOWN_HOURS = 12;
+
+async function notifyOnce(supabaseAdmin: any, userId: string, type: "low_credits" | "trial_expired", title: string, body: string, cooldownField: string) {
+  const { data: prof } = await supabaseAdmin.from("profiles").select(cooldownField).eq("id", userId).maybeSingle();
+  const last = prof?.[cooldownField] ? new Date(prof[cooldownField]).getTime() : 0;
+  if (Date.now() - last < ALERT_COOLDOWN_HOURS * 3600 * 1000) return;
+  await supabaseAdmin.from("notifications").insert({ user_id: userId, type, title, body });
+  await supabaseAdmin.from("profiles").update({ [cooldownField]: new Date().toISOString() }).eq("id", userId);
+}
 
 async function generateAIReply(opts: {
   userInput: string;
