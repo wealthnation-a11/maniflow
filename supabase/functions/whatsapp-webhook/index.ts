@@ -185,12 +185,19 @@ Deno.serve(async (req: Request) => {
         content: messageText, platform_message_id: message.id,
       });
 
-      // Credit gate
-      const { data: ok } = await supabaseAdmin.rpc("deduct_credits", {
-        p_user_id: userId, p_amount: COST, p_reason: "ai_reply", p_conversation_id: conversationId,
-      });
-      if (!ok) {
-        console.log("User out of credits, skipping AI reply", userId);
+      // Credit gate: check before doing any AI work
+      if (!planActive) {
+        await notifyOnce(supabaseAdmin, userId, "trial_expired",
+          "Trial expired", "Your free trial ended. Top up to keep your AI bot replying.",
+          "trial_expired_alert_sent_at");
+        return new Response(JSON.stringify({ status: "trial_expired" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!hasBalance) {
+        await notifyOnce(supabaseAdmin, userId, "low_credits",
+          "Out of credits", `Your AI bot stopped replying. Each reply costs ${cost} credits — top up to resume.`,
+          "low_credits_alert_sent_at");
         return new Response(JSON.stringify({ status: "no_credits" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -206,39 +213,50 @@ Deno.serve(async (req: Request) => {
         content: m.content,
       }));
 
-      let aiReply: string;
-      try {
-        aiReply = await generateAIReply({
-          userInput: messageText, customerName,
-          businessName: profile?.business_name || "",
-          aiTone: profile?.ai_tone || "friendly",
-          qaRules: (botConfig?.qa_rules as any[]) || [],
-          negotiationRules: (botConfig?.negotiation_rules as any[]) || [],
-          paymentDetails: botConfig?.payment_details || {},
-          botSettings: botConfig?.bot_settings || {},
-          history,
-        });
-      } catch (e) {
-        // Refund
-        const { data: prof } = await supabaseAdmin.from("profiles").select("credits_balance").eq("id", userId).maybeSingle();
-        if (prof) {
-          await supabaseAdmin.from("profiles").update({ credits_balance: (prof.credits_balance || 0) + COST }).eq("id", userId);
-          await supabaseAdmin.from("credit_transactions").insert({ user_id: userId, amount: COST, reason: "ai_reply_refund", conversation_id: conversationId });
-        }
-        throw e;
-      }
-
-      await supabaseAdmin.from("messages").insert({
-        conversation_id: conversationId, role: "ai", content: aiReply,
+      const aiReply = await generateAIReply({
+        userInput: messageText, customerName,
+        businessName: profile?.business_name || "",
+        aiTone: profile?.ai_tone || "friendly",
+        qaRules: (botConfig?.qa_rules as any[]) || [],
+        negotiationRules: (botConfig?.negotiation_rules as any[]) || [],
+        paymentDetails: botConfig?.payment_details || {},
+        botSettings: botConfig?.bot_settings || {},
+        history,
       });
 
-      await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+      // Send reply BEFORE deducting
+      const sendRes = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
         method: "POST",
         headers: { Authorization: `Bearer ${connection.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           messaging_product: "whatsapp", to: customerPhone, type: "text", text: { body: aiReply },
         }),
       });
+
+      if (!sendRes.ok) {
+        const t = await sendRes.text();
+        console.error("WhatsApp send failed:", sendRes.status, t);
+        return new Response(JSON.stringify({ status: "send_failed" }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      await supabaseAdmin.from("messages").insert({
+        conversation_id: conversationId, role: "ai", content: aiReply,
+      });
+
+      // Deduct only after successful send
+      await supabaseAdmin.rpc("deduct_credits", {
+        p_user_id: userId, p_amount: cost, p_reason: "ai_reply", p_conversation_id: conversationId,
+      });
+
+      // Low-balance early warning after deduction
+      const newBalance = (profile?.credits_balance ?? 0) - cost;
+      if (newBalance < cost * 5) {
+        await notifyOnce(supabaseAdmin, userId, "low_credits",
+          "Credits running low", `You have ${newBalance} credits left. Top up to avoid interruption.`,
+          "low_credits_alert_sent_at");
+      }
 
       return new Response(JSON.stringify({ status: "ok", reply: aiReply }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
