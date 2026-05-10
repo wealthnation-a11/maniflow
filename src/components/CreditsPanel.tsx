@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Coins, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCredits, COST_PER_AI_REPLY } from "@/hooks/useCredits";
+import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ const PLAN_LABEL: Record<string, string> = {
 };
 
 export default function CreditsPanel() {
-  const { info, loading, refetch, trialActive } = useCredits();
+  const { info, loading, refetch, trialActive, costPerReply: COST_PER_AI_REPLY } = useCredits();
   const [busy, setBusy] = useState<string | null>(null);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
