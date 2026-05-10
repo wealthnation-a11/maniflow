@@ -124,7 +124,7 @@ export default function CreditsPanel() {
         </button>
       </div>
       <p className="text-[10px] text-muted-foreground mt-3">
-        Demo top-up: clicking instantly credits your account. Hook this up to a payment gateway before going live.
+        Demo top-up: clicking instantly credits your account. Hook this up to a payment gateway before going live. <a href="/credits" className="text-primary hover:underline ml-1">View history →</a>
       </p>
     </div>
   );
