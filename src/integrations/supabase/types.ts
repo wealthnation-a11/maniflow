@@ -250,6 +250,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          metadata: Json
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number
@@ -377,49 +410,58 @@ export type Database = {
         Row: {
           ai_tone: string | null
           business_name: string
+          cost_per_ai_reply: number
           created_at: string
           credits_balance: number
           currency: string | null
           id: string
           logo_url: string | null
+          low_credits_alert_sent_at: string | null
           payment_details: Json
           phone: string | null
           plan: string
           plan_purchased_at: string | null
           timezone: string | null
           trial_ends_at: string | null
+          trial_expired_alert_sent_at: string | null
           updated_at: string
         }
         Insert: {
           ai_tone?: string | null
           business_name?: string
+          cost_per_ai_reply?: number
           created_at?: string
           credits_balance?: number
           currency?: string | null
           id: string
           logo_url?: string | null
+          low_credits_alert_sent_at?: string | null
           payment_details?: Json
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
           timezone?: string | null
           trial_ends_at?: string | null
+          trial_expired_alert_sent_at?: string | null
           updated_at?: string
         }
         Update: {
           ai_tone?: string | null
           business_name?: string
+          cost_per_ai_reply?: number
           created_at?: string
           credits_balance?: number
           currency?: string | null
           id?: string
           logo_url?: string | null
+          low_credits_alert_sent_at?: string | null
           payment_details?: Json
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
           timezone?: string | null
           trial_ends_at?: string | null
+          trial_expired_alert_sent_at?: string | null
           updated_at?: string
         }
         Relationships: []

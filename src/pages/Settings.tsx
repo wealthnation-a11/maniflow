@@ -47,6 +47,7 @@ export default function Settings() {
   const [currency, setCurrency] = useState("ngn");
   const [phone, setPhone] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [costPerReply, setCostPerReply] = useState<number>(20);
   const [payment, setPayment] = useState<PaymentDetails>({ bank_name: "", account_number: "", account_name: "" });
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +70,7 @@ export default function Settings() {
         setCurrency(profile.currency || "ngn");
         setPhone(profile.phone || "");
         setLogoUrl(profile.logo_url || null);
+        setCostPerReply((profile as any).cost_per_ai_reply ?? 20);
         const pd = (profile as any).payment_details as PaymentDetails | null;
         if (pd && typeof pd === "object") setPayment({ bank_name: pd.bank_name || "", account_number: pd.account_number || "", account_name: pd.account_name || "" });
       }
@@ -152,6 +154,7 @@ export default function Settings() {
       currency,
       phone,
       logo_url: logoUrl,
+      cost_per_ai_reply: Math.max(1, Math.min(1000, Math.floor(costPerReply || 20))),
       payment_details: payment as any,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
@@ -227,6 +230,18 @@ export default function Settings() {
           <div>
             <Label className="text-xs sm:text-sm">Business Name (shown in AI replies)</Label>
             <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="mt-1" placeholder="My Business" />
+          </div>
+          <div>
+            <Label className="text-xs sm:text-sm">Credits per AI reply</Label>
+            <Input
+              type="number" min={1} max={1000}
+              value={costPerReply}
+              onChange={(e) => setCostPerReply(Number(e.target.value))}
+              className="mt-1 w-32"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Each AI reply sent to a customer deducts this many credits. Default: 20.
+            </p>
           </div>
         </div>
       </div>

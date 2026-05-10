@@ -127,7 +127,7 @@ export default function AppSidebar() {
         <div className="p-3 border-t border-sidebar-border space-y-1">
           {credits && (
             <Link
-              to="/settings"
+              to="/credits"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm bg-sidebar-accent/40 hover:bg-sidebar-accent transition-colors"
             >
@@ -138,7 +138,7 @@ export default function AppSidebar() {
                   {credits.credits_balance.toLocaleString()}
                 </p>
               </div>
-              <span className="text-[10px] text-primary font-medium">Top up</span>
+              <span className="text-[10px] text-primary font-medium">History</span>
             </Link>
           )}
           <ThemeToggle />

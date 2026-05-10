@@ -26,6 +26,7 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import Notifications from "./pages/Notifications";
+import CreditsHistory from "./pages/CreditsHistory";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -61,6 +62,7 @@ const App = () => (
                   <Route path="/bot-config" element={<BotConfig />} />
                   <Route path="/chat" element={<ChatAssistant />} />
                   <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/credits" element={<CreditsHistory />} />
                   <Route path="/settings" element={<Settings />} />
                 </Route>
               </Route>

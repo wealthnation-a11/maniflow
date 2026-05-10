@@ -6,7 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const COST = 20;
+const ALERT_COOLDOWN_HOURS = 12;
+
+async function notifyOnce(supabaseAdmin: any, userId: string, type: "low_credits" | "trial_expired", title: string, body: string, cooldownField: string) {
+  const { data: prof } = await supabaseAdmin.from("profiles").select(cooldownField).eq("id", userId).maybeSingle();
+  const last = prof?.[cooldownField] ? new Date(prof[cooldownField]).getTime() : 0;
+  if (Date.now() - last < ALERT_COOLDOWN_HOURS * 3600 * 1000) return;
+  await supabaseAdmin.from("notifications").insert({ user_id: userId, type, title, body });
+  await supabaseAdmin.from("profiles").update({ [cooldownField]: new Date().toISOString() }).eq("id", userId);
+}
 
 async function generateAIReply(opts: {
   userInput: string;
@@ -144,8 +152,13 @@ Deno.serve(async (req: Request) => {
 
       const [{ data: botConfig }, { data: profile }] = await Promise.all([
         supabaseAdmin.from("bot_configs").select("*").eq("user_id", userId).maybeSingle(),
-        supabaseAdmin.from("profiles").select("business_name, ai_tone").eq("id", userId).maybeSingle(),
+        supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, trial_ends_at, credits_balance, cost_per_ai_reply").eq("id", userId).maybeSingle(),
       ]);
+
+      const cost = (profile as any)?.cost_per_ai_reply ?? 20;
+      const trialActive = profile?.trial_ends_at && new Date(profile.trial_ends_at as string) > new Date();
+      const planActive = profile && (profile.plan !== "free" || trialActive);
+      const hasBalance = ((profile as any)?.credits_balance ?? 0) >= cost;
 
       const { data: existingConv } = await supabaseAdmin
         .from("conversations").select("*")
@@ -171,12 +184,19 @@ Deno.serve(async (req: Request) => {
         content: messageText, platform_message_id: messageId,
       });
 
-      // Credit gate
-      const { data: ok } = await supabaseAdmin.rpc("deduct_credits", {
-        p_user_id: userId, p_amount: COST, p_reason: "ai_reply", p_conversation_id: conversationId,
-      });
-      if (!ok) {
-        console.log("Out of credits, skipping AI reply for user", userId);
+      // Credit gate (no deduction yet)
+      if (!planActive) {
+        await notifyOnce(supabaseAdmin, userId, "trial_expired",
+          "Trial expired", "Your free trial ended. Top up to keep your AI bot replying.",
+          "trial_expired_alert_sent_at");
+        return new Response(JSON.stringify({ status: "trial_expired" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!hasBalance) {
+        await notifyOnce(supabaseAdmin, userId, "low_credits",
+          "Out of credits", `Your AI bot stopped replying. Each reply costs ${cost} credits — top up to resume.`,
+          "low_credits_alert_sent_at");
         return new Response(JSON.stringify({ status: "no_credits" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -191,39 +211,49 @@ Deno.serve(async (req: Request) => {
         content: m.content,
       }));
 
-      let aiReply: string;
-      try {
-        aiReply = await generateAIReply({
-          userInput: messageText, customerName: "Customer",
-          businessName: profile?.business_name || "",
-          aiTone: profile?.ai_tone || "friendly",
-          qaRules: (botConfig?.qa_rules as any[]) || [],
-          negotiationRules: (botConfig?.negotiation_rules as any[]) || [],
-          paymentDetails: botConfig?.payment_details || {},
-          history,
-        });
-      } catch (e) {
-        const { data: prof } = await supabaseAdmin.from("profiles").select("credits_balance").eq("id", userId).maybeSingle();
-        if (prof) {
-          await supabaseAdmin.from("profiles").update({ credits_balance: (prof.credits_balance || 0) + COST }).eq("id", userId);
-          await supabaseAdmin.from("credit_transactions").insert({ user_id: userId, amount: COST, reason: "ai_reply_refund", conversation_id: conversationId });
-        }
-        throw e;
-      }
-
-      await supabaseAdmin.from("messages").insert({
-        conversation_id: conversationId, role: "ai", content: aiReply,
+      const aiReply = await generateAIReply({
+        userInput: messageText, customerName: "Customer",
+        businessName: profile?.business_name || "",
+        aiTone: profile?.ai_tone || "friendly",
+        qaRules: (botConfig?.qa_rules as any[]) || [],
+        negotiationRules: (botConfig?.negotiation_rules as any[]) || [],
+        paymentDetails: botConfig?.payment_details || {},
+        history,
       });
 
       const endpoint = platform === "instagram"
         ? `https://graph.facebook.com/v18.0/${pageId}/messages`
         : `https://graph.facebook.com/v18.0/me/messages`;
 
-      await fetch(endpoint, {
+      const sendRes = await fetch(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${connection.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ recipient: { id: senderId }, message: { text: aiReply } }),
       });
+
+      if (!sendRes.ok) {
+        const t = await sendRes.text();
+        console.error("Meta send failed:", sendRes.status, t);
+        return new Response(JSON.stringify({ status: "send_failed" }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      await supabaseAdmin.from("messages").insert({
+        conversation_id: conversationId, role: "ai", content: aiReply,
+      });
+
+      // Deduct only after successful send
+      await supabaseAdmin.rpc("deduct_credits", {
+        p_user_id: userId, p_amount: cost, p_reason: "ai_reply", p_conversation_id: conversationId,
+      });
+
+      const newBalance = ((profile as any)?.credits_balance ?? 0) - cost;
+      if (newBalance < cost * 5) {
+        await notifyOnce(supabaseAdmin, userId, "low_credits",
+          "Credits running low", `You have ${newBalance} credits left. Top up to avoid interruption.`,
+          "low_credits_alert_sent_at");
+      }
 
       return new Response(JSON.stringify({ status: "ok", reply: aiReply }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
