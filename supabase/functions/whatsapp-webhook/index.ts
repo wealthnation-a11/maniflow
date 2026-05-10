@@ -149,8 +149,13 @@ Deno.serve(async (req: Request) => {
 
       const [{ data: botConfig }, { data: profile }] = await Promise.all([
         supabaseAdmin.from("bot_configs").select("*").eq("user_id", userId).maybeSingle(),
-        supabaseAdmin.from("profiles").select("business_name, ai_tone").eq("id", userId).maybeSingle(),
+        supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, trial_ends_at, credits_balance, cost_per_ai_reply").eq("id", userId).maybeSingle(),
       ]);
+
+      const cost = profile?.cost_per_ai_reply ?? 20;
+      const trialActive = profile?.trial_ends_at && new Date(profile.trial_ends_at as string) > new Date();
+      const planActive = profile && (profile.plan !== "free" || trialActive);
+      const hasBalance = (profile?.credits_balance ?? 0) >= cost;
 
       // Find or create conversation
       const { data: existingConv } = await supabaseAdmin
