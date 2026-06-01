@@ -9,12 +9,18 @@ export type CreditsInfo = {
   credits_balance: number;
   trial_ends_at: string | null;
   plan_purchased_at: string | null;
-  cost_per_ai_reply: number;
 };
 
-export const DEFAULT_COST_PER_AI_REPLY = 20;
-// Backwards-compat export (some files imported the constant before per-user cost existed)
-export const COST_PER_AI_REPLY = DEFAULT_COST_PER_AI_REPLY;
+// Plan-based AI reply cost (must match DB function public.get_reply_cost)
+export const PLAN_REPLY_COST: Record<PlanType, number> = {
+  free: 5,
+  growth: 3,
+  business: 1,
+};
+
+export function getReplyCost(plan: PlanType | string | undefined): number {
+  return PLAN_REPLY_COST[(plan as PlanType)] ?? 5;
+}
 
 export function useCredits() {
   const { user } = useAuth();
@@ -25,7 +31,7 @@ export function useCredits() {
     if (!user) { setInfo(null); setLoading(false); return; }
     const { data } = await supabase
       .from("profiles")
-      .select("plan, credits_balance, trial_ends_at, plan_purchased_at, cost_per_ai_reply")
+      .select("plan, credits_balance, trial_ends_at, plan_purchased_at")
       .eq("id", user.id)
       .maybeSingle();
     if (data) setInfo(data as CreditsInfo);
@@ -47,10 +53,10 @@ export function useCredits() {
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchInfo]);
 
-  const cost = info?.cost_per_ai_reply ?? DEFAULT_COST_PER_AI_REPLY;
+  const cost = getReplyCost(info?.plan);
   const trialActive = !!info?.trial_ends_at && new Date(info.trial_ends_at) > new Date();
   const hasAccess = !!info && (info.plan !== "free" || trialActive) && info.credits_balance >= cost;
-  const lowBalance = !!info && info.credits_balance < cost * 5;
+  const lowBalance = !!info && info.credits_balance < cost * 10;
 
   return { info, loading, refetch: fetchInfo, trialActive, hasAccess, lowBalance, costPerReply: cost };
 }

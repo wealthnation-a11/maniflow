@@ -231,16 +231,10 @@ export default function Settings() {
             <Label className="text-xs sm:text-sm">Business Name (shown in AI replies)</Label>
             <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="mt-1" placeholder="My Business" />
           </div>
-          <div>
+          <div className="bg-muted/30 rounded-lg p-3">
             <Label className="text-xs sm:text-sm">Credits per AI reply</Label>
-            <Input
-              type="number" min={1} max={1000}
-              value={costPerReply}
-              onChange={(e) => setCostPerReply(Number(e.target.value))}
-              className="mt-1 w-32"
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Each AI reply sent to a customer deducts this many credits. Default: 20.
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Set automatically by your plan — Free: 5, Growth: 3, Business: 1 credit per reply.
             </p>
           </div>
         </div>
