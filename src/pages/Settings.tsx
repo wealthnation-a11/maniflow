@@ -47,7 +47,7 @@ export default function Settings() {
   const [currency, setCurrency] = useState("ngn");
   const [phone, setPhone] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [costPerReply, setCostPerReply] = useState<number>(20);
+  const [_planForCost, setPlanForCost] = useState<string>("free");
   const [payment, setPayment] = useState<PaymentDetails>({ bank_name: "", account_number: "", account_name: "" });
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +70,7 @@ export default function Settings() {
         setCurrency(profile.currency || "ngn");
         setPhone(profile.phone || "");
         setLogoUrl(profile.logo_url || null);
-        setCostPerReply((profile as any).cost_per_ai_reply ?? 20);
+        setPlanForCost((profile as any).plan ?? "free");
         const pd = (profile as any).payment_details as PaymentDetails | null;
         if (pd && typeof pd === "object") setPayment({ bank_name: pd.bank_name || "", account_number: pd.account_number || "", account_name: pd.account_name || "" });
       }
@@ -233,7 +233,7 @@ export default function Settings() {
           <div className="bg-muted/30 rounded-lg p-3">
             <Label className="text-xs sm:text-sm">Credits per AI reply</Label>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Set automatically by your plan — Free: 5, Growth: 3, Business: 1 credit per reply.
+              Set automatically by your plan ({_planForCost}). Free: 5, Growth: 3, Business: 1 credit per reply.
             </p>
           </div>
         </div>
