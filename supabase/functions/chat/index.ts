@@ -33,13 +33,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Pre-flight credit check (no deduction yet)
+    // Pre-flight credit check (plan-based cost)
+    const PLAN_COST: Record<string, number> = { free: 5, growth: 3, business: 1 };
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("plan, trial_ends_at, credits_balance, cost_per_ai_reply")
+      .select("plan, trial_ends_at, credits_balance")
       .eq("id", user.id).maybeSingle();
 
-    const cost = profile?.cost_per_ai_reply ?? 20;
+    const cost = PLAN_COST[(profile?.plan as string) || "free"] ?? 5;
     const trialActive = profile?.trial_ends_at && new Date(profile.trial_ends_at as string) > new Date();
     const planActive = profile && (profile.plan !== "free" || trialActive);
     const hasBalance = (profile?.credits_balance ?? 0) >= cost;
