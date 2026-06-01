@@ -11,12 +11,11 @@ const plans = [
     period: "/ 3 days",
     desc: "Try ManyFlow with 100 credits",
     features: [
-      "100 trial credits (~5 AI replies)",
+      "100 trial credits",
+      "5 credits per AI reply",
       "All platforms (WhatsApp, Instagram, Facebook)",
-      "Full AI bot",
       "Expires after 3 days",
     ],
-    cta: "Start Free Trial",
     highlighted: false,
   },
   {
@@ -26,13 +25,11 @@ const plans = [
     period: "one-time",
     desc: "7,000 credits to power your AI",
     features: [
-      "7,000 credits (~350 AI replies)",
+      "7,000 credits",
+      "3 credits per AI reply (~2,300 replies)",
       "All platforms",
       "Full AI bot replies",
-      "Credits used per AI message",
-      "Resubscribe when credits run out",
     ],
-    cta: "Buy Growth",
     highlighted: true,
   },
   {
@@ -42,13 +39,11 @@ const plans = [
     period: "one-time",
     desc: "20,000 credits for scaling teams",
     features: [
-      "20,000 credits (~1,000 AI replies)",
+      "20,000 credits",
+      "1 credit per AI reply (~20,000 replies)",
       "All platforms",
-      "Full AI bot replies",
       "Priority support",
-      "Resubscribe when credits run out",
     ],
-    cta: "Buy Business",
     highlighted: false,
   },
 ];
@@ -67,7 +62,7 @@ export default function Pricing() {
         <div className="text-center mb-12">
           <h1 className="font-heading text-3xl md:text-4xl font-bold mb-4">Pay-As-You-Grow Pricing</h1>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Each AI reply costs <strong>20 credits</strong>. Top up once — no subscription, no surprises.
+            Credit cost per AI reply depends on your plan — the bigger the plan, the cheaper each reply.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
@@ -90,7 +85,7 @@ export default function Pricing() {
                   {plan.period}
                 </span>
               </div>
-              <ul className="space-y-2 mb-6">
+              <ul className="space-y-2 mb-2">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm">
                     <Check className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -98,23 +93,17 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <Link to={plan.id === "free" ? "/auth?mode=signup" : "/settings?topup=" + plan.id}>
-                <Button
-                  className={`w-full ${
-                    plan.highlighted
-                      ? "bg-card text-foreground hover:bg-card/90"
-                      : "gradient-primary text-primary-foreground"
-                  }`}
-                >
-                  {plan.cta}
-                </Button>
-              </Link>
             </div>
           ))}
         </div>
         <p className="text-center text-xs text-muted-foreground mt-8">
-          Once your credits run out, your AI bot pauses and you'll be prompted to resubscribe.
+          Payments are coming soon — for now, contact us to upgrade your plan.
         </p>
+        <div className="text-center mt-6">
+          <Link to="/auth?mode=signup">
+            <Button className="gradient-primary text-primary-foreground">Start Free Trial</Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

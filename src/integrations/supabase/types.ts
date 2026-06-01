@@ -480,6 +480,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_reply_cost: { Args: { p_plan: string }; Returns: number }
       grant_plan_credits: {
         Args: { p_plan: string; p_user_id: string }
         Returns: boolean

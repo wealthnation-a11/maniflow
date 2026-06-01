@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 const ALERT_COOLDOWN_HOURS = 12;
+const PLAN_COST: Record<string, number> = { free: 5, growth: 3, business: 1 };
+function costForPlan(plan?: string | null) { return PLAN_COST[plan || "free"] ?? 5; }
 
 async function notifyOnce(supabaseAdmin: any, userId: string, type: "low_credits" | "trial_expired", title: string, body: string, cooldownField: string) {
   const { data: prof } = await supabaseAdmin.from("profiles").select(cooldownField).eq("id", userId).maybeSingle();
@@ -16,50 +18,72 @@ async function notifyOnce(supabaseAdmin: any, userId: string, type: "low_credits
   await supabaseAdmin.from("profiles").update({ [cooldownField]: new Date().toISOString() }).eq("id", userId);
 }
 
-async function generateAIReply(opts: {
-  userInput: string;
+function buildSystemPrompt(opts: {
   customerName: string;
   businessName: string;
   aiTone: string;
+  products: any[];
   qaRules: any[];
-  negotiationRules: any[];
   paymentDetails: any;
+}) {
+  const productLines = (opts.products || []).map((p: any) => {
+    const price = Number(p.price || 0);
+    const min = Number(p.min_price ?? p.minPrice ?? price);
+    const negotiable = min > 0 && min < price;
+    const stock = p.stock != null ? `, stock: ${p.stock}` : "";
+    return `- ${p.name}: ₦${price.toLocaleString()}${negotiable ? ` (negotiable down to ₦${min.toLocaleString()})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
+  }).join("\n") || "(no products configured yet — apologise and offer to take a manual order)";
+
+  const qa = (opts.qaRules || []).map((r: any) =>
+    `- If customer mentions [${(r.keywords || []).join(", ")}]: ${r.response}`).join("\n") || "(none)";
+
+  const pd = opts.paymentDetails || {};
+  const hasPay = pd.bankName || pd.accountNumber;
+  const payInfo = hasPay
+    ? `Bank: ${pd.bankName || ""}\nAccount Number: ${pd.accountNumber || ""}\nAccount Name: ${pd.accountName || ""}`
+    : "(not configured — apologise and say payment info will be shared shortly)";
+
+  return `You are the AI sales assistant for ${opts.businessName || "this business"}, chatting on WhatsApp/Instagram/Facebook with ${opts.customerName}.
+
+TONE: ${opts.aiTone || "friendly"}. Reply in short, natural messages (max 2-3 short sentences, no markdown headings, occasional emoji is fine).
+
+PRODUCT CATALOG (this is the ONLY source of truth — never invent products or prices):
+${productLines}
+
+KNOWLEDGE / FAQ:
+${qa}
+
+PAYMENT DETAILS (share IMMEDIATELY and in full the moment the customer agrees to buy or asks for account/payment info):
+${payInfo}
+
+STRICT NEGOTIATION RULES:
+1. If a product is firm, politely refuse to lower the price.
+2. If a product is negotiable, you may accept any offer at or above its minimum price. Never go below the minimum, under any circumstance.
+3. If the customer offers below the minimum, counter with the minimum (or slightly above) and explain it is your best price.
+4. Once the customer accepts a price, send the full payment details above (bank, account number, account name) plus the exact amount to pay, then ask them to share proof of payment.
+5. If the customer asks for the account number, account name, or "where do I send money", reply with the FULL payment block above — do not invent any numbers.
+
+GENERAL RULES:
+- Keep replies fast and concise — this is a chat, not an email.
+- If you don't know an answer, say so and offer to connect a human.
+- Never mention you are an AI unless asked.`;
+}
+
+async function generateAIReply(opts: {
+  userInput: string;
+  systemPrompt: string;
   history: { role: "user" | "assistant"; content: string }[];
 }): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-  const productCatalog = (opts.negotiationRules || []).map((p: any) =>
-    `- ${p.productName}: ₦${Number(p.price || 0).toLocaleString()}${p.negotiable ? ` (negotiable, min ₦${Number(p.minPrice || 0).toLocaleString()})` : ""}`
-  ).join("\n") || "(no products configured)";
-  const qa = (opts.qaRules || []).map((r: any) =>
-    `Q (keywords: ${(r.keywords || []).join(", ")}) → ${r.response}`).join("\n") || "(none)";
-  const payInfo = opts.paymentDetails && (opts.paymentDetails.bankName || opts.paymentDetails.accountNumber)
-    ? `Bank: ${opts.paymentDetails.bankName || ""}\nAccount: ${opts.paymentDetails.accountNumber || ""}\nName: ${opts.paymentDetails.accountName || ""}`
-    : "(not set)";
-
-  const system = `You are the AI sales assistant for ${opts.businessName || "this business"}.
-Tone: ${opts.aiTone || "friendly"}. Reply in short, natural chat-style messages (no markdown headings, max ~3 short sentences). Customer: ${opts.customerName}.
-
-Product catalog:
-${productCatalog}
-
-Q&A knowledge:
-${qa}
-
-Payment details (share when customer agrees to buy):
-${payInfo}
-
-Rules: stick to the catalog, negotiate only down to min price for negotiable items, share payment info when buyer commits, ask for proof of payment, never invent products.`;
-
   const messages = [
-    { role: "system", content: system },
-    ...opts.history.slice(-10),
+    { role: "system", content: opts.systemPrompt },
+    ...opts.history.slice(-12),
     { role: "user", content: opts.userInput },
   ];
-
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-2.5-flash", messages }),
+    body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.5 }),
   });
   if (!res.ok) {
     console.error("AI gateway error:", res.status, await res.text());
@@ -150,12 +174,13 @@ Deno.serve(async (req: Request) => {
       platform = connection.platform as "instagram" | "facebook";
       const userId = connection.user_id;
 
-      const [{ data: botConfig }, { data: profile }] = await Promise.all([
+      const [{ data: botConfig }, { data: profile }, { data: products }] = await Promise.all([
         supabaseAdmin.from("bot_configs").select("*").eq("user_id", userId).maybeSingle(),
-        supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, trial_ends_at, credits_balance, cost_per_ai_reply").eq("id", userId).maybeSingle(),
+        supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, trial_ends_at, credits_balance, payment_details").eq("id", userId).maybeSingle(),
+        supabaseAdmin.from("products").select("name, price, description, stock, variants").eq("user_id", userId),
       ]);
 
-      const cost = (profile as any)?.cost_per_ai_reply ?? 20;
+      const cost = costForPlan(profile?.plan);
       const trialActive = profile?.trial_ends_at && new Date(profile.trial_ends_at as string) > new Date();
       const planActive = profile && (profile.plan !== "free" || trialActive);
       const hasBalance = ((profile as any)?.credits_balance ?? 0) >= cost;
@@ -184,10 +209,9 @@ Deno.serve(async (req: Request) => {
         content: messageText, platform_message_id: messageId,
       });
 
-      // Credit gate (no deduction yet)
       if (!planActive) {
         await notifyOnce(supabaseAdmin, userId, "trial_expired",
-          "Trial expired", "Your free trial ended. Top up to keep your AI bot replying.",
+          "Trial expired", "Your free trial ended. Upgrade to keep your AI bot replying.",
           "trial_expired_alert_sent_at");
         return new Response(JSON.stringify({ status: "trial_expired" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -195,7 +219,7 @@ Deno.serve(async (req: Request) => {
       }
       if (!hasBalance) {
         await notifyOnce(supabaseAdmin, userId, "low_credits",
-          "Out of credits", `Your AI bot stopped replying. Each reply costs ${cost} credits — top up to resume.`,
+          "Out of credits", `Your AI bot stopped replying. Each reply costs ${cost} credit${cost > 1 ? "s" : ""} — top up to resume.`,
           "low_credits_alert_sent_at");
         return new Response(JSON.stringify({ status: "no_credits" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -211,13 +235,23 @@ Deno.serve(async (req: Request) => {
         content: m.content,
       }));
 
-      const aiReply = await generateAIReply({
-        userInput: messageText, customerName: "Customer",
+      const paymentDetails =
+        (profile?.payment_details && Object.keys(profile.payment_details).length > 0)
+          ? profile.payment_details
+          : (botConfig?.payment_details || {});
+
+      const systemPrompt = buildSystemPrompt({
+        customerName: "Customer",
         businessName: profile?.business_name || "",
         aiTone: profile?.ai_tone || "friendly",
+        products: (products as any[]) || [],
         qaRules: (botConfig?.qa_rules as any[]) || [],
-        negotiationRules: (botConfig?.negotiation_rules as any[]) || [],
-        paymentDetails: botConfig?.payment_details || {},
+        paymentDetails,
+      });
+
+      const aiReply = await generateAIReply({
+        userInput: messageText,
+        systemPrompt,
         history,
       });
 
@@ -232,8 +266,7 @@ Deno.serve(async (req: Request) => {
       });
 
       if (!sendRes.ok) {
-        const t = await sendRes.text();
-        console.error("Meta send failed:", sendRes.status, t);
+        console.error("Meta send failed:", sendRes.status, await sendRes.text());
         return new Response(JSON.stringify({ status: "send_failed" }), {
           status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -243,13 +276,12 @@ Deno.serve(async (req: Request) => {
         conversation_id: conversationId, role: "ai", content: aiReply,
       });
 
-      // Deduct only after successful send
       await supabaseAdmin.rpc("deduct_credits", {
         p_user_id: userId, p_amount: cost, p_reason: "ai_reply", p_conversation_id: conversationId,
       });
 
       const newBalance = ((profile as any)?.credits_balance ?? 0) - cost;
-      if (newBalance < cost * 5) {
+      if (newBalance < cost * 10) {
         await notifyOnce(supabaseAdmin, userId, "low_credits",
           "Credits running low", `You have ${newBalance} credits left. Top up to avoid interruption.`,
           "low_credits_alert_sent_at");
