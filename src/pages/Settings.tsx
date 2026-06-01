@@ -154,7 +154,6 @@ export default function Settings() {
       currency,
       phone,
       logo_url: logoUrl,
-      cost_per_ai_reply: Math.max(1, Math.min(1000, Math.floor(costPerReply || 20))),
       payment_details: payment as any,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
