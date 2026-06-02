@@ -103,13 +103,31 @@ export default function Settings() {
 
   const handleOAuthConnect = async (platform: string) => {
     if (!user) return;
+    // Open the popup SYNCHRONOUSLY on the click gesture so the browser doesn't block it.
+    // Meta OAuth also fails inside the Lovable preview iframe, so always use a new tab.
+    const popup = window.open("about:blank", "_blank");
+    if (!popup) {
+      toast.error("Popup blocked. Please allow popups for this site and try again.");
+      return;
+    }
+    popup.document.write("<p style='font-family:sans-serif;padding:24px'>Preparing connection…</p>");
     try {
+      const redirectUrl = (window.location.hostname.includes("lovable.app") && window.location.hostname.startsWith("id-preview"))
+        ? `https://maniflow.lovable.app/settings`
+        : `${window.location.origin}/settings`;
       const { data, error } = await supabase.functions.invoke("meta-oauth-url", {
-        body: { platform, user_id: user.id, redirect_url: window.location.origin + "/settings" },
+        body: { platform, user_id: user.id, redirect_url: redirectUrl },
       });
-      if (error || !data?.url) { toast.error("Failed to start connection. Please try again."); return; }
-      window.open(data.url, "_blank");
-    } catch { toast.error("Failed to start connection. Please try again."); }
+      if (error || !data?.url) {
+        popup.close();
+        toast.error(`Failed to start connection: ${error?.message || data?.error || "unknown error"}`);
+        return;
+      }
+      popup.location.href = data.url;
+    } catch (e: any) {
+      popup.close();
+      toast.error(`Failed to start connection: ${e?.message || "network error"}`);
+    }
   };
 
   const handleDisconnect = async (platform: string) => {
