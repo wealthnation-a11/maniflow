@@ -155,7 +155,206 @@ export default function TestPanel() {
           <Badge variant="secondary" className="text-[10px]">Plan: {diag.plan}</Badge>
         </Card>
       )}
+
+      <SimulatedPayment defaultCustomer={customerName} />
     </div>
+  );
+}
+
+type Provider = "paystack" | "flutterwave";
+type OrderRow = {
+  id: string;
+  customer_name: string;
+  product_name: string | null;
+  amount: number;
+  status: string;
+  payment_status: string;
+  created_at: string;
+};
+
+function SimulatedPayment({ defaultCustomer }: { defaultCustomer: string }) {
+  const { user } = useAuth();
+  const [provider, setProvider] = useState<Provider>("paystack");
+  const [productName, setProductName] = useState("Test Product");
+  const [amount, setAmount] = useState("5000");
+  const [customer, setCustomer] = useState(defaultCustomer);
+  const [order, setOrder] = useState<OrderRow | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [recent, setRecent] = useState<OrderRow[]>([]);
+
+  useEffect(() => { setCustomer(defaultCustomer); }, [defaultCustomer]);
+
+  const loadRecent = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("orders")
+      .select("id, customer_name, product_name, amount, status, payment_status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    setRecent((data as OrderRow[]) || []);
+  };
+
+  useEffect(() => { loadRecent(); }, [user]);
+
+  const createOrder = async () => {
+    if (!user) return;
+    const amt = Number(amount);
+    if (!productName.trim() || isNaN(amt) || amt <= 0) {
+      toast({ title: "Add a product name and a valid amount", variant: "destructive" });
+      return;
+    }
+    setBusy(true);
+    const { data, error } = await supabase.from("orders").insert({
+      user_id: user.id,
+      customer_name: customer || "Test Customer",
+      product_name: productName,
+      amount: amt,
+      platform: "whatsapp",
+      status: "pending",
+      payment_status: "pending",
+    }).select("id, customer_name, product_name, amount, status, payment_status, created_at").single();
+    setBusy(false);
+    if (error) { toast({ title: "Could not create order", description: error.message, variant: "destructive" }); return; }
+    setOrder(data as OrderRow);
+    toast({ title: "Test order created", description: `${provider === "paystack" ? "Paystack" : "Flutterwave"} checkout simulated.` });
+    loadRecent();
+  };
+
+  const simulateWebhook = async (result: "paid" | "failed") => {
+    if (!order) return;
+    setBusy(true);
+    const { data, error } = await supabase.from("orders")
+      .update({
+        payment_status: result,
+        status: result === "paid" ? "processing" : "pending",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id)
+      .select("id, customer_name, product_name, amount, status, payment_status, created_at")
+      .single();
+    setBusy(false);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    setOrder(data as OrderRow);
+    toast({
+      title: result === "paid" ? "Payment confirmed" : "Payment failed",
+      description: `Simulated ${provider === "paystack" ? "Paystack" : "Flutterwave"} webhook received.`,
+    });
+    loadRecent();
+  };
+
+  const reset = () => setOrder(null);
+
+  const providerColor = provider === "paystack" ? "bg-info" : "bg-warning";
+
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <CreditCard className="h-4 w-4 text-primary" />
+        <h2 className="font-semibold text-sm">Simulate payment confirmation</h2>
+        <Badge variant="secondary" className="text-[10px]">No real webhooks</Badge>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-1">
+        Creates a real order in your database and lets you fire a fake Paystack or Flutterwave webhook to flip its payment status.
+      </p>
+
+      <div className="flex gap-2">
+        {(["paystack", "flutterwave"] as Provider[]).map((p) => (
+          <button
+            key={p}
+            onClick={() => setProvider(p)}
+            className={`flex-1 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${
+              provider === p ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {p === "paystack" ? "Paystack" : "Flutterwave"}
+          </button>
+        ))}
+      </div>
+
+      {!order ? (
+        <div className="space-y-2">
+          <div className="grid sm:grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-muted-foreground">Product</label>
+              <Input value={productName} onChange={(e) => setProductName(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground">Amount (₦)</label>
+              <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-[11px] text-muted-foreground">Customer</label>
+              <Input value={customer} onChange={(e) => setCustomer(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={createOrder} disabled={busy} className="w-full">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Create test order & open checkout</>}
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="rounded-lg border p-3 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`h-2 w-2 rounded-full ${providerColor}`} />
+              <span className="font-medium">{provider === "paystack" ? "Paystack" : "Flutterwave"} test checkout</span>
+              <span className="text-muted-foreground ml-auto">#{order.id.slice(0, 8)}</span>
+            </div>
+            <p className="text-sm font-semibold">{order.product_name} — ₦{Number(order.amount).toLocaleString()}</p>
+            <p className="text-[11px] text-muted-foreground">Customer: {order.customer_name}</p>
+            <div className="flex gap-2 pt-1">
+              <Badge variant={order.payment_status === "paid" ? "default" : order.payment_status === "failed" ? "destructive" : "secondary"} className="text-[10px]">
+                payment: {order.payment_status}
+              </Badge>
+              <Badge variant="secondary" className="text-[10px]">order: {order.status}</Badge>
+            </div>
+          </div>
+
+          {order.payment_status === "pending" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={() => simulateWebhook("paid")} disabled={busy} className="w-full">
+                <CheckCircle2 className="h-4 w-4" /> Simulate success
+              </Button>
+              <Button onClick={() => simulateWebhook("failed")} disabled={busy} variant="destructive" className="w-full">
+                <XCircle className="h-4 w-4" /> Simulate failure
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                {order.payment_status === "paid"
+                  ? "Webhook delivered. Order moved to processing — check the Orders page."
+                  : "Webhook delivered as failure. Order stays pending so customer can retry."}
+              </p>
+              <Button onClick={reset} variant="outline" size="sm">
+                <RefreshCw className="h-3.5 w-3.5" /> New
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {recent.length > 0 && (
+        <div className="pt-2 border-t">
+          <p className="text-[11px] text-muted-foreground mb-2">Recent orders</p>
+          <ul className="space-y-1.5">
+            {recent.map((o) => (
+              <li key={o.id} className="flex items-center gap-2 text-xs">
+                <span className="font-mono text-[10px] text-muted-foreground">#{o.id.slice(0, 6)}</span>
+                <span className="flex-1 truncate">{o.product_name || "—"}</span>
+                <span className="text-muted-foreground">₦{Number(o.amount).toLocaleString()}</span>
+                <Badge
+                  variant={o.payment_status === "paid" ? "default" : o.payment_status === "failed" ? "destructive" : "secondary"}
+                  className="text-[9px]"
+                >
+                  {o.payment_status}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Card>
   );
 }
 
