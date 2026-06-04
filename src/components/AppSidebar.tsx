@@ -19,6 +19,7 @@ import {
   Bot,
   Sparkles,
   Coins,
+  FlaskConical,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import ManyFlowLogo from "./ManyFlowLogo";
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", badgeKey: null },
   { label: "Inbox", icon: MessageSquare, path: "/inbox", badgeKey: "inbox" as const },
   { label: "Bot Config", icon: Bot, path: "/bot-config", badgeKey: null },
+  { label: "Test Panel", icon: FlaskConical, path: "/test", badgeKey: null },
   { label: "AI Assistant", icon: Sparkles, path: "/chat", badgeKey: null },
   { label: "Products", icon: Package, path: "/products", badgeKey: null },
   { label: "Orders", icon: ShoppingCart, path: "/orders", badgeKey: null },
