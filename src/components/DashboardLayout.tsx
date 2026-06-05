@@ -20,6 +20,7 @@ export default function DashboardLayout() {
         </div>
       </main>
       {import.meta.env.DEV && <RealtimeDebugPanel />}
+      {import.meta.env.DEV && <AuthDebugPanel />}
     </div>
   );
 }
