@@ -42,14 +42,13 @@ export function useCredits() {
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`credits-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-        () => fetchInfo()
-      )
-      .subscribe();
+    const channel = supabase.channel(`credits-${user.id}-${Math.random().toString(36).slice(2)}`);
+    channel.on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+      () => fetchInfo()
+    );
+    channel.subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchInfo]);
 
