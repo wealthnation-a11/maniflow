@@ -214,6 +214,7 @@ export default function Inbox() {
     </div>
   ) : emptyState;
 
+  if (!user) return <SessionRequired feature="the unified inbox" />;
   if (pageLoading || convsLoading) return <InboxSkeleton />;
 
   return (
