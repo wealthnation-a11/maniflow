@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeSubscription, type RealtimeStatus } from "@/lib/realtime";
 
 export type PlanType = "free" | "growth" | "business";
 
@@ -40,22 +41,21 @@ export function useCredits() {
 
   useEffect(() => { fetchInfo(); }, [fetchInfo]);
 
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase.channel(`credits-${user.id}-${Math.random().toString(36).slice(2)}`);
-    channel.on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-      () => fetchInfo()
-    );
-    channel.subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, fetchInfo]);
+  const listeners = useMemo(() => user ? [{
+    config: { event: "UPDATE" as const, table: "profiles", filter: `id=eq.${user.id}` },
+    callback: () => fetchInfo(),
+  }] : [], [user, fetchInfo]);
+
+  const realtimeStatus: RealtimeStatus = useRealtimeSubscription(
+    user ? `credits-${user.id}` : "credits-anon",
+    listeners,
+    !!user
+  );
 
   const cost = getReplyCost(info?.plan);
   const trialActive = !!info?.trial_ends_at && new Date(info.trial_ends_at) > new Date();
   const hasAccess = !!info && (info.plan !== "free" || trialActive) && info.credits_balance >= cost;
   const lowBalance = !!info && info.credits_balance < cost * 10;
 
-  return { info, loading, refetch: fetchInfo, trialActive, hasAccess, lowBalance, costPerReply: cost };
+  return { info, loading, refetch: fetchInfo, trialActive, hasAccess, lowBalance, costPerReply: cost, realtimeStatus };
 }
