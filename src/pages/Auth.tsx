@@ -70,18 +70,57 @@ export default function Auth() {
 
   const handleGoogle = async () => {
     setLoading(true);
+    authDebug.log("starting", { provider: "google" });
     try {
+      // Detect "already signed in" case before kicking off OAuth
+      const { data: existing } = await supabase.auth.getSession();
+      if (existing.session) {
+        authDebug.log("success", { provider: "google", message: "session already active" });
+        toast.info("You're already signed in. Redirecting…");
+        navigate("/dashboard");
+        return;
+      }
+
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/dashboard`,
       });
+
       if (result.error) {
-        toast.error(result.error.message || "Google sign-in failed");
+        const friendly = friendlyAuthError(result.error);
+        authDebug.log("error", { provider: "google", message: friendly });
+        toast.error(friendly);
         return;
       }
-      if (result.redirected) return;
+
+      if (result.redirected) {
+        authDebug.log("redirecting", { provider: "google", message: "browser leaving for Google" });
+        return;
+      }
+
+      // Tokens already returned — verify the user via the Auth server.
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) {
+        const friendly = friendlyAuthError(userErr || new Error("Could not verify Google user"));
+        authDebug.log("error", { provider: "google", message: friendly });
+        toast.error(friendly);
+        return;
+      }
+
+      authDebug.log("success", {
+        provider: "google",
+        message: `${userData.user.email} (${userData.user.id})`,
+      });
+      toast.success(`Signed in as ${userData.user.email}`);
       navigate("/dashboard");
     } catch (e: any) {
-      toast.error(e?.message || "Google sign-in failed");
+      const friendly = friendlyAuthError(e);
+      // Heuristic: popup blocked / closed quickly
+      if (e?.name === "AbortError" || /popup/i.test(e?.message || "")) {
+        authDebug.log("cancel", { provider: "google", message: friendly });
+      } else {
+        authDebug.log("error", { provider: "google", message: friendly });
+      }
+      toast.error(friendly);
     } finally {
       setLoading(false);
     }
