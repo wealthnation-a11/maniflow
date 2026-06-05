@@ -112,6 +112,8 @@ export default function Dashboard() {
 
   const hasAnyActivity = data.totalConversations > 0 || data.totalMessages > 0 || data.connectedPlatforms.some(p => p.connected);
 
+  if (!user) return <SessionRequired feature="your dashboard" />;
+
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex items-start sm:items-center justify-between gap-3">
