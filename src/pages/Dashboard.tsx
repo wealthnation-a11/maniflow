@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import EmptyState from "@/components/EmptyState";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import SessionRequired from "@/components/SessionRequired";
 
 type DashboardData = {
   totalConversations: number;
