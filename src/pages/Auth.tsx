@@ -323,6 +323,7 @@ export default function Auth() {
           </button>
         </p>
       </div>
+      {import.meta.env.DEV && <AuthDebugPanel />}
     </div>
   );
 }
