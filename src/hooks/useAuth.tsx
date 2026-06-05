@@ -21,10 +21,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      // Mirror key auth events into the debug log
+      import("@/lib/authDebug").then(({ authDebug }) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          const provider =
+            (session.user.app_metadata as any)?.provider ||
+            session.user.identities?.[0]?.provider;
+          authDebug.log("success", {
+            provider,
+            message: `SIGNED_IN ${session.user.email ?? session.user.id}`,
+          });
+        } else if (event === "SIGNED_OUT") {
+          authDebug.log("idle", { message: "SIGNED_OUT" });
+        }
+      });
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {

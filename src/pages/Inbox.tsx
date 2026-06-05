@@ -11,6 +11,7 @@ import { useConversations, useMessages, type Conversation } from "@/hooks/useCon
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SessionRequired from "@/components/SessionRequired";
 
 const platformColors: Record<string, string> = {
   whatsapp: "bg-success/10 text-success",
@@ -213,6 +214,7 @@ export default function Inbox() {
     </div>
   ) : emptyState;
 
+  if (!user) return <SessionRequired feature="the unified inbox" />;
   if (pageLoading || convsLoading) return <InboxSkeleton />;
 
   return (

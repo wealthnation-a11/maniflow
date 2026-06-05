@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import EmptyState from "@/components/EmptyState";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import SessionRequired from "@/components/SessionRequired";
 
 type DashboardData = {
   totalConversations: number;
@@ -110,6 +111,8 @@ export default function Dashboard() {
   };
 
   const hasAnyActivity = data.totalConversations > 0 || data.totalMessages > 0 || data.connectedPlatforms.some(p => p.connected);
+
+  if (!user) return <SessionRequired feature="your dashboard" />;
 
   return (
     <div className="space-y-4 md:space-y-6">

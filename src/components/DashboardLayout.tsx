@@ -4,6 +4,7 @@ import DashboardBreadcrumb from "./DashboardBreadcrumb";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import PageTransition from "./PageTransition";
 import RealtimeDebugPanel from "./RealtimeDebugPanel";
+import AuthDebugPanel from "./AuthDebugPanel";
 
 export default function DashboardLayout() {
   return (
@@ -19,6 +20,7 @@ export default function DashboardLayout() {
         </div>
       </main>
       {import.meta.env.DEV && <RealtimeDebugPanel />}
+      {import.meta.env.DEV && <AuthDebugPanel />}
     </div>
   );
 }
