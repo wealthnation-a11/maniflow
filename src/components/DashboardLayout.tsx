@@ -3,6 +3,7 @@ import AppSidebar from "./AppSidebar";
 import DashboardBreadcrumb from "./DashboardBreadcrumb";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import PageTransition from "./PageTransition";
+import RealtimeDebugPanel from "./RealtimeDebugPanel";
 
 export default function DashboardLayout() {
   return (
@@ -17,6 +18,8 @@ export default function DashboardLayout() {
           </PageTransition>
         </div>
       </main>
+      {import.meta.env.DEV && <RealtimeDebugPanel />}
     </div>
   );
 }
+
