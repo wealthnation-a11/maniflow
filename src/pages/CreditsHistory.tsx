@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Coins, ArrowDownCircle, ArrowUpCircle, Loader2 } from "lucide-react";
+import { Coins, ArrowDownCircle, ArrowUpCircle, Loader2, Zap, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 type Tx = {
   id: string;
@@ -24,8 +25,10 @@ const REASON_LABEL: Record<string, string> = {
 
 export default function CreditsHistory() {
   const { user } = useAuth();
+  const { info, refetch } = useCredits();
   const [rows, setRows] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
+  const [buying, setBuying] = useState<null | "growth" | "business">(null);
 
   useEffect(() => {
     if (!user) return;
@@ -49,17 +52,69 @@ export default function CreditsHistory() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
+  const handleTopUp = async (plan: "growth" | "business") => {
+    if (!user) { toast.error("Please sign in to top up."); return; }
+    setBuying(plan);
+    try {
+      const { data, error } = await supabase.functions.invoke("redeem-plan", { body: { plan } });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Top-up failed");
+      toast.success(`${plan === "growth" ? "Growth" : "Business"} credits added to your balance!`);
+      await refetch();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Top-up failed";
+      toast.error(msg);
+      console.error("top-up error:", e);
+    } finally {
+      setBuying(null);
+    }
+  };
+
+  const TOP_UPS = [
+    { id: "growth" as const, name: "Growth", price: "₦10,000", credits: "7,000 credits", icon: Zap, highlighted: false },
+    { id: "business" as const, name: "Business", price: "₦30,000", credits: "20,000 credits", icon: Rocket, highlighted: true },
+  ];
+
   return (
     <div className="space-y-4 md:space-y-6 max-w-3xl">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Credits History</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Every top-up and AI reply, with timestamps.</p>
-        </div>
-        <Button asChild variant="outline" size="sm" className="text-xs">
-          <Link to="/settings"><Coins className="h-3.5 w-3.5 mr-1.5" /> Top up</Link>
-        </Button>
+      <div>
+        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Credits History</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+          Every top-up and AI reply, with timestamps.
+          {info ? <> Current balance: <strong>{info.credits_balance.toLocaleString()}</strong> credits.</> : null}
+        </p>
       </div>
+
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Coins className="h-4 w-4 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-base">Top up credits</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {TOP_UPS.map((t) => {
+            const Icon = t.icon;
+            const isBuying = buying === t.id;
+            return (
+              <div key={t.id} className={`rounded-lg p-4 border ${t.highlighted ? "gradient-primary text-primary-foreground border-transparent" : "bg-muted/30"}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon className="h-4 w-4" />
+                  <p className="font-heading font-semibold text-sm">{t.name}</p>
+                </div>
+                <p className={`text-xs ${t.highlighted ? "opacity-80" : "text-muted-foreground"}`}>{t.credits}</p>
+                <p className="font-heading text-lg font-bold mt-2">{t.price}</p>
+                <Button size="sm" variant={t.highlighted ? "secondary" : "default"} className="w-full mt-3 text-xs" disabled={!!buying} onClick={() => handleTopUp(t.id)}>
+                  {isBuying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                  {isBuying ? "Processing…" : `Buy ${t.name}`}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-3">
+          Credits are added to your balance instantly. Payment gateway integration coming soon — for now this is a one-click top-up.
+        </p>
+      </div>
+
 
       <div className="bg-card rounded-xl shadow-card overflow-hidden">
         {loading ? (
