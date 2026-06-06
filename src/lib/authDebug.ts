@@ -12,7 +12,7 @@ const KEY = "manyflow.authDebug.events";
 const STATUS_KEY = "manyflow.authDebug.status";
 const listeners = new Set<() => void>();
 
-function read(): AuthDebugEvent[] {
+function loadFromStorage(): AuthDebugEvent[] {
   try {
     return JSON.parse(sessionStorage.getItem(KEY) || "[]");
   } catch {
@@ -20,32 +20,37 @@ function read(): AuthDebugEvent[] {
   }
 }
 
-function write(events: AuthDebugEvent[]) {
-  sessionStorage.setItem(KEY, JSON.stringify(events.slice(-25)));
+// Cache a stable snapshot so useSyncExternalStore doesn't loop.
+let cached: AuthDebugEvent[] = typeof window !== "undefined" ? loadFromStorage() : [];
+
+function commit(events: AuthDebugEvent[]) {
+  cached = events.slice(-25);
+  try { sessionStorage.setItem(KEY, JSON.stringify(cached)); } catch {}
   listeners.forEach((l) => l());
 }
 
 export const authDebug = {
   log(status: OAuthStatus, opts: { provider?: string; message?: string } = {}) {
-    const events = read();
-    events.push({ at: Date.now(), status, ...opts });
-    write(events);
-    sessionStorage.setItem(STATUS_KEY, status);
+    commit([...cached, { at: Date.now(), status, ...opts }]);
+    try { sessionStorage.setItem(STATUS_KEY, status); } catch {}
   },
   getStatus(): OAuthStatus {
-    return (sessionStorage.getItem(STATUS_KEY) as OAuthStatus) || "idle";
+    try { return (sessionStorage.getItem(STATUS_KEY) as OAuthStatus) || "idle"; } catch { return "idle"; }
   },
   getEvents(): AuthDebugEvent[] {
-    return read();
+    return cached;
   },
   clear() {
-    sessionStorage.removeItem(KEY);
-    sessionStorage.removeItem(STATUS_KEY);
+    cached = [];
+    try {
+      sessionStorage.removeItem(KEY);
+      sessionStorage.removeItem(STATUS_KEY);
+    } catch {}
     listeners.forEach((l) => l());
   },
   subscribe(fn: () => void) {
     listeners.add(fn);
-    return () => listeners.delete(fn);
+    return () => { listeners.delete(fn); };
   },
 };
 
