@@ -8,7 +8,22 @@ export default function RealtimeConsentBanner() {
   const { state, grant, deny } = useRealtimeConsent();
 
   if (!user) return null;
-  if (state !== "unknown") return null;
+
+  if (state === "denied") {
+    return (
+      <div className="mb-4 rounded-xl border border-border bg-muted/40 p-3 flex items-center gap-3">
+        <ShieldOff className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <p className="text-[11px] sm:text-xs text-muted-foreground flex-1">
+          Live updates are off. You'll only see new activity after refreshing.
+        </p>
+        <Button size="sm" variant="outline" onClick={grant} className="text-[11px] h-7">
+          Turn on
+        </Button>
+      </div>
+    );
+  }
+
+  if (state === "granted") return null;
 
   return (
     <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-3 sm:p-4">
@@ -20,8 +35,8 @@ export default function RealtimeConsentBanner() {
           <h3 className="font-heading font-semibold text-sm sm:text-base">Enable live updates?</h3>
           <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
             Manyflow can keep your dashboard, inbox, notifications, and credit balance in sync in
-            real time over a secure websocket scoped to your account. You can change this any time
-            in Settings.
+            real time over a secure websocket scoped to your account. If you decline, the app still
+            works — it just won't auto-refresh.
           </p>
           <div className="flex flex-wrap gap-2 mt-3">
             <Button size="sm" onClick={grant} className="text-xs gradient-primary text-primary-foreground">
