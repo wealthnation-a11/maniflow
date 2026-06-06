@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeSubscription } from "@/lib/realtime";
 
 export type Platform = "whatsapp" | "instagram" | "facebook";
 export type ConversationStatus = "active" | "closed" | "archived";
@@ -47,19 +48,13 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
-  // Realtime subscription
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel("conversations-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "conversations", filter: `user_id=eq.${user.id}` },
-        () => { fetchConversations(); }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, fetchConversations]);
+  useRealtimeSubscription(
+    { userId: user?.id, scope: "conversations", enabled: !!user },
+    [{
+      config: { event: "*", table: "conversations", filter: `user_id=eq.${user?.id ?? ""}` },
+      callback: () => fetchConversations(),
+    }]
+  );
 
   return { conversations, loading, refetch: fetchConversations };
 }
