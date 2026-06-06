@@ -59,7 +59,8 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     if (!user) return;
-    setDataLoading(true);
+    // Only show the skeleton on the very first load — realtime ticks should not flash it.
+    setDataLoading((prev) => prev);
     const [convsRes, msgsRes, connectionsRes] = await Promise.all([
       supabase.from("conversations").select("id, platform, status, created_at").eq("user_id", user.id),
       supabase.from("messages").select("id, role, conversation_id, created_at"),
