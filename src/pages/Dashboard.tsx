@@ -126,6 +126,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <RealtimeConsentBanner />
       <OnboardingChecklist />
 
       {/* Platform connections */}
