@@ -26,6 +26,8 @@ import { useNavigate } from "react-router-dom";
 import EmptyState from "@/components/EmptyState";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import SessionRequired from "@/components/SessionRequired";
+import RealtimeConsentBanner from "@/components/RealtimeConsentBanner";
+import { useRealtimeSubscription } from "@/lib/realtime";
 
 type DashboardData = {
   totalConversations: number;
@@ -55,52 +57,50 @@ export default function Dashboard() {
   });
   const [dataLoading, setDataLoading] = useState(true);
 
+  const fetchData = async () => {
+    if (!user) return;
+    setDataLoading(true);
+    const [convsRes, msgsRes, connectionsRes] = await Promise.all([
+      supabase.from("conversations").select("id, platform, status, created_at").eq("user_id", user.id),
+      supabase.from("messages").select("id, role, conversation_id, created_at"),
+      supabase.from("platform_connections").select("platform").eq("user_id", user.id),
+    ]);
+
+    const conversations = convsRes.data || [];
+    const messages = msgsRes.data || [];
+    const connections = connectionsRes.data || [];
+
+    const connectedPlatformNames = connections.map((c) => c.platform);
+
+    setData({
+      totalConversations: conversations.length,
+      totalMessages: messages.length,
+      aiMessages: messages.filter((m) => m.role === "ai").length,
+      customerMessages: messages.filter((m) => m.role === "customer").length,
+      manualMessages: messages.filter((m) => m.role === "manual").length,
+      connectedPlatforms: [
+        { platform: "WhatsApp", connected: connectedPlatformNames.includes("whatsapp") },
+        { platform: "Instagram", connected: connectedPlatformNames.includes("instagram") },
+        { platform: "Facebook", connected: connectedPlatformNames.includes("facebook") },
+      ],
+    });
+    setDataLoading(false);
+  };
+
   useEffect(() => {
     if (!user) return;
-
-    const fetchData = async () => {
-      setDataLoading(true);
-
-      // Fetch all data in parallel
-      const [convsRes, msgsRes, connectionsRes] = await Promise.all([
-        supabase.from("conversations").select("id, platform, status, created_at").eq("user_id", user.id),
-        supabase.from("messages").select("id, role, conversation_id, created_at"),
-        supabase.from("platform_connections").select("platform").eq("user_id", user.id),
-      ]);
-
-      const conversations = convsRes.data || [];
-      const messages = msgsRes.data || [];
-      const connections = connectionsRes.data || [];
-
-      const connectedPlatformNames = connections.map((c) => c.platform);
-
-      setData({
-        totalConversations: conversations.length,
-        totalMessages: messages.length,
-        aiMessages: messages.filter((m) => m.role === "ai").length,
-        customerMessages: messages.filter((m) => m.role === "customer").length,
-        manualMessages: messages.filter((m) => m.role === "manual").length,
-        connectedPlatforms: [
-          { platform: "WhatsApp", connected: connectedPlatformNames.includes("whatsapp") },
-          { platform: "Instagram", connected: connectedPlatformNames.includes("instagram") },
-          { platform: "Facebook", connected: connectedPlatformNames.includes("facebook") },
-        ],
-      });
-      setDataLoading(false);
-    };
-
     fetchData();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel("dashboard-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () => fetchData())
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => fetchData())
-      .on("postgres_changes", { event: "*", schema: "public", table: "platform_connections" }, () => fetchData())
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  useRealtimeSubscription(
+    { userId: user?.id, scope: "dashboard", enabled: !!user },
+    [
+      { config: { event: "*", table: "conversations", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
+      { config: { event: "*", table: "messages" }, callback: () => fetchData() },
+      { config: { event: "*", table: "platform_connections", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
+    ]
+  );
 
   if (loading || dataLoading) return <DashboardSkeleton />;
 

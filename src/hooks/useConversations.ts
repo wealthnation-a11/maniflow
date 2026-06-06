@@ -60,6 +60,7 @@ export function useConversations() {
 }
 
 export function useMessages(conversationId: string | null) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -75,25 +76,21 @@ export function useMessages(conversationId: string | null) {
     setLoading(false);
   }, [conversationId]);
 
-  useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
-  // Realtime
-  useEffect(() => {
-    if (!conversationId) return;
-    const channel = supabase
-      .channel(`messages-${conversationId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [conversationId]);
+  useRealtimeSubscription(
+    {
+      userId: user?.id,
+      scope: conversationId ? `messages:${conversationId}` : "messages",
+      enabled: !!user && !!conversationId,
+    },
+    conversationId
+      ? [{
+          config: { event: "INSERT", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+          callback: (payload) => setMessages((prev) => [...prev, payload.new as Message]),
+        }]
+      : []
+  );
 
   const sendMessage = useCallback(
     async (role: MessageRole, content: string) => {

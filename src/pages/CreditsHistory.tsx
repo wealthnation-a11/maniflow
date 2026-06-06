@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Coins, ArrowDownCircle, ArrowUpCircle, Loader2, Zap, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
+import { useRealtimeSubscription } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -30,27 +31,27 @@ export default function CreditsHistory() {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<null | "growth" | "business">(null);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!user) return;
-    const load = async () => {
-      const { data } = await supabase
-        .from("credit_transactions")
-        .select("id, amount, reason, conversation_id, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      setRows((data ?? []) as Tx[]);
-      setLoading(false);
-    };
-    load();
-    const channel = supabase
-      .channel(`credit-tx-${user.id}`)
-      .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "credit_transactions", filter: `user_id=eq.${user.id}` },
-        (payload) => setRows((prev) => [payload.new as Tx, ...prev]))
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const { data } = await supabase
+      .from("credit_transactions")
+      .select("id, amount, reason, conversation_id, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    setRows((data ?? []) as Tx[]);
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => { if (user) load(); }, [user, load]);
+
+  useRealtimeSubscription(
+    { userId: user?.id, scope: "credit-tx", enabled: !!user },
+    [{
+      config: { event: "INSERT", table: "credit_transactions", filter: `user_id=eq.${user?.id ?? ""}` },
+      callback: (payload) => setRows((prev) => [payload.new as Tx, ...prev]),
+    }]
+  );
 
   const handleTopUp = async (plan: "growth" | "business") => {
     if (!user) { toast.error("Please sign in to top up."); return; }

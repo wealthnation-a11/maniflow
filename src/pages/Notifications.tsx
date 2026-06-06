@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, MessageSquare, DollarSign, ShoppingCart, AlertCircle, Coins, Check, CheckCheck, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeSubscription } from "@/lib/realtime";
 import { formatDistanceToNow } from "date-fns";
 
 type NotifCategory = "all" | "message" | "payment" | "order" | "system" | "credits";
@@ -43,24 +44,24 @@ export default function Notifications() {
   const [category, setCategory] = useState<NotifCategory>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!user) return;
-    const load = async () => {
-      const { data } = await supabase
-        .from("notifications").select("*")
-        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(200);
-      setItems((data ?? []) as Notification[]);
-      setLoading(false);
-    };
-    load();
-    const channel = supabase
-      .channel(`notifs-${user.id}`)
-      .on("postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const { data } = await supabase
+      .from("notifications").select("*")
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(200);
+    setItems((data ?? []) as Notification[]);
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => { if (user) load(); }, [user, load]);
+
+  useRealtimeSubscription(
+    { userId: user?.id, scope: "notifs", enabled: !!user },
+    [{
+      config: { event: "*", table: "notifications", filter: `user_id=eq.${user?.id ?? ""}` },
+      callback: () => load(),
+    }]
+  );
 
   const filtered = items.filter((n) => matchesCategory(n, category));
   const unreadCount = items.filter((n) => !n.read).length;
