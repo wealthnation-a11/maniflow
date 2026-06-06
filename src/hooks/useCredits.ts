@@ -47,9 +47,8 @@ export function useCredits() {
   }] : [], [user, fetchInfo]);
 
   const realtimeStatus: RealtimeStatus = useRealtimeSubscription(
-    user ? `credits-${user.id}` : "credits-anon",
-    listeners,
-    !!user
+    { userId: user?.id, scope: "credits", enabled: !!user },
+    listeners
   );
 
   const cost = getReplyCost(info?.plan);

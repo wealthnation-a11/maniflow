@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, Circle, ArrowRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSubscription } from "@/lib/realtime";
 
 type Step = {
   id: string;
@@ -22,78 +23,43 @@ export default function OnboardingChecklist() {
     try { setDismissed(localStorage.getItem("manyflow_checklist_dismissed") === "1"); } catch {}
   }, []);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!user) return;
-    const load = async () => {
-      const [profileRes, productsRes, connRes, msgsRes] = await Promise.all([
-        supabase.from("profiles").select("business_name, payment_details").eq("id", user.id).maybeSingle(),
-        supabase.from("products").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("platform_connections").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("messages").select("id", { count: "exact", head: true }).eq("role", "ai"),
-      ]);
+    const [profileRes, productsRes, connRes, msgsRes] = await Promise.all([
+      supabase.from("profiles").select("business_name, payment_details").eq("id", user.id).maybeSingle(),
+      supabase.from("products").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("platform_connections").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("messages").select("id", { count: "exact", head: true }).eq("role", "ai"),
+    ]);
 
-      const profile = profileRes.data;
-      const pd = profile?.payment_details as any || {};
-      const hasPayment = !!(pd.bankName || pd.accountNumber);
-      const hasProducts = (productsRes.count ?? 0) > 0;
-      const hasConnection = (connRes.count ?? 0) > 0;
-      const hasAiReply = (msgsRes.count ?? 0) > 0;
-      const testSent = (() => { try { return localStorage.getItem("manyflow_test_sent") === "1"; } catch { return false; } })();
+    const profile = profileRes.data;
+    const pd = profile?.payment_details as any || {};
+    const hasPayment = !!(pd.bankName || pd.accountNumber);
+    const hasProducts = (productsRes.count ?? 0) > 0;
+    const hasConnection = (connRes.count ?? 0) > 0;
+    const hasAiReply = (msgsRes.count ?? 0) > 0;
+    const testSent = (() => { try { return localStorage.getItem("manyflow_test_sent") === "1"; } catch { return false; } })();
 
-      setSteps([
-        {
-          id: "business",
-          title: "Set up your business",
-          description: "Add your business name and payment details so the AI can share them.",
-          done: !!profile?.business_name && hasPayment,
-          href: "/settings",
-          cta: "Open Settings",
-        },
-        {
-          id: "products",
-          title: "Add at least one product",
-          description: "The AI sells from your catalog — no products, no replies.",
-          done: hasProducts,
-          href: "/products",
-          cta: "Add Products",
-        },
-        {
-          id: "connect",
-          title: "Connect a platform",
-          description: "Link WhatsApp, Facebook or Instagram so customers can reach you.",
-          done: hasConnection,
-          href: "/settings",
-          cta: "Connect",
-        },
-        {
-          id: "test",
-          title: "Run a test message",
-          description: "Simulate a customer chat in the Test Panel — no credits used.",
-          done: testSent,
-          href: "/test",
-          cta: "Open Test Panel",
-        },
-        {
-          id: "live",
-          title: "See your first live AI reply",
-          description: "Send a real message to your connected platform and check the Inbox.",
-          done: hasAiReply,
-          href: "/inbox",
-          cta: "Open Inbox",
-        },
-      ]);
-    };
-    load();
-
-    const ch = supabase
-      .channel("checklist")
-      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "platform_connections" }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, load)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, load)
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    setSteps([
+      { id: "business", title: "Set up your business", description: "Add your business name and payment details so the AI can share them.", done: !!profile?.business_name && hasPayment, href: "/settings", cta: "Open Settings" },
+      { id: "products", title: "Add at least one product", description: "The AI sells from your catalog — no products, no replies.", done: hasProducts, href: "/products", cta: "Add Products" },
+      { id: "connect", title: "Connect a platform", description: "Link WhatsApp, Facebook or Instagram so customers can reach you.", done: hasConnection, href: "/settings", cta: "Connect" },
+      { id: "test", title: "Run a test message", description: "Simulate a customer chat in the Test Panel — no credits used.", done: testSent, href: "/test", cta: "Open Test Panel" },
+      { id: "live", title: "See your first live AI reply", description: "Send a real message to your connected platform and check the Inbox.", done: hasAiReply, href: "/inbox", cta: "Open Inbox" },
+    ]);
   }, [user]);
+
+  useEffect(() => { if (user) load(); }, [user, load]);
+
+  useRealtimeSubscription(
+    { userId: user?.id, scope: "checklist", enabled: !!user },
+    [
+      { config: { event: "*", table: "products", filter: `user_id=eq.${user?.id ?? ""}` }, callback: load },
+      { config: { event: "*", table: "platform_connections", filter: `user_id=eq.${user?.id ?? ""}` }, callback: load },
+      { config: { event: "*", table: "messages" }, callback: load },
+      { config: { event: "*", table: "profiles", filter: `id=eq.${user?.id ?? ""}` }, callback: load },
+    ]
+  );
 
   if (!steps || dismissed) return null;
   const completed = steps.filter((s) => s.done).length;

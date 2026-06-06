@@ -1,13 +1,21 @@
 import { useState } from "react";
 import { Radio, ChevronUp, ChevronDown } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
+import { useRealtimeConsent } from "@/lib/realtimeConsent";
 import { formatDistanceToNow } from "date-fns";
 
 export default function RealtimeDebugPanel() {
   const { realtimeStatus: s } = useCredits();
+  const { state: consent, grant, deny, reset } = useRealtimeConsent();
   const [open, setOpen] = useState(false);
 
-  const dot = s.error ? "bg-destructive" : s.active ? "bg-success" : "bg-muted-foreground";
+  const dot = s.error
+    ? "bg-destructive"
+    : s.active
+    ? "bg-success"
+    : consent === "denied"
+    ? "bg-muted-foreground"
+    : "bg-warning";
 
   return (
     <div className="fixed bottom-3 right-3 z-50 text-[11px] font-mono">
@@ -17,17 +25,24 @@ export default function RealtimeDebugPanel() {
       >
         <span className={`h-2 w-2 rounded-full ${dot} ${s.active ? "animate-pulse" : ""}`} />
         <Radio className="h-3 w-3" />
-        <span>credits realtime</span>
+        <span>realtime · {consent}</span>
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
       </button>
       {open && (
         <div className="mt-1 w-72 bg-card border border-border rounded-lg shadow-card p-3 space-y-1">
+          <Row label="Consent" value={consent} />
           <Row label="Channel" value={s.channelName ?? "—"} />
+          <Row label="Private" value={s.private ? "yes" : "no"} />
           <Row label="Mounted" value={s.mounted ? "yes" : "no"} />
           <Row label="Active" value={s.active ? "yes" : "no"} />
           <Row label="Events" value={String(s.eventCount)} />
           <Row label="Last event" value={s.lastEventAt ? formatDistanceToNow(s.lastEventAt, { addSuffix: true }) : "—"} />
           {s.error && <Row label="Error" value={s.error} danger />}
+          <div className="pt-2 border-t border-border flex gap-1.5">
+            <button onClick={grant} className="px-2 py-1 rounded bg-muted hover:bg-muted/70">grant</button>
+            <button onClick={deny} className="px-2 py-1 rounded bg-muted hover:bg-muted/70">deny</button>
+            <button onClick={reset} className="px-2 py-1 rounded bg-muted hover:bg-muted/70">reset</button>
+          </div>
         </div>
       )}
     </div>
