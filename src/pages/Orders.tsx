@@ -64,7 +64,7 @@ export default function Orders() {
         setOrders(data.map((o: any) => ({
           id: o.id, customer_name: o.customer_name, customer_phone: o.customer_phone || "",
           product_name: o.product_name || "", amount: Number(o.amount), platform: o.platform,
-          status: o.status, payment_status: o.payment_status,
+          status: o.status, payment_status: o.payment_status, created_at: o.created_at,
         })));
       }
       setDbLoading(false);
