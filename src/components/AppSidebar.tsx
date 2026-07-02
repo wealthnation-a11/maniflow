@@ -15,6 +15,7 @@ import {
   X,
   LogOut,
   Settings,
+  Radio,
   Bell,
   Bot,
   Sparkles,
