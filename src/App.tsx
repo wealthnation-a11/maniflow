@@ -67,6 +67,7 @@ const App = () => (
                   <Route path="/credits" element={<CreditsHistory />} />
                   <Route path="/test" element={<TestPanel />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/realtime" element={<RealtimeSettings />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
