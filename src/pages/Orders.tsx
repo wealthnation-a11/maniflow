@@ -24,6 +24,7 @@ type Order = {
   platform: string;
   status: string;
   payment_status: string;
+  created_at: string;
 };
 
 const statusStyles: Record<string, string> = {
