@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Download, Search, X, FileText, ShoppingCart } from "lucide-react";
+import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { exportToCSV } from "@/lib/csv";
+import { exportSalesWorkbook } from "@/lib/excel";
+import { useBusiness } from "@/hooks/use-business";
 import { toast } from "sonner";
 import { useLoadingState } from "@/hooks/use-loading";
 import { TableSkeleton } from "@/components/Skeletons";
@@ -22,6 +24,7 @@ type Order = {
   platform: string;
   status: string;
   payment_status: string;
+  created_at: string;
 };
 
 const statusStyles: Record<string, string> = {
@@ -61,7 +64,7 @@ export default function Orders() {
         setOrders(data.map((o: any) => ({
           id: o.id, customer_name: o.customer_name, customer_phone: o.customer_phone || "",
           product_name: o.product_name || "", amount: Number(o.amount), platform: o.platform,
-          status: o.status, payment_status: o.payment_status,
+          status: o.status, payment_status: o.payment_status, created_at: o.created_at,
         })));
       }
       setDbLoading(false);
@@ -79,10 +82,28 @@ export default function Orders() {
     return true;
   });
 
+  const { businessName } = useBusiness();
+
   const handleExport = () => {
     exportToCSV("orders", ["Order ID", "Customer", "Phone", "Product", "Amount", "Platform", "Status", "Payment"],
       filtered.map((o) => [o.id, o.customer_name, o.customer_phone, o.product_name, `₦${o.amount.toLocaleString()}`, o.platform, o.status, o.payment_status]));
-    toast.success(`Exported ${filtered.length} orders`);
+    toast.success(`Exported ${filtered.length} orders to CSV`);
+  };
+
+  const handleExcelExport = () => {
+    if (filtered.length === 0) {
+      toast.error("No orders to export");
+      return;
+    }
+    exportSalesWorkbook(
+      `${businessName.replace(/\s+/g, "-").toLowerCase()}-sales-${new Date().toISOString().slice(0, 10)}`,
+      filtered.map((o) => ({
+        id: o.id, date: o.created_at, customer: o.customer_name, phone: o.customer_phone,
+        product: o.product_name, amount: o.amount, platform: o.platform, status: o.status, payment: o.payment_status,
+      })),
+      businessName,
+    );
+    toast.success(`Sales workbook downloaded (${filtered.length} rows)`);
   };
 
   const hasFilters = statusFilter !== "all" || platformFilter !== "all" || paymentFilter !== "all" || search;
@@ -116,7 +137,10 @@ export default function Orders() {
           <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Orders</h1>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">Track all orders and payments</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm"><Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Export</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm"><Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> CSV</Button>
+          <Button size="sm" onClick={handleExcelExport} className="gradient-primary text-primary-foreground text-xs sm:text-sm"><FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Excel</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

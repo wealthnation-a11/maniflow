@@ -16,6 +16,7 @@ import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
+import RealtimeSettings from "./pages/RealtimeSettings";
 import BotConfig from "./pages/BotConfig";
 import ChatAssistant from "./pages/ChatAssistant";
 import Onboarding from "./pages/Onboarding";
@@ -66,6 +67,7 @@ const App = () => (
                   <Route path="/credits" element={<CreditsHistory />} />
                   <Route path="/test" element={<TestPanel />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/realtime" element={<RealtimeSettings />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />
