@@ -82,10 +82,28 @@ export default function Orders() {
     return true;
   });
 
+  const { businessName } = useBusiness();
+
   const handleExport = () => {
     exportToCSV("orders", ["Order ID", "Customer", "Phone", "Product", "Amount", "Platform", "Status", "Payment"],
       filtered.map((o) => [o.id, o.customer_name, o.customer_phone, o.product_name, `₦${o.amount.toLocaleString()}`, o.platform, o.status, o.payment_status]));
-    toast.success(`Exported ${filtered.length} orders`);
+    toast.success(`Exported ${filtered.length} orders to CSV`);
+  };
+
+  const handleExcelExport = () => {
+    if (filtered.length === 0) {
+      toast.error("No orders to export");
+      return;
+    }
+    exportSalesWorkbook(
+      `${businessName.replace(/\s+/g, "-").toLowerCase()}-sales-${new Date().toISOString().slice(0, 10)}`,
+      filtered.map((o) => ({
+        id: o.id, date: o.created_at, customer: o.customer_name, phone: o.customer_phone,
+        product: o.product_name, amount: o.amount, platform: o.platform, status: o.status, payment: o.payment_status,
+      })),
+      businessName,
+    );
+    toast.success(`Sales workbook downloaded (${filtered.length} rows)`);
   };
 
   const hasFilters = statusFilter !== "all" || platformFilter !== "all" || paymentFilter !== "all" || search;
