@@ -16,6 +16,7 @@ import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
+import RealtimeSettings from "./pages/RealtimeSettings";
 import BotConfig from "./pages/BotConfig";
 import ChatAssistant from "./pages/ChatAssistant";
 import Onboarding from "./pages/Onboarding";
