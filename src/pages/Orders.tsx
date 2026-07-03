@@ -186,7 +186,19 @@ export default function Orders() {
           <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Orders</h1>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">Track all orders and payments</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-1.5">
+            <span className={`h-2 w-2 rounded-full ${rtStatus.active ? "bg-success animate-pulse" : "bg-muted-foreground/40"}`} />
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
+              {rtStatus.active ? "Live" : rtStatus.consent === "denied" ? "Live off" : "Idle"}
+              {lastSyncAt && <> · synced {new Date(lastSyncAt).toLocaleTimeString()}</>}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-1.5">
+            <Switch id="autosync" checked={autoSync} onCheckedChange={toggleAutoSync} />
+            <Label htmlFor="autosync" className="text-[10px] sm:text-xs cursor-pointer">Auto-sync Excel</Label>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => loadOrders()} className="text-xs sm:text-sm"><RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Refresh</Button>
           <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm"><Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> CSV</Button>
           <Button size="sm" onClick={handleExcelExport} className="gradient-primary text-primary-foreground text-xs sm:text-sm"><FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Excel</Button>
         </div>
