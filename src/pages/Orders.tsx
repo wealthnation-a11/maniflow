@@ -58,22 +58,70 @@ export default function Orders() {
   const [platformFilter, setPlatformFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [invoiceOrder, setInvoiceOrder] = useState<any>(null);
+  const [autoSync, setAutoSync] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("orders:autoSyncExcel") === "1";
+  });
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
+  const { businessName } = useBusiness();
+
+  const loadOrders = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (data) {
+      setOrders(data.map((o: any) => ({
+        id: o.id, customer_name: o.customer_name, customer_phone: o.customer_phone || "",
+        product_name: o.product_name || "", amount: Number(o.amount), platform: o.platform,
+        status: o.status, payment_status: o.payment_status, created_at: o.created_at,
+      })));
+      setLastSyncAt(Date.now());
+    }
+    setDbLoading(false);
+  };
 
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
-      const { data } = await supabase.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-      if (data) {
-        setOrders(data.map((o: any) => ({
-          id: o.id, customer_name: o.customer_name, customer_phone: o.customer_phone || "",
-          product_name: o.product_name || "", amount: Number(o.amount), platform: o.platform,
-          status: o.status, payment_status: o.payment_status, created_at: o.created_at,
-        })));
-      }
-      setDbLoading(false);
-    };
-    load();
+    loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Live aggregation: any INSERT/UPDATE/DELETE to this user's orders re-pulls the list,
+  // so the Excel export always reflects the latest sales without manual refresh.
+  const rtStatus = useRealtimeSubscription(
+    { userId: user?.id, scope: "orders" },
+    [{ config: { event: "*", table: "orders", filter: `user_id=eq.${user?.id}` }, callback: () => loadOrders() }],
+  );
+
+  // Auto re-export the workbook (debounced) when data changes and the toggle is on.
+  const autoExportTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!autoSync || orders.length === 0) return;
+    if (autoExportTimer.current) window.clearTimeout(autoExportTimer.current);
+    autoExportTimer.current = window.setTimeout(() => {
+      try {
+        exportSalesWorkbook(
+          `${businessName.replace(/\s+/g, "-").toLowerCase()}-sales-live`,
+          orders.map((o) => ({
+            id: o.id, date: o.created_at, customer: o.customer_name, phone: o.customer_phone,
+            product: o.product_name, amount: o.amount, platform: o.platform, status: o.status, payment: o.payment_status,
+          })),
+          businessName,
+        );
+        toast.success(`Auto-exported workbook (${orders.length} rows)`);
+      } catch (e: any) {
+        toast.error(`Auto-export failed: ${e?.message ?? e}`);
+      }
+    }, 1500);
+    return () => {
+      if (autoExportTimer.current) window.clearTimeout(autoExportTimer.current);
+    };
+  }, [orders, autoSync, businessName]);
+
+  const toggleAutoSync = (v: boolean) => {
+    setAutoSync(v);
+    localStorage.setItem("orders:autoSyncExcel", v ? "1" : "0");
+    toast.success(v ? "Auto-sync enabled — workbook will refresh on new orders" : "Auto-sync disabled");
+  };
 
   if (loading || dbLoading) return <TableSkeleton />;
 
@@ -84,8 +132,6 @@ export default function Orders() {
     if (paymentFilter !== "all" && o.payment_status !== paymentFilter) return false;
     return true;
   });
-
-  const { businessName } = useBusiness();
 
   const handleExport = () => {
     exportToCSV("orders", ["Order ID", "Customer", "Phone", "Product", "Amount", "Platform", "Status", "Payment"],
