@@ -253,6 +253,12 @@ export default function Orders() {
           <Button variant="outline" size="sm" onClick={() => loadOrders()} className="text-xs sm:text-sm"><RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Refresh</Button>
           <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm"><Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> CSV</Button>
           <Button size="sm" onClick={handleExcelExport} className="gradient-primary text-primary-foreground text-xs sm:text-sm"><FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Excel</Button>
+          <Button variant="outline" size="sm" onClick={handleServerExport} disabled={serverBusy} className="text-xs sm:text-sm" title="Generate on the server and download via signed link (also runs automatically every day at 06:00 UTC)">
+            <Cloud className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {serverBusy ? "Working…" : "Server export"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSheetsSync} disabled={sheetsBusy} className="text-xs sm:text-sm" title="Push sales into a Google Sheet via the connected Google Sheets account">
+            <Sheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {sheetsBusy ? "Syncing…" : "Google Sheets"}
+          </Button>
         </div>
       </div>
 
