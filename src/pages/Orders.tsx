@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet, RefreshCw } from "lucide-react";
+import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet, RefreshCw, Cloud, Sheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -92,22 +92,34 @@ export default function Orders() {
     [{ config: { event: "*", table: "orders", filter: `user_id=eq.${user?.id}` }, callback: () => loadOrders() }],
   );
 
-  // Auto re-export the workbook (debounced) when data changes and the toggle is on.
+  // Compute filtered rows (also used inside the auto-sync effect so it stays
+  // in-scope for both the effect and the JSX below the early return).
+  const filteredForSync = orders.filter((o) => {
+    if (search && !o.customer_name.toLowerCase().includes(search.toLowerCase()) && !o.id.toLowerCase().includes(search.toLowerCase())) return false;
+    if (statusFilter !== "all" && o.status !== statusFilter) return false;
+    if (platformFilter !== "all" && o.platform !== platformFilter) return false;
+    if (paymentFilter !== "all" && o.payment_status !== paymentFilter) return false;
+    return true;
+  });
+
+  // Auto re-export the workbook (debounced) whenever the filtered dataset
+  // changes and the toggle is on. Filters are respected — the workbook always
+  // matches what you see on screen.
   const autoExportTimer = useRef<number | null>(null);
   useEffect(() => {
-    if (!autoSync || orders.length === 0) return;
+    if (!autoSync || filteredForSync.length === 0) return;
     if (autoExportTimer.current) window.clearTimeout(autoExportTimer.current);
     autoExportTimer.current = window.setTimeout(() => {
       try {
         exportSalesWorkbook(
           `${businessName.replace(/\s+/g, "-").toLowerCase()}-sales-live`,
-          orders.map((o) => ({
+          filteredForSync.map((o) => ({
             id: o.id, date: o.created_at, customer: o.customer_name, phone: o.customer_phone,
             product: o.product_name, amount: o.amount, platform: o.platform, status: o.status, payment: o.payment_status,
           })),
           businessName,
         );
-        toast.success(`Auto-exported workbook (${orders.length} rows)`);
+        toast.success(`Auto-exported workbook (${filteredForSync.length} rows)`);
       } catch (e: any) {
         toast.error(`Auto-export failed: ${e?.message ?? e}`);
       }
@@ -115,13 +127,53 @@ export default function Orders() {
     return () => {
       if (autoExportTimer.current) window.clearTimeout(autoExportTimer.current);
     };
-  }, [orders, autoSync, businessName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders, autoSync, businessName, search, statusFilter, platformFilter, paymentFilter]);
 
   const toggleAutoSync = (v: boolean) => {
     setAutoSync(v);
     localStorage.setItem("orders:autoSyncExcel", v ? "1" : "0");
-    toast.success(v ? "Auto-sync enabled — workbook will refresh on new orders" : "Auto-sync disabled");
+    toast.success(v ? "Auto-sync enabled — workbook refreshes on new/filtered orders" : "Auto-sync disabled");
   };
+
+  const [serverBusy, setServerBusy] = useState(false);
+  const handleServerExport = async () => {
+    setServerBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-sales-workbook", { body: {} });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success(`Server workbook ready (${data.rows} rows) — link valid 7 days`);
+      } else {
+        toast.error(data?.error ?? "Server export returned no URL");
+      }
+    } catch (e: any) {
+      toast.error(`Server export failed: ${e?.message ?? e}`);
+    } finally {
+      setServerBusy(false);
+    }
+  };
+
+  const [sheetsBusy, setSheetsBusy] = useState(false);
+  const handleSheetsSync = async () => {
+    setSheetsBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-sales-to-sheets", { body: {} });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success(`Synced ${data.rows} rows to Google Sheets`);
+      } else {
+        toast.error(data?.error ?? "Sheets sync failed");
+      }
+    } catch (e: any) {
+      toast.error(`Sheets sync failed: ${e?.message ?? e}`);
+    } finally {
+      setSheetsBusy(false);
+    }
+  };
+
 
   if (loading || dbLoading) return <TableSkeleton />;
 
@@ -201,6 +253,12 @@ export default function Orders() {
           <Button variant="outline" size="sm" onClick={() => loadOrders()} className="text-xs sm:text-sm"><RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Refresh</Button>
           <Button variant="outline" size="sm" onClick={handleExport} className="text-xs sm:text-sm"><Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> CSV</Button>
           <Button size="sm" onClick={handleExcelExport} className="gradient-primary text-primary-foreground text-xs sm:text-sm"><FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Excel</Button>
+          <Button variant="outline" size="sm" onClick={handleServerExport} disabled={serverBusy} className="text-xs sm:text-sm" title="Generate on the server and download via signed link (also runs automatically every day at 06:00 UTC)">
+            <Cloud className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {serverBusy ? "Working…" : "Server export"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSheetsSync} disabled={sheetsBusy} className="text-xs sm:text-sm" title="Push sales into a Google Sheet via the connected Google Sheets account">
+            <Sheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {sheetsBusy ? "Syncing…" : "Google Sheets"}
+          </Button>
         </div>
       </div>
 
