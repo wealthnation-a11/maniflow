@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet } from "lucide-react";
+import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { exportToCSV } from "@/lib/csv";
 import { exportSalesWorkbook } from "@/lib/excel";
 import { useBusiness } from "@/hooks/use-business";
@@ -14,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import EmptyState from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeSubscription } from "@/lib/realtime";
 
 type Order = {
   id: string;
