@@ -174,6 +174,28 @@ export default function Orders() {
     }
   };
 
+  const [latestBusy, setLatestBusy] = useState(false);
+  const handleDownloadLatestDaily = async () => {
+    if (!user) return;
+    setLatestBusy(true);
+    try {
+      const path = `${user.id}/latest.xlsx`;
+      const { data, error } = await supabase.storage
+        .from("sales-exports")
+        .createSignedUrl(path, 60 * 60);
+      if (error || !data?.signedUrl) {
+        toast.error("No daily export found yet — the scheduled job runs every day at 06:00 UTC.");
+        return;
+      }
+      window.open(data.signedUrl, "_blank");
+      toast.success("Opening latest daily export");
+    } catch (e: any) {
+      toast.error(`Could not fetch latest export: ${e?.message ?? e}`);
+    } finally {
+      setLatestBusy(false);
+    }
+  };
+
 
   if (loading || dbLoading) return <TableSkeleton />;
 
