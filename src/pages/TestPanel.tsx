@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
-import { Send, Bot, User, Sparkles, CheckCircle2, AlertCircle, Loader2, CreditCard, XCircle, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Send, Bot, User, Sparkles, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
 type Msg = { role: "user" | "assistant"; content: string };
