@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet, RefreshCw, Cloud, Sheet } from "lucide-react";
+import { Download, Search, X, FileText, ShoppingCart, FileSpreadsheet, RefreshCw, Cloud, Sheet, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -174,6 +174,28 @@ export default function Orders() {
     }
   };
 
+  const [latestBusy, setLatestBusy] = useState(false);
+  const handleDownloadLatestDaily = async () => {
+    if (!user) return;
+    setLatestBusy(true);
+    try {
+      const path = `${user.id}/latest.xlsx`;
+      const { data, error } = await supabase.storage
+        .from("sales-exports")
+        .createSignedUrl(path, 60 * 60);
+      if (error || !data?.signedUrl) {
+        toast.error("No daily export found yet — the scheduled job runs every day at 06:00 UTC.");
+        return;
+      }
+      window.open(data.signedUrl, "_blank");
+      toast.success("Opening latest daily export");
+    } catch (e: any) {
+      toast.error(`Could not fetch latest export: ${e?.message ?? e}`);
+    } finally {
+      setLatestBusy(false);
+    }
+  };
+
 
   if (loading || dbLoading) return <TableSkeleton />;
 
@@ -255,6 +277,9 @@ export default function Orders() {
           <Button size="sm" onClick={handleExcelExport} className="gradient-primary text-primary-foreground text-xs sm:text-sm"><FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> Excel</Button>
           <Button variant="outline" size="sm" onClick={handleServerExport} disabled={serverBusy} className="text-xs sm:text-sm" title="Generate on the server and download via signed link (also runs automatically every day at 06:00 UTC)">
             <Cloud className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {serverBusy ? "Working…" : "Server export"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownloadLatestDaily} disabled={latestBusy} className="text-xs sm:text-sm" title="Download the most recent daily workbook produced by the 06:00 UTC scheduled export">
+            <CalendarClock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {latestBusy ? "Fetching…" : "Latest daily"}
           </Button>
           <Button variant="outline" size="sm" onClick={handleSheetsSync} disabled={sheetsBusy} className="text-xs sm:text-sm" title="Push sales into a Google Sheet via the connected Google Sheets account">
             <Sheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {sheetsBusy ? "Syncing…" : "Google Sheets"}

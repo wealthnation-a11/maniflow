@@ -92,10 +92,16 @@ export function useRealtimeSubscription(
     }
 
     const baseTopic = `user:${userId}:${scope}`;
-    // Channel _instance_ name gets a random suffix so StrictMode/remount cannot
-    // collide, but the authorized realtime topic itself is the stable baseTopic.
-    // (supabase-js uses the channel name as the topic; we therefore use baseTopic
-    // and rely on supabase.removeChannel to clear the previous instance.)
+    // Defensive: if a previous instance of the same topic is still around
+    // (StrictMode double-mount, HMR, or slow websocket teardown), remove it
+    // synchronously before creating a new one. Otherwise supabase-js reuses
+    // the already-subscribed channel and .on() throws:
+    // "cannot add `postgres_changes` callbacks ... after `subscribe()`".
+    for (const existing of supabase.getChannels()) {
+      if ((existing as any).topic === `realtime:${baseTopic}` || existing.topic === baseTopic) {
+        supabase.removeChannel(existing);
+      }
+    }
     const channel: RealtimeChannel = supabase.channel(baseTopic, {
       config: { private: true },
     });
