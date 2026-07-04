@@ -278,6 +278,9 @@ export default function Orders() {
           <Button variant="outline" size="sm" onClick={handleServerExport} disabled={serverBusy} className="text-xs sm:text-sm" title="Generate on the server and download via signed link (also runs automatically every day at 06:00 UTC)">
             <Cloud className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {serverBusy ? "Working…" : "Server export"}
           </Button>
+          <Button variant="outline" size="sm" onClick={handleDownloadLatestDaily} disabled={latestBusy} className="text-xs sm:text-sm" title="Download the most recent daily workbook produced by the 06:00 UTC scheduled export">
+            <CalendarClock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {latestBusy ? "Fetching…" : "Latest daily"}
+          </Button>
           <Button variant="outline" size="sm" onClick={handleSheetsSync} disabled={sheetsBusy} className="text-xs sm:text-sm" title="Push sales into a Google Sheet via the connected Google Sheets account">
             <Sheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" /> {sheetsBusy ? "Syncing…" : "Google Sheets"}
           </Button>
