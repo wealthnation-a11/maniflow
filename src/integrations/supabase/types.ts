@@ -325,6 +325,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount_kobo: number
+          created_at: string
+          currency: string
+          id: string
+          plan: string
+          provider: string
+          raw: Json | null
+          reference: string
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount_kobo: number
+          created_at?: string
+          currency?: string
+          id?: string
+          plan: string
+          provider?: string
+          raw?: Json | null
+          reference: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount_kobo?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          plan?: string
+          provider?: string
+          raw?: Json | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       platform_connections: {
         Row: {
           access_token: string
