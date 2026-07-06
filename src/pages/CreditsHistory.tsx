@@ -130,16 +130,16 @@ export default function CreditsHistory() {
                 </div>
                 <p className={`text-xs ${t.highlighted ? "opacity-80" : "text-muted-foreground"}`}>{t.credits}</p>
                 <p className="font-heading text-lg font-bold mt-2">{t.price}</p>
-                <Button size="sm" variant={t.highlighted ? "secondary" : "default"} className="w-full mt-3 text-xs" disabled={!!buying} onClick={() => handleTopUp(t.id)}>
+                <Button size="sm" variant={t.highlighted ? "secondary" : "default"} className="w-full mt-3 text-xs" disabled={!!buying || verifying} onClick={() => handleTopUp(t.id)}>
                   {isBuying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                  {isBuying ? "Processing…" : `Buy ${t.name}`}
+                  {isBuying ? "Redirecting…" : `Buy ${t.name}`}
                 </Button>
               </div>
             );
           })}
         </div>
         <p className="text-[10px] text-muted-foreground mt-3">
-          Credits are added to your balance instantly. Payment gateway integration coming soon — for now this is a one-click top-up.
+          {verifying ? "Verifying your payment…" : "Secure checkout via Paystack. Credits are added instantly after payment."}
         </p>
       </div>
 
