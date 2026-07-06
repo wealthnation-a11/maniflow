@@ -84,16 +84,16 @@ export default function CreditsHistory() {
     if (!user) { toast.error("Please sign in to top up."); return; }
     setBuying(plan);
     try {
-      const { data, error } = await supabase.functions.invoke("redeem-plan", { body: { plan } });
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error || "Top-up failed");
-      toast.success(`${plan === "growth" ? "Growth" : "Business"} credits added to your balance!`);
-      await refetch();
+      const callbackUrl = `${window.location.origin}/credits`;
+      const { data, error } = await supabase.functions.invoke("paystack-init", {
+        body: { plan, callback_url: callbackUrl },
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.authorization_url) throw new Error("No checkout URL returned");
+      window.location.href = data.authorization_url;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Top-up failed";
+      const msg = e instanceof Error ? e.message : "Checkout failed";
       toast.error(msg);
-      console.error("top-up error:", e);
-    } finally {
       setBuying(null);
     }
   };
