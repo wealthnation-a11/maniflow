@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Coins, ArrowDownCircle, ArrowUpCircle, Loader2, Zap, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,6 +31,8 @@ export default function CreditsHistory() {
   const [rows, setRows] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<null | "growth" | "business">(null);
+  const [verifying, setVerifying] = useState(false);
+  const [params, setParams] = useSearchParams();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -45,6 +48,30 @@ export default function CreditsHistory() {
 
   useEffect(() => { if (user) load(); }, [user, load]);
 
+  // Verify Paystack payment on return
+  useEffect(() => {
+    const reference = params.get("reference") ?? params.get("trxref");
+    if (!reference) return;
+    setVerifying(true);
+    (async () => {
+      const { data, error } = await supabase.functions.invoke("paystack-verify", {
+        body: { reference },
+      });
+      setVerifying(false);
+      setParams({}, { replace: true });
+      if (error) {
+        toast.error(`Verification failed: ${error.message}`);
+      } else if (data?.status === "success") {
+        toast.success("Payment verified — credits added 🎉");
+        await refetch();
+        await load();
+      } else {
+        toast.error(`Payment ${data?.status ?? "not completed"}.`);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useRealtimeSubscription(
     { userId: user?.id, scope: "credit-tx", enabled: !!user },
     [{
@@ -57,16 +84,16 @@ export default function CreditsHistory() {
     if (!user) { toast.error("Please sign in to top up."); return; }
     setBuying(plan);
     try {
-      const { data, error } = await supabase.functions.invoke("redeem-plan", { body: { plan } });
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error || "Top-up failed");
-      toast.success(`${plan === "growth" ? "Growth" : "Business"} credits added to your balance!`);
-      await refetch();
+      const callbackUrl = `${window.location.origin}/credits`;
+      const { data, error } = await supabase.functions.invoke("paystack-init", {
+        body: { plan, callback_url: callbackUrl },
+      });
+      if (error) throw new Error(error.message);
+      if (!data?.authorization_url) throw new Error("No checkout URL returned");
+      window.location.href = data.authorization_url;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Top-up failed";
+      const msg = e instanceof Error ? e.message : "Checkout failed";
       toast.error(msg);
-      console.error("top-up error:", e);
-    } finally {
       setBuying(null);
     }
   };
@@ -103,16 +130,16 @@ export default function CreditsHistory() {
                 </div>
                 <p className={`text-xs ${t.highlighted ? "opacity-80" : "text-muted-foreground"}`}>{t.credits}</p>
                 <p className="font-heading text-lg font-bold mt-2">{t.price}</p>
-                <Button size="sm" variant={t.highlighted ? "secondary" : "default"} className="w-full mt-3 text-xs" disabled={!!buying} onClick={() => handleTopUp(t.id)}>
+                <Button size="sm" variant={t.highlighted ? "secondary" : "default"} className="w-full mt-3 text-xs" disabled={!!buying || verifying} onClick={() => handleTopUp(t.id)}>
                   {isBuying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                  {isBuying ? "Processing…" : `Buy ${t.name}`}
+                  {isBuying ? "Redirecting…" : `Buy ${t.name}`}
                 </Button>
               </div>
             );
           })}
         </div>
         <p className="text-[10px] text-muted-foreground mt-3">
-          Credits are added to your balance instantly. Payment gateway integration coming soon — for now this is a one-click top-up.
+          {verifying ? "Verifying your payment…" : "Secure checkout via Paystack. Credits are added instantly after payment."}
         </p>
       </div>
 
