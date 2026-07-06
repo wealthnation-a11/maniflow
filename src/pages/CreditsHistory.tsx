@@ -31,6 +31,8 @@ export default function CreditsHistory() {
   const [rows, setRows] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<null | "growth" | "business">(null);
+  const [verifying, setVerifying] = useState(false);
+  const [params, setParams] = useSearchParams();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -45,6 +47,30 @@ export default function CreditsHistory() {
   }, [user]);
 
   useEffect(() => { if (user) load(); }, [user, load]);
+
+  // Verify Paystack payment on return
+  useEffect(() => {
+    const reference = params.get("reference") ?? params.get("trxref");
+    if (!reference) return;
+    setVerifying(true);
+    (async () => {
+      const { data, error } = await supabase.functions.invoke("paystack-verify", {
+        body: { reference },
+      });
+      setVerifying(false);
+      setParams({}, { replace: true });
+      if (error) {
+        toast.error(`Verification failed: ${error.message}`);
+      } else if (data?.status === "success") {
+        toast.success("Payment verified — credits added 🎉");
+        await refetch();
+        await load();
+      } else {
+        toast.error(`Payment ${data?.status ?? "not completed"}.`);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useRealtimeSubscription(
     { userId: user?.id, scope: "credit-tx", enabled: !!user },
