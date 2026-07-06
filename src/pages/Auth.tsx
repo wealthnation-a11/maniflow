@@ -9,7 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { authDebug, friendlyAuthError } from "@/lib/authDebug";
-import AuthDebugPanel from "@/components/AuthDebugPanel";
 import { toast } from "sonner";
 
 export default function Auth() {
