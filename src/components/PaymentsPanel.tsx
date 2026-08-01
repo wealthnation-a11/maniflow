@@ -6,33 +6,9 @@ import { Receipt, RefreshCw, Loader2, AlertTriangle, CheckCircle2, Clock } from 
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import PaymentReceiptDialog, { PaymentRow, PLAN_CREDITS } from "./PaymentReceiptDialog";
+import { verifyPayment } from "@/lib/paystack";
 
 const fmtNaira = (kobo: number) => `₦${(kobo / 100).toLocaleString("en-NG")}`;
-
-/** Turns any verification failure into a message a business owner can act on. */
-export function explainPaymentError(raw: string | undefined | null): string {
-  const m = (raw ?? "").toLowerCase();
-  if (!m) return "We couldn't reach the payment service. Check your connection and retry.";
-  if (m.includes("failed to fetch") || m.includes("network")) {
-    return "Network error while contacting Paystack. Check your connection and press Retry.";
-  }
-  if (m.includes("not configured")) {
-    return "Payments aren't configured yet — the Paystack key is missing. Contact support.";
-  }
-  if (m.includes("transaction reference not found") || m.includes("invalid reference")) {
-    return "Paystack doesn't recognise this reference. If money left your account, contact support with the reference.";
-  }
-  if (m.includes("credits grant failed")) {
-    return "Payment succeeded but crediting your account failed. Press Retry — this is safe and won't double-charge.";
-  }
-  if (m.includes("unauthorized") || m.includes("401")) {
-    return "Your session expired. Sign in again, then press Retry.";
-  }
-  if (m.includes("non-2xx") || m.includes("500")) {
-    return "The verification service returned an error. Press Retry in a moment.";
-  }
-  return raw!;
-}
 
 export default function PaymentsPanel({ onCreditsGranted }: { onCreditsGranted?: () => void }) {
   const { user } = useAuth();
@@ -60,28 +36,23 @@ export default function PaymentsPanel({ onCreditsGranted }: { onCreditsGranted?:
   const retry = async (p: PaymentRow) => {
     setRetrying(p.reference);
     setErrors((e) => ({ ...e, [p.reference]: "" }));
-    try {
-      const { data, error } = await supabase.functions.invoke("paystack-verify", {
-        body: { reference: p.reference },
-      });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (data?.status === "success") {
-        toast.success(`Verified — ${(PLAN_CREDITS[p.plan] ?? 0).toLocaleString()} credits added.`);
-        onCreditsGranted?.();
-      } else if (data?.status === "abandoned" || data?.status === "pending") {
-        setErrors((e) => ({ ...e, [p.reference]: "Paystack hasn't received this payment yet. If you completed it, wait a moment and retry." }));
-      } else {
-        setErrors((e) => ({ ...e, [p.reference]: data?.gateway_response || `Paystack reports this payment as "${data?.status ?? "unknown"}". No credits were added.` }));
-      }
-      await load();
-    } catch (e) {
-      const msg = explainPaymentError(e instanceof Error ? e.message : String(e));
-      setErrors((err) => ({ ...err, [p.reference]: msg }));
-      toast.error(msg);
-    } finally {
-      setRetrying(null);
+    const result = await verifyPayment(p.reference);
+    if (result.error) {
+      setErrors((e) => ({ ...e, [p.reference]: result.error! }));
+      toast.error(result.error);
+    } else if (result.status === "success") {
+      toast.success(`Verified — ${(result.credits ?? PLAN_CREDITS[p.plan] ?? 0).toLocaleString()} credits added.`);
+      onCreditsGranted?.();
+    } else if (result.status === "pending" || result.status === "ongoing" || result.status === "abandoned") {
+      setErrors((e) => ({ ...e, [p.reference]: "Paystack hasn't received this payment yet. If you completed it, wait a moment and retry." }));
+    } else {
+      setErrors((e) => ({
+        ...e,
+        [p.reference]: result.gateway_response || `Paystack reports this payment as "${result.status ?? "unknown"}". No credits were added.`,
+      }));
     }
+    await load();
+    setRetrying(null);
   };
 
   if (!loading && rows.length === 0) return null;
