@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Coins, ArrowDownCircle, ArrowUpCircle, Loader2, Zap, Rocket } from "lucide-react";
+import { Coins, ArrowDownCircle, ArrowUpCircle, Loader2, Zap, Rocket, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -8,6 +8,8 @@ import { useRealtimeSubscription } from "@/lib/realtime";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import PaymentsPanel from "@/components/PaymentsPanel";
+import { verifyPayment } from "@/lib/paystack";
 
 type Tx = {
   id: string;
@@ -49,26 +51,43 @@ export default function CreditsHistory() {
   useEffect(() => { if (user) load(); }, [user, load]);
 
   // Verify Paystack payment on return
+  const [pendingRef, setPendingRef] = useState<string | null>(null);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [paymentsKey, setPaymentsKey] = useState(0);
+
+  const runVerification = useCallback(async (reference: string) => {
+    setVerifying(true);
+    setVerifyError(null);
+    const result = await verifyPayment(reference);
+    setVerifying(false);
+    if (result.error) {
+      setVerifyError(result.error);
+      setPendingRef(reference);
+      toast.error(result.error);
+      return;
+    }
+    if (result.status === "success") {
+      setPendingRef(null);
+      toast.success(`Payment verified — ${(result.credits ?? 0).toLocaleString()} credits added 🎉`);
+      await refetch();
+      await load();
+      setPaymentsKey((k) => k + 1);
+    } else {
+      setPendingRef(reference);
+      setVerifyError(
+        result.gateway_response ||
+          `Paystack reports this payment as "${result.status ?? "not completed"}". No credits were added.`
+      );
+    }
+    setPaymentsKey((k) => k + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [load, refetch]);
+
   useEffect(() => {
     const reference = params.get("reference") ?? params.get("trxref");
     if (!reference) return;
-    setVerifying(true);
-    (async () => {
-      const { data, error } = await supabase.functions.invoke("paystack-verify", {
-        body: { reference },
-      });
-      setVerifying(false);
-      setParams({}, { replace: true });
-      if (error) {
-        toast.error(`Verification failed: ${error.message}`);
-      } else if (data?.status === "success") {
-        toast.success("Payment verified — credits added 🎉");
-        await refetch();
-        await load();
-      } else {
-        toast.error(`Payment ${data?.status ?? "not completed"}.`);
-      }
-    })();
+    setParams({}, { replace: true });
+    runVerification(reference);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -138,10 +157,27 @@ export default function CreditsHistory() {
             );
           })}
         </div>
+        {verifyError ? (
+          <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+            <p className="text-xs text-destructive font-medium">Payment verification problem</p>
+            <p className="text-[11px] text-destructive/90 mt-1">{verifyError}</p>
+            {pendingRef ? (
+              <div className="flex items-center gap-2 mt-2">
+                <Button size="sm" variant="outline" className="text-xs" disabled={verifying} onClick={() => runVerification(pendingRef)}>
+                  {verifying ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+                  Retry verification
+                </Button>
+                <span className="text-[10px] text-muted-foreground break-all">Ref: {pendingRef}</span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <p className="text-[10px] text-muted-foreground mt-3">
-          {verifying ? "Verifying your payment…" : "Secure checkout via Paystack. Credits are added instantly after payment."}
+          {verifying ? "Verifying your payment…" : "Secure live checkout via Paystack. Credits are added as soon as payment is confirmed."}
         </p>
       </div>
+
+      <PaymentsPanel key={paymentsKey} onCreditsGranted={async () => { await refetch(); await load(); }} />
 
 
       <div className="bg-card rounded-xl shadow-card overflow-hidden">

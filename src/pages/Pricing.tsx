@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { verifyPayment } from "@/lib/paystack";
 
 type PlanId = "free" | "growth" | "business";
 
@@ -73,22 +74,31 @@ export default function Pricing() {
   useEffect(() => {
     const reference = params.get("reference") ?? params.get("trxref");
     if (!reference) return;
+    setParams({}, { replace: true });
     setVerifying(true);
     (async () => {
-      const { data, error } = await supabase.functions.invoke("paystack-verify", {
-        body: { reference },
-      });
+      const result = await verifyPayment(reference);
       setVerifying(false);
-      if (error) {
-        toast.error(`Verification failed: ${error.message}`);
-      } else if (data?.status === "success") {
-        toast.success("Payment verified — credits added to your account 🎉");
-        // Clean URL and route to dashboard
-        setParams({}, { replace: true });
+      if (result.error) {
+        toast.error(result.error, {
+          description: `Reference: ${reference}. Open Credits History to retry.`,
+          action: { label: "Credits History", onClick: () => navigate("/credits") },
+          duration: 12000,
+        });
+        return;
+      }
+      if (result.status === "success") {
+        toast.success(`Payment verified — ${(result.credits ?? 0).toLocaleString()} credits added 🎉`);
         setTimeout(() => navigate("/dashboard"), 1200);
       } else {
-        toast.error(`Payment ${data?.status ?? "not completed"}.`);
-        setParams({}, { replace: true });
+        toast.error(
+          result.gateway_response || `Payment ${result.status ?? "not completed"} — no credits were added.`,
+          {
+            description: `Reference: ${reference}. You can retry from Credits History.`,
+            action: { label: "Retry", onClick: () => navigate("/credits") },
+            duration: 12000,
+          }
+        );
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
