@@ -108,7 +108,7 @@ export default function Products() {
     if (editId) {
       const { error } = await supabase.from("products").update(row).eq("id", editId);
       if (error) { toast.error("Failed to update product"); setSaving(false); return; }
-      setProducts((prev) => prev.map((p) => p.id === editId ? { ...p, ...row, id: editId, variants: cleanVariants } : p));
+      setProducts((prev) => prev.map((p) => p.id === editId ? { ...p, ...row, id: editId, tags, variants: cleanVariants } : p));
       toast.success("Product updated!");
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
@@ -213,6 +213,8 @@ export default function Products() {
           <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Inventory Value</p>
         </div>
       </div>
+
+      <StoreLinkCard />
 
       {isMobile ? (
         <Drawer open={showForm} onOpenChange={setShowForm}>
