@@ -544,6 +544,7 @@ export type Database = {
           store_description: string
           store_slug: string
           user_id: string
+          whatsapp: string
         }[]
       }
       grant_plan_credits: {
