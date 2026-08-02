@@ -419,6 +419,7 @@ export type Database = {
           name: string
           price: number
           stock: number
+          tags: string[]
           updated_at: string
           user_id: string
           variants: Json
@@ -432,6 +433,7 @@ export type Database = {
           name: string
           price?: number
           stock?: number
+          tags?: string[]
           updated_at?: string
           user_id: string
           variants?: Json
@@ -445,6 +447,7 @@ export type Database = {
           name?: string
           price?: number
           stock?: number
+          tags?: string[]
           updated_at?: string
           user_id?: string
           variants?: Json
@@ -466,6 +469,8 @@ export type Database = {
           phone: string | null
           plan: string
           plan_purchased_at: string | null
+          store_description: string
+          store_slug: string | null
           timezone: string | null
           trial_ends_at: string | null
           trial_expired_alert_sent_at: string | null
@@ -485,6 +490,8 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
+          store_description?: string
+          store_slug?: string | null
           timezone?: string | null
           trial_ends_at?: string | null
           trial_expired_alert_sent_at?: string | null
@@ -504,6 +511,8 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
+          store_description?: string
+          store_slug?: string | null
           timezone?: string | null
           trial_ends_at?: string | null
           trial_expired_alert_sent_at?: string | null
@@ -526,6 +535,17 @@ export type Database = {
         Returns: boolean
       }
       get_reply_cost: { Args: { p_plan: string }; Returns: number }
+      get_store_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          business_name: string
+          currency: string
+          logo_url: string
+          store_description: string
+          store_slug: string
+          user_id: string
+        }[]
+      }
       grant_plan_credits: {
         Args: { p_plan: string; p_user_id: string }
         Returns: boolean
