@@ -21,6 +21,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import ProductImageUpload from "@/components/ProductImageUpload";
+import StoreLinkCard from "@/components/StoreLinkCard";
+import { PRODUCT_TAGS, tagMeta } from "@/lib/productTags";
 
 type Variant = { id: number; name: string; price: string; stock: string };
 

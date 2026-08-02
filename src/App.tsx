@@ -26,6 +26,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
+import Store from "./pages/Store";
 import Notifications from "./pages/Notifications";
 import CreditsHistory from "./pages/CreditsHistory";
 import TestPanel from "./pages/TestPanel";
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/help" element={<Help />} />
+              <Route path="/store/:slug" element={<Store />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route element={<DashboardLayout />}>
