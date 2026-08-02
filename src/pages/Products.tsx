@@ -35,6 +35,7 @@ type Product = {
   image_url: string;
   stock: number;
   category: string;
+  tags: string[];
   variants: Variant[];
 };
 
@@ -48,6 +49,7 @@ export default function Products() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "" });
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -59,7 +61,7 @@ export default function Products() {
       if (data) {
         setProducts(data.map((p: any) => ({
           id: p.id, name: p.name, price: Number(p.price), description: p.description || "",
-          image_url: p.image_url || "", stock: p.stock, category: p.category || "",
+          image_url: p.image_url || "", stock: p.stock, category: p.category || "", tags: ((p as any).tags as string[]) || [],
           variants: (p.variants as Variant[]) || [],
         })));
       }
@@ -73,6 +75,7 @@ export default function Products() {
   const openEdit = (p: Product) => {
     setEditId(p.id);
     setForm({ name: p.name, price: String(p.price), description: p.description, image: p.image_url, stock: String(p.stock), category: p.category });
+    setTags(p.tags ?? []);
     setVariants(p.variants);
     setShowForm(true);
   };
@@ -80,6 +83,7 @@ export default function Products() {
   const openNew = () => {
     setEditId(null);
     setForm({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+    setTags([]);
     setVariants([]);
     setShowForm(true);
   };
@@ -97,7 +101,7 @@ export default function Products() {
 
     const row = {
       user_id: user.id, name: form.name, price, description: form.description,
-      image_url: form.image, stock, category: form.category,
+      image_url: form.image, stock, category: form.category, tags,
       variants: cleanVariants as any, updated_at: new Date().toISOString(),
     };
 
@@ -109,7 +113,7 @@ export default function Products() {
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
       if (error || !data) { toast.error("Failed to add product"); setSaving(false); return; }
-      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", variants: (data.variants as Variant[]) || [] }, ...prev]);
+      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [] }, ...prev]);
       toast.success("Product added!");
     }
     setSaving(false);
@@ -143,7 +147,23 @@ export default function Products() {
       </div>
       <div><Label className="text-sm">Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Hair Care" className="mt-1" /></div>
       <div><Label className="text-sm">Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe your product…" className="mt-1" rows={3} /></div>
-      <div><Label className="text-sm">Image URL</Label><Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." className="mt-1" /></div>
+      <ProductImageUpload value={form.image} onChange={(url) => setForm({ ...form, image: url })} />
+      <div>
+        <Label className="text-sm">Tags</Label>
+        <p className="text-[10px] text-muted-foreground mb-1.5">Shown as badges on your public store page.</p>
+        <div className="flex flex-wrap gap-1.5">
+          {PRODUCT_TAGS.map((t) => {
+            const active = tags.includes(t.id);
+            return (
+              <button key={t.id} type="button"
+                onClick={() => setTags((prev) => active ? prev.filter((x) => x !== t.id) : [...prev, t.id])}
+                className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${active ? t.className + " border-transparent" : "bg-card text-muted-foreground"}`}>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <div className="border-t pt-3 mt-3">
         <div className="flex items-center justify-between mb-2">
           <Label className="text-sm font-semibold">Variants</Label>
@@ -227,6 +247,14 @@ export default function Products() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"><Package className="h-8 sm:h-10 w-8 sm:w-10 text-muted-foreground" /></div>
                 )}
+                {p.tags?.length ? (
+                  <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1 max-w-[65%]">
+                    {p.tags.slice(0, 2).map((t) => {
+                      const meta = tagMeta(t);
+                      return <span key={t} className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${meta.className}`}>{meta.label}</span>;
+                    })}
+                  </div>
+                ) : null}
                 {p.stock <= 5 && p.stock > 0 && <span className="absolute top-1.5 right-1.5 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-warning/90 text-warning-foreground">Low Stock</span>}
                 {p.stock === 0 && <span className="absolute top-1.5 right-1.5 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/90 text-destructive-foreground">Out of Stock</span>}
               </div>
