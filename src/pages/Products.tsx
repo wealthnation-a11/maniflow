@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ProductImageUpload from "@/components/ProductImageUpload";
 import StoreLinkCard from "@/components/StoreLinkCard";
+import StoreAnalyticsCard from "@/components/StoreAnalyticsCard";
 import { PRODUCT_TAGS, tagMeta } from "@/lib/productTags";
 
 type Variant = { id: number; name: string; price: string; stock: string };
@@ -247,6 +248,7 @@ export default function Products() {
       </div>
 
       <StoreLinkCard />
+      <StoreAnalyticsCard />
 
       {isMobile ? (
         <Drawer open={showForm} onOpenChange={setShowForm}>
