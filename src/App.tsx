@@ -72,6 +72,8 @@ const App = () => (
                   <Route path="/settings/realtime" element={<RealtimeSettings />} />
                 </Route>
               </Route>
+              {/* Public store short link: maniflow.lovable.app/<store-name> */}
+              <Route path="/:slug" element={<Store />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
