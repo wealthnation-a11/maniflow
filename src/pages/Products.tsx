@@ -157,6 +157,27 @@ export default function Products() {
         <div><Label className="text-sm">Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="0" className="mt-1" /></div>
       </div>
       <div><Label className="text-sm">Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Hair Care" className="mt-1" /></div>
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <Label className="text-sm">Track inventory</Label>
+            <p className="text-[10px] text-muted-foreground">Show “Sold out” on your store page and auto-reduce stock when an order is confirmed.</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={form.trackInventory}
+            onChange={(e) => setForm({ ...form, trackInventory: e.target.checked })}
+            className="h-4 w-4 accent-primary shrink-0"
+            aria-label="Track inventory"
+          />
+        </div>
+        {form.trackInventory && (
+          <div>
+            <Label className="text-sm">Low stock alert at</Label>
+            <Input type="number" min={0} value={form.lowStock} onChange={(e) => setForm({ ...form, lowStock: e.target.value })} placeholder="5" className="mt-1" />
+          </div>
+        )}
+      </div>
       <div><Label className="text-sm">Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe your product…" className="mt-1" rows={3} /></div>
       <ProductImageUpload value={form.image} onChange={(url) => setForm({ ...form, image: url })} />
       <div>
