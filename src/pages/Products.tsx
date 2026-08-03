@@ -77,7 +77,11 @@ export default function Products() {
 
   const openEdit = (p: Product) => {
     setEditId(p.id);
-    setForm({ name: p.name, price: String(p.price), description: p.description, image: p.image_url, stock: String(p.stock), category: p.category });
+    setForm({
+      name: p.name, price: String(p.price), description: p.description, image: p.image_url,
+      stock: String(p.stock), category: p.category,
+      trackInventory: p.track_inventory, lowStock: String(p.low_stock_threshold ?? 5),
+    });
     setTags(p.tags ?? []);
     setVariants(p.variants);
     setShowForm(true);
@@ -85,7 +89,7 @@ export default function Products() {
 
   const openNew = () => {
     setEditId(null);
-    setForm({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+    setForm({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
     setTags([]);
     setVariants([]);
     setShowForm(true);
