@@ -37,6 +37,8 @@ type Product = {
   category: string;
   tags: string[];
   variants: Variant[];
+  track_inventory: boolean;
+  low_stock_threshold: number;
 };
 
 export default function Products() {
@@ -47,7 +49,7 @@ export default function Products() {
   const [dbLoading, setDbLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+  const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
   const [variants, setVariants] = useState<Variant[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
