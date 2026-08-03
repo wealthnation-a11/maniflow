@@ -65,6 +65,7 @@ export default function Products() {
           id: p.id, name: p.name, price: Number(p.price), description: p.description || "",
           image_url: p.image_url || "", stock: p.stock, category: p.category || "", tags: ((p as any).tags as string[]) || [],
           variants: (p.variants as Variant[]) || [],
+          track_inventory: p.track_inventory ?? true, low_stock_threshold: p.low_stock_threshold ?? 5,
         })));
       }
       setDbLoading(false);
