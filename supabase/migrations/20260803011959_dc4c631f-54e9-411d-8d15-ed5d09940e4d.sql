@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.apply_order_inventory() FROM PUBLIC, anon, authenticated;

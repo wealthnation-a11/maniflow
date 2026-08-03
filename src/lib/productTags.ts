@@ -32,5 +32,5 @@ export function slugify(input: string): string {
 }
 
 export function storeUrl(slug: string): string {
-  return `${window.location.origin}/store/${slug}`;
+  return `${window.location.origin}/${slug}`;
 }

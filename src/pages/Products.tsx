@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ProductImageUpload from "@/components/ProductImageUpload";
 import StoreLinkCard from "@/components/StoreLinkCard";
+import StoreAnalyticsCard from "@/components/StoreAnalyticsCard";
 import { PRODUCT_TAGS, tagMeta } from "@/lib/productTags";
 
 type Variant = { id: number; name: string; price: string; stock: string };
@@ -37,6 +38,8 @@ type Product = {
   category: string;
   tags: string[];
   variants: Variant[];
+  track_inventory: boolean;
+  low_stock_threshold: number;
 };
 
 export default function Products() {
@@ -47,7 +50,7 @@ export default function Products() {
   const [dbLoading, setDbLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+  const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
   const [variants, setVariants] = useState<Variant[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -63,6 +66,7 @@ export default function Products() {
           id: p.id, name: p.name, price: Number(p.price), description: p.description || "",
           image_url: p.image_url || "", stock: p.stock, category: p.category || "", tags: ((p as any).tags as string[]) || [],
           variants: (p.variants as Variant[]) || [],
+          track_inventory: p.track_inventory ?? true, low_stock_threshold: p.low_stock_threshold ?? 5,
         })));
       }
       setDbLoading(false);
@@ -74,7 +78,11 @@ export default function Products() {
 
   const openEdit = (p: Product) => {
     setEditId(p.id);
-    setForm({ name: p.name, price: String(p.price), description: p.description, image: p.image_url, stock: String(p.stock), category: p.category });
+    setForm({
+      name: p.name, price: String(p.price), description: p.description, image: p.image_url,
+      stock: String(p.stock), category: p.category,
+      trackInventory: p.track_inventory, lowStock: String(p.low_stock_threshold ?? 5),
+    });
     setTags(p.tags ?? []);
     setVariants(p.variants);
     setShowForm(true);
@@ -82,7 +90,7 @@ export default function Products() {
 
   const openNew = () => {
     setEditId(null);
-    setForm({ name: "", price: "", description: "", image: "", stock: "", category: "" });
+    setForm({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
     setTags([]);
     setVariants([]);
     setShowForm(true);
@@ -99,9 +107,13 @@ export default function Products() {
     const stock = parseInt(form.stock) || 0;
     const cleanVariants = variants.filter((v) => v.name.trim());
 
+    const track_inventory = form.trackInventory;
+    const low_stock_threshold = Math.max(0, parseInt(form.lowStock) || 0);
+
     const row = {
       user_id: user.id, name: form.name, price, description: form.description,
       image_url: form.image, stock, category: form.category, tags,
+      track_inventory, low_stock_threshold,
       variants: cleanVariants as any, updated_at: new Date().toISOString(),
     };
 
@@ -113,7 +125,7 @@ export default function Products() {
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
       if (error || !data) { toast.error("Failed to add product"); setSaving(false); return; }
-      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [] }, ...prev]);
+      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
       toast.success("Product added!");
     }
     setSaving(false);
@@ -146,6 +158,27 @@ export default function Products() {
         <div><Label className="text-sm">Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="0" className="mt-1" /></div>
       </div>
       <div><Label className="text-sm">Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Hair Care" className="mt-1" /></div>
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <Label className="text-sm">Track inventory</Label>
+            <p className="text-[10px] text-muted-foreground">Show “Sold out” on your store page and auto-reduce stock when an order is confirmed.</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={form.trackInventory}
+            onChange={(e) => setForm({ ...form, trackInventory: e.target.checked })}
+            className="h-4 w-4 accent-primary shrink-0"
+            aria-label="Track inventory"
+          />
+        </div>
+        {form.trackInventory && (
+          <div>
+            <Label className="text-sm">Low stock alert at</Label>
+            <Input type="number" min={0} value={form.lowStock} onChange={(e) => setForm({ ...form, lowStock: e.target.value })} placeholder="5" className="mt-1" />
+          </div>
+        )}
+      </div>
       <div><Label className="text-sm">Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe your product…" className="mt-1" rows={3} /></div>
       <ProductImageUpload value={form.image} onChange={(url) => setForm({ ...form, image: url })} />
       <div>
@@ -215,6 +248,7 @@ export default function Products() {
       </div>
 
       <StoreLinkCard />
+      <StoreAnalyticsCard />
 
       {isMobile ? (
         <Drawer open={showForm} onOpenChange={setShowForm}>
