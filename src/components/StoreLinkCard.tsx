@@ -99,7 +99,7 @@ export default function StoreLinkCard() {
           <Label className="text-xs">Store link</Label>
           <div className="flex items-center mt-1">
             <span className="text-[11px] sm:text-xs text-muted-foreground bg-muted rounded-l-md border border-r-0 px-2 py-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[45%]">
-              {window.location.origin}/store/
+              {window.location.host}/
             </span>
             <Input
               value={slug}
