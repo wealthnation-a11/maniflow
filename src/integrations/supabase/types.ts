@@ -290,10 +290,14 @@ export type Database = {
           customer_name: string
           customer_phone: string | null
           id: string
+          inventory_applied: boolean
+          items: Json
           payment_status: Database["public"]["Enums"]["payment_status"]
           platform: Database["public"]["Enums"]["platform_type"]
           product_name: string | null
+          source: string
           status: Database["public"]["Enums"]["order_status"]
+          store_slug: string | null
           updated_at: string
           user_id: string
         }
@@ -303,10 +307,14 @@ export type Database = {
           customer_name?: string
           customer_phone?: string | null
           id?: string
+          inventory_applied?: boolean
+          items?: Json
           payment_status?: Database["public"]["Enums"]["payment_status"]
           platform?: Database["public"]["Enums"]["platform_type"]
           product_name?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["order_status"]
+          store_slug?: string | null
           updated_at?: string
           user_id: string
         }
@@ -316,10 +324,14 @@ export type Database = {
           customer_name?: string
           customer_phone?: string | null
           id?: string
+          inventory_applied?: boolean
+          items?: Json
           payment_status?: Database["public"]["Enums"]["payment_status"]
           platform?: Database["public"]["Enums"]["platform_type"]
           product_name?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["order_status"]
+          store_slug?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -416,10 +428,12 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          low_stock_threshold: number
           name: string
           price: number
           stock: number
           tags: string[]
+          track_inventory: boolean
           updated_at: string
           user_id: string
           variants: Json
@@ -430,10 +444,12 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          low_stock_threshold?: number
           name: string
           price?: number
           stock?: number
           tags?: string[]
+          track_inventory?: boolean
           updated_at?: string
           user_id: string
           variants?: Json
@@ -444,10 +460,12 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          low_stock_threshold?: number
           name?: string
           price?: number
           stock?: number
           tags?: string[]
+          track_inventory?: boolean
           updated_at?: string
           user_id?: string
           variants?: Json
@@ -517,6 +535,39 @@ export type Database = {
           trial_ends_at?: string | null
           trial_expired_alert_sent_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      store_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          product_id: string | null
+          session_id: string | null
+          store_slug: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          product_id?: string | null
+          session_id?: string | null
+          store_slug: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          product_id?: string | null
+          session_id?: string | null
+          store_slug?: string
+          user_id?: string
         }
         Relationships: []
       }
