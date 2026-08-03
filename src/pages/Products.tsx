@@ -106,9 +106,13 @@ export default function Products() {
     const stock = parseInt(form.stock) || 0;
     const cleanVariants = variants.filter((v) => v.name.trim());
 
+    const track_inventory = form.trackInventory;
+    const low_stock_threshold = Math.max(0, parseInt(form.lowStock) || 0);
+
     const row = {
       user_id: user.id, name: form.name, price, description: form.description,
       image_url: form.image, stock, category: form.category, tags,
+      track_inventory, low_stock_threshold,
       variants: cleanVariants as any, updated_at: new Date().toISOString(),
     };
 
@@ -120,7 +124,7 @@ export default function Products() {
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
       if (error || !data) { toast.error("Failed to add product"); setSaving(false); return; }
-      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [] }, ...prev]);
+      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
       toast.success("Product added!");
     }
     setSaving(false);
