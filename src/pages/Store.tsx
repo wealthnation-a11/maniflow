@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Store as StoreIcon, Search, MessageCircle, Loader2, ShoppingBag,
-  ShoppingCart, Plus, Minus, Trash2, CheckCircle2,
+  ShoppingCart, Plus, Minus, Trash2, CheckCircle2, Copy, Bot,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,9 @@ import {
 import { toast } from "sonner";
 import { tagMeta, PRODUCT_TAGS } from "@/lib/productTags";
 import ManyFlowLogo from "@/components/ManyFlowLogo";
+import StoreChat from "@/components/StoreChat";
+import StoreBottomNav from "@/components/StoreBottomNav";
+
 
 type StoreInfo = {
   user_id: string;
