@@ -413,12 +413,19 @@ export default function Store() {
             </Sheet>
           </div>
 
-          {waLink() ? (
-            <Button asChild size="sm" className="mt-4 gradient-primary text-primary-foreground text-xs">
-              <a href={waLink()!} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> Chat with us on WhatsApp
-              </a>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button size="sm" className="gradient-primary text-primary-foreground text-xs" onClick={() => setChatOpen(true)}>
+              <Bot className="h-3.5 w-3.5 mr-1.5" /> Chat with us
             </Button>
+            {waLink() ? (
+              <Button asChild size="sm" variant="outline" className="text-xs">
+                <a href={waLink()!} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> WhatsApp
+                </a>
+              </Button>
+            ) : null}
+          </div>
+
           ) : null}
         </div>
       </header>
@@ -458,7 +465,8 @@ export default function Store() {
       </div>
 
       {/* Products */}
-      <main className="max-w-5xl mx-auto px-4 py-5">
+      <main ref={productsRef} className="max-w-5xl mx-auto px-4 py-5">
+
         {visible.length === 0 ? (
           <div className="bg-card rounded-xl shadow-card p-10 text-center">
             <ShoppingBag className="h-9 w-9 text-muted-foreground mx-auto mb-3" />
@@ -541,9 +549,9 @@ export default function Store() {
         )}
       </main>
 
-      {/* Sticky cart bar */}
+      {/* Sticky cart bar (sits above the bottom menu) */}
       {cartCount > 0 && !cartOpen ? (
-        <div className="fixed bottom-0 inset-x-0 border-t bg-card/95 backdrop-blur px-4 py-3 z-40">
+        <div className="fixed bottom-[52px] inset-x-0 border-t bg-card/95 backdrop-blur px-4 py-3 z-40">
           <div className="max-w-5xl mx-auto flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold">{cartCount} item{cartCount === 1 ? "" : "s"}</p>
@@ -562,6 +570,22 @@ export default function Store() {
           <span>Powered by ManyFlow</span>
         </div>
       </footer>
+
+      <StoreBottomNav
+        onHome={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        onProducts={() => productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        onChat={() => setChatOpen(true)}
+        onTrack={goTrack}
+      />
+
+      <StoreChat
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        slug={store.store_slug}
+        sessionId={sessionId()}
+        businessName={store.business_name || "the store"}
+      />
     </div>
+
   );
 }
