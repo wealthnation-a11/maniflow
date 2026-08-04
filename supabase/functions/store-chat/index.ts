@@ -1,0 +1,223 @@
+// Public storefront chat: shoppers talk to the store owner's ManyFlow bot.
+// Runs with service role, deducts the owner's credits, and mirrors the
+// conversation into the owner's inbox.
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+function buildSystemPrompt(opts: {
+  customerName: string;
+  businessName: string;
+  aiTone: string;
+  products: any[];
+  qaRules: any[];
+  paymentDetails: any;
+  storeUrl: string;
+}) {
+  const productLines =
+    (opts.products || [])
+      .map((p: any) => {
+        const price = Number(p.price || 0);
+        const min = Number(p.min_price ?? price);
+        const negotiable = min > 0 && min < price;
+        const stock = p.stock != null ? `, stock: ${p.stock}` : "";
+        return `- ${p.name}: ₦${price.toLocaleString()}${negotiable ? ` (negotiable down to ₦${min.toLocaleString()})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
+      })
+      .join("\n") || "(no products listed yet)";
+
+  const qa =
+    (opts.qaRules || [])
+      .map((r: any) => `- If customer mentions [${(r.keywords || []).join(", ")}]: ${r.response}`)
+      .join("\n") || "(none)";
+
+  const pd = opts.paymentDetails || {};
+  const bank = pd.bank_name || pd.bankName;
+  const acct = pd.account_number || pd.accountNumber;
+  const acctName = pd.account_name || pd.accountName;
+  const payInfo = bank || acct
+    ? `Bank: ${bank || ""}\nAccount Number: ${acct || ""}\nAccount Name: ${acctName || ""}`
+    : "(not configured — say the store will share payment details shortly)";
+
+  return `You are the sales assistant for ${opts.businessName || "this store"}, chatting with ${opts.customerName} on the store's online shop page (${opts.storeUrl}).
+
+TONE: ${opts.aiTone || "friendly"}. Short, natural replies (2-3 sentences max, no markdown headings).
+
+PRODUCT CATALOG (only source of truth — never invent products or prices):
+${opts.products?.length ? productLines : "(no products listed yet)"}
+
+KNOWLEDGE / FAQ:
+${qa}
+
+PAYMENT DETAILS (share in full the moment the customer agrees to buy or asks how to pay):
+${payInfo}
+
+RULES:
+1. Help with pricing, availability, shipping and delivery questions.
+2. Negotiate only within the allowed range; never go below a product's minimum price. Firm products cannot be discounted.
+3. Once a price is agreed, share the payment details above with the exact amount and ask for proof of payment.
+4. Encourage the customer to add items to the cart on this page and place the order so they get a tracking link.
+5. For delivery, ask for their location and confirm shipping arrangements.
+6. Never mention you are an AI unless asked.`;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const body = await req.json().catch(() => null);
+    if (!body) return json({ error: "Invalid request body" }, 400);
+
+    const slug = String(body.slug ?? "").trim().toLowerCase();
+    const sessionIdRaw = String(body.session_id ?? "").slice(0, 64);
+    const customerName = String(body.customer_name ?? "Store visitor").trim().slice(0, 80) || "Store visitor";
+    const message = String(body.message ?? "").trim().slice(0, 1000);
+
+    if (!slug) return json({ error: "Missing store link" }, 400);
+    if (!sessionIdRaw) return json({ error: "Missing session" }, 400);
+    if (!message) return json({ error: "Please type a message" }, 400);
+
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id, business_name, ai_tone, plan, payment_details, credits_balance, trial_ends_at, store_slug")
+      .ilike("store_slug", slug)
+      .maybeSingle();
+
+    if (!profile) return json({ error: "Store not found" }, 404);
+
+    // Find or create the conversation for this shopper session
+    let conversationId: string | null = null;
+    const { data: existing } = await admin
+      .from("conversations")
+      .select("id")
+      .eq("user_id", profile.id)
+      .eq("customer_platform_id", sessionIdRaw)
+      .maybeSingle();
+
+    if (existing) {
+      conversationId = existing.id;
+    } else {
+      const { data: created } = await admin
+        .from("conversations")
+        .insert({
+          user_id: profile.id,
+          platform: "whatsapp",
+          customer_name: customerName,
+          customer_platform_id: sessionIdRaw,
+          tags: ["store"],
+        })
+        .select("id")
+        .single();
+      conversationId = created?.id ?? null;
+    }
+
+    if (!conversationId) return json({ error: "Could not start the chat" }, 500);
+
+    await admin.from("messages").insert({
+      conversation_id: conversationId,
+      role: "customer",
+      content: message,
+    });
+    await admin
+      .from("conversations")
+      .update({ last_message_at: new Date().toISOString() })
+      .eq("id", conversationId);
+
+    // Plan / credits gate
+    const trialActive = profile.trial_ends_at && new Date(profile.trial_ends_at as string) > new Date();
+    const planActive = profile.plan !== "free" || trialActive;
+    if (!planActive || (profile.credits_balance ?? 0) <= 0) {
+      return json({
+        reply: null,
+        unavailable: true,
+        error: "The store assistant is offline right now. Please use WhatsApp or place your order directly.",
+      });
+    }
+
+    const [{ data: botConfig }, { data: products }, { data: history }] = await Promise.all([
+      admin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", profile.id).maybeSingle(),
+      admin.from("products").select("name, price, description, stock").eq("user_id", profile.id).limit(60),
+      admin
+        .from("messages")
+        .select("role, content")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: false })
+        .limit(12),
+    ]);
+
+    const paymentDetails =
+      profile.payment_details && Object.keys(profile.payment_details as object).length > 0
+        ? profile.payment_details
+        : botConfig?.payment_details || {};
+
+    const systemPrompt = buildSystemPrompt({
+      customerName,
+      businessName: profile.business_name || "",
+      aiTone: profile.ai_tone || "friendly",
+      products: (products as any[]) || [],
+      qaRules: (botConfig?.qa_rules as any[]) || [],
+      paymentDetails,
+      storeUrl: `/${profile.store_slug}`,
+    });
+
+    const priorTurns = ((history as any[]) ?? [])
+      .slice()
+      .reverse()
+      .map((m) => ({ role: m.role === "customer" ? "user" : "assistant", content: m.content }));
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "system", content: systemPrompt }, ...priorTurns],
+        temperature: 0.5,
+      }),
+    });
+
+    if (!res.ok) {
+      const details = await res.text();
+      console.error("store-chat AI error", res.status, details);
+      return json({ error: "The assistant is busy. Please try again in a moment." }, 502);
+    }
+
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content?.trim() || "";
+    if (!reply) return json({ error: "No reply generated. Please try again." }, 502);
+
+    await admin.from("messages").insert({
+      conversation_id: conversationId,
+      role: "ai",
+      content: reply,
+    });
+    await admin
+      .from("conversations")
+      .update({ last_message_at: new Date().toISOString() })
+      .eq("id", conversationId);
+
+    // Deduct credits only after a successful reply
+    await admin.rpc("deduct_credits", {
+      p_user_id: profile.id,
+      p_amount: 0,
+      p_reason: "store_chat_reply",
+      p_conversation_id: conversationId,
+    });
+
+    return json({ reply, conversation_id: conversationId });
+  } catch (e) {
+    console.error("store-chat error", e);
+    return json({ error: e instanceof Error ? e.message : "Unexpected error" }, 500);
+  }
+});
