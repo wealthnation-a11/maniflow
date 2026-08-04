@@ -425,8 +425,6 @@ export default function Store() {
               </Button>
             ) : null}
           </div>
-
-          ) : null}
         </div>
       </header>
 
