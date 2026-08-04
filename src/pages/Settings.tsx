@@ -76,7 +76,11 @@ export default function Settings() {
         setPlanForCost((profile as any).plan ?? "free");
         const pd = (profile as any).payment_details as PaymentDetails | null;
         if (pd && typeof pd === "object") setPayment({ bank_name: pd.bank_name || "", account_number: pd.account_number || "", account_name: pd.account_name || "" });
+        setPayoutsEnabled(!!(profile as any).payouts_enabled);
+        const po = (profile as any).payout_details as any;
+        if (po && typeof po === "object") setPayout({ subaccount_code: po.subaccount_code || "", business_name: po.business_name || "" });
       }
+
       if (conns) setConnections(conns as PlatformConnection[]);
       setProfileLoaded(true);
     };
@@ -165,6 +169,8 @@ export default function Settings() {
     toast.success("Logo removed");
   };
 
+  const isPaidPlan = planForCost !== "free";
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
@@ -176,11 +182,14 @@ export default function Settings() {
       phone,
       logo_url: logoUrl,
       payment_details: payment as any,
+      payout_details: (isPaidPlan ? payout : {}) as any,
+      payouts_enabled: isPaidPlan ? payoutsEnabled && !!payout.subaccount_code.trim() : false,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
 
     setSaving(false);
     if (error) { toast.error("Failed to save settings"); return; }
+
     setStoreBusinessName(businessName);
     setStoreLogoUrl(logoUrl);
     toast.success("Settings saved!");
