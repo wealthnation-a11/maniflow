@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Package, Store as StoreIcon, Search, MessageCircle, Loader2, ShoppingBag,
-  ShoppingCart, Plus, Minus, Trash2, CheckCircle2,
+  ShoppingCart, Plus, Minus, Trash2, CheckCircle2, Copy, Bot,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,9 @@ import {
 import { toast } from "sonner";
 import { tagMeta, PRODUCT_TAGS } from "@/lib/productTags";
 import ManyFlowLogo from "@/components/ManyFlowLogo";
+import StoreChat from "@/components/StoreChat";
+import StoreBottomNav from "@/components/StoreBottomNav";
+
 
 type StoreInfo = {
   user_id: string;
@@ -56,6 +59,8 @@ function sessionId() {
 
 export default function Store() {
   const { slug = "" } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [store, setStore] = useState<StoreInfo | null>(null);
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,12 +68,20 @@ export default function Store() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(searchParams.get("chat") === "1");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [placing, setPlacing] = useState(false);
-  const [placed, setPlaced] = useState<{ id: string; amount: number } | null>(null);
+  const [placed, setPlaced] = useState<{ id: string; amount: number; tracking_code?: string } | null>(null);
   const viewLogged = useRef(false);
+  const productsRef = useRef<HTMLElement>(null);
+
+  const goTrack = () => {
+    const code = window.prompt("Enter your order tracking code (e.g. from your order confirmation)");
+    if (code?.trim()) navigate(`/track/${code.trim().toLowerCase()}`);
+  };
+
 
   useEffect(() => {
     let cancelled = false;
@@ -216,7 +229,7 @@ export default function Store() {
       return;
     }
 
-    setPlaced({ id: (data as any).order_id, amount: (data as any).amount });
+    setPlaced({ id: (data as any).order_id, amount: (data as any).amount, tracking_code: (data as any).tracking_code });
     setCart({});
 
     const phoneDigits = (store.whatsapp ?? "").replace(/[^\d]/g, "");
@@ -249,7 +262,7 @@ export default function Store() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-32">
       {/* Store header */}
       <header className="border-b bg-card">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
@@ -296,10 +309,36 @@ export default function Store() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {store.business_name} received your order of ₦{placed.amount.toLocaleString()} and will confirm shortly.
                     </p>
+                    {placed.tracking_code ? (
+                      <div className="mt-4 bg-muted/40 rounded-lg p-3 text-left">
+                        <p className="text-[11px] font-semibold">Your tracking link</p>
+                        <p className="text-[11px] text-muted-foreground break-all mt-0.5">
+                          {window.location.origin}/track/{placed.tracking_code}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Button asChild size="sm" className="text-[11px] gradient-primary text-primary-foreground">
+                            <Link to={`/track/${placed.tracking_code}`}>Pay & track order</Link>
+                          </Button>
+                          <Button
+                            size="sm" variant="outline" className="text-[11px]"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/track/${placed.tracking_code}`);
+                              toast.success("Tracking link copied");
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />Copy link
+                          </Button>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          Save this link — it shows payment and delivery status, plus the store's account details.
+                        </p>
+                      </div>
+                    ) : null}
                     <Button size="sm" variant="outline" className="mt-4 text-xs" onClick={() => { setPlaced(null); setCartOpen(false); }}>
                       Continue shopping
                     </Button>
                   </div>
+
                 ) : lines.length === 0 ? (
                   <div className="mt-8 text-center">
                     <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -374,13 +413,18 @@ export default function Store() {
             </Sheet>
           </div>
 
-          {waLink() ? (
-            <Button asChild size="sm" className="mt-4 gradient-primary text-primary-foreground text-xs">
-              <a href={waLink()!} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> Chat with us on WhatsApp
-              </a>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button size="sm" className="gradient-primary text-primary-foreground text-xs" onClick={() => setChatOpen(true)}>
+              <Bot className="h-3.5 w-3.5 mr-1.5" /> Chat with us
             </Button>
-          ) : null}
+            {waLink() ? (
+              <Button asChild size="sm" variant="outline" className="text-xs">
+                <a href={waLink()!} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> WhatsApp
+                </a>
+              </Button>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -419,7 +463,8 @@ export default function Store() {
       </div>
 
       {/* Products */}
-      <main className="max-w-5xl mx-auto px-4 py-5">
+      <main ref={productsRef} className="max-w-5xl mx-auto px-4 py-5">
+
         {visible.length === 0 ? (
           <div className="bg-card rounded-xl shadow-card p-10 text-center">
             <ShoppingBag className="h-9 w-9 text-muted-foreground mx-auto mb-3" />
@@ -502,9 +547,9 @@ export default function Store() {
         )}
       </main>
 
-      {/* Sticky cart bar */}
+      {/* Sticky cart bar (sits above the bottom menu) */}
       {cartCount > 0 && !cartOpen ? (
-        <div className="fixed bottom-0 inset-x-0 border-t bg-card/95 backdrop-blur px-4 py-3 z-40">
+        <div className="fixed bottom-[52px] inset-x-0 border-t bg-card/95 backdrop-blur px-4 py-3 z-40">
           <div className="max-w-5xl mx-auto flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold">{cartCount} item{cartCount === 1 ? "" : "s"}</p>
@@ -523,6 +568,22 @@ export default function Store() {
           <span>Powered by ManyFlow</span>
         </div>
       </footer>
+
+      <StoreBottomNav
+        onHome={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        onProducts={() => productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        onChat={() => setChatOpen(true)}
+        onTrack={goTrack}
+      />
+
+      <StoreChat
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        slug={store.store_slug}
+        sessionId={sessionId()}
+        businessName={store.business_name || "the store"}
+      />
     </div>
+
   );
 }

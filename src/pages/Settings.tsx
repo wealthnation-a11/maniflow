@@ -49,6 +49,9 @@ export default function Settings() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [planForCost, setPlanForCost] = useState<string>("free");
   const [payment, setPayment] = useState<PaymentDetails>({ bank_name: "", account_number: "", account_name: "" });
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [payout, setPayout] = useState({ subaccount_code: "", business_name: "" });
+
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
@@ -73,7 +76,11 @@ export default function Settings() {
         setPlanForCost((profile as any).plan ?? "free");
         const pd = (profile as any).payment_details as PaymentDetails | null;
         if (pd && typeof pd === "object") setPayment({ bank_name: pd.bank_name || "", account_number: pd.account_number || "", account_name: pd.account_name || "" });
+        setPayoutsEnabled(!!(profile as any).payouts_enabled);
+        const po = (profile as any).payout_details as any;
+        if (po && typeof po === "object") setPayout({ subaccount_code: po.subaccount_code || "", business_name: po.business_name || "" });
       }
+
       if (conns) setConnections(conns as PlatformConnection[]);
       setProfileLoaded(true);
     };
@@ -162,6 +169,8 @@ export default function Settings() {
     toast.success("Logo removed");
   };
 
+  const isPaidPlan = planForCost !== "free";
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
@@ -173,11 +182,14 @@ export default function Settings() {
       phone,
       logo_url: logoUrl,
       payment_details: payment as any,
+      payout_details: (isPaidPlan ? payout : {}) as any,
+      payouts_enabled: isPaidPlan ? payoutsEnabled && !!payout.subaccount_code.trim() : false,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
 
     setSaving(false);
     if (error) { toast.error("Failed to save settings"); return; }
+
     setStoreBusinessName(businessName);
     setStoreLogoUrl(logoUrl);
     toast.success("Settings saved!");
@@ -292,6 +304,56 @@ export default function Settings() {
           <p className="text-[10px] sm:text-xs text-muted-foreground">These details are shared by the AI bot after a price is agreed.</p>
         </div>
       </div>
+
+      {/* Automated online payments (paid plans only) */}
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Automated Online Payments</h2>
+          {!isPaidPlan ? <Badge variant="secondary" className="text-[9px] sm:text-[10px]">Paid plans only</Badge> : null}
+        </div>
+        <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
+          Optional. Let customers pay for store orders online with Paystack — money is settled straight into your bank account.
+        </p>
+
+        {isPaidPlan ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-1">
+              <span className="text-xs sm:text-sm">Accept online payments on my store</span>
+              <Switch checked={payoutsEnabled} onCheckedChange={setPayoutsEnabled} />
+            </div>
+            <div>
+              <Label className="text-xs sm:text-sm">Paystack subaccount code</Label>
+              <Input
+                value={payout.subaccount_code}
+                onChange={(e) => setPayout({ ...payout, subaccount_code: e.target.value.trim() })}
+                placeholder="ACCT_xxxxxxxxxxxx"
+                className="mt-1 font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Create a subaccount in your Paystack dashboard with your settlement bank account, then paste its code here. Payments for your store orders settle directly to you.
+              </p>
+            </div>
+            <div>
+              <Label className="text-xs sm:text-sm">Settlement business name (optional)</Label>
+              <Input
+                value={payout.business_name}
+                onChange={(e) => setPayout({ ...payout, business_name: e.target.value })}
+                placeholder="My Business Ltd"
+                className="mt-1"
+              />
+            </div>
+            {payoutsEnabled && !payout.subaccount_code ? (
+              <p className="text-[10px] text-destructive">Add your subaccount code to switch online payments on.</p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Upgrade to Growth or Business to unlock automated payments. Free-plan stores can still share bank details on the order tracking page.
+          </p>
+        )}
+      </div>
+
 
       {/* Profile / Account */}
       <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">

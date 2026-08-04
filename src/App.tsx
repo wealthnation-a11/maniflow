@@ -27,6 +27,8 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import Store from "./pages/Store";
+import TrackOrder from "./pages/TrackOrder";
+
 import Notifications from "./pages/Notifications";
 import CreditsHistory from "./pages/CreditsHistory";
 import TestPanel from "./pages/TestPanel";
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/help" element={<Help />} />
               <Route path="/store/:slug" element={<Store />} />
+              <Route path="/track/:code" element={<TrackOrder />} />
+
               <Route element={<ProtectedRoute />}>
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route element={<DashboardLayout />}>

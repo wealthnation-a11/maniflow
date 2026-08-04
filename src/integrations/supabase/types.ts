@@ -292,12 +292,16 @@ export type Database = {
           id: string
           inventory_applied: boolean
           items: Json
+          note: string
+          paid_at: string | null
+          payment_reference: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           platform: Database["public"]["Enums"]["platform_type"]
           product_name: string | null
           source: string
           status: Database["public"]["Enums"]["order_status"]
           store_slug: string | null
+          tracking_code: string | null
           updated_at: string
           user_id: string
         }
@@ -309,12 +313,16 @@ export type Database = {
           id?: string
           inventory_applied?: boolean
           items?: Json
+          note?: string
+          paid_at?: string | null
+          payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           platform?: Database["public"]["Enums"]["platform_type"]
           product_name?: string | null
           source?: string
           status?: Database["public"]["Enums"]["order_status"]
           store_slug?: string | null
+          tracking_code?: string | null
           updated_at?: string
           user_id: string
         }
@@ -326,12 +334,16 @@ export type Database = {
           id?: string
           inventory_applied?: boolean
           items?: Json
+          note?: string
+          paid_at?: string | null
+          payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           platform?: Database["public"]["Enums"]["platform_type"]
           product_name?: string | null
           source?: string
           status?: Database["public"]["Enums"]["order_status"]
           store_slug?: string | null
+          tracking_code?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -484,6 +496,8 @@ export type Database = {
           logo_url: string | null
           low_credits_alert_sent_at: string | null
           payment_details: Json
+          payout_details: Json
+          payouts_enabled: boolean
           phone: string | null
           plan: string
           plan_purchased_at: string | null
@@ -505,6 +519,8 @@ export type Database = {
           logo_url?: string | null
           low_credits_alert_sent_at?: string | null
           payment_details?: Json
+          payout_details?: Json
+          payouts_enabled?: boolean
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
@@ -526,6 +542,8 @@ export type Database = {
           logo_url?: string | null
           low_credits_alert_sent_at?: string | null
           payment_details?: Json
+          payout_details?: Json
+          payouts_enabled?: boolean
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
@@ -584,6 +602,30 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      get_order_tracking: {
+        Args: { p_code: string }
+        Returns: {
+          account_name: string
+          account_number: string
+          amount: number
+          bank_name: string
+          business_name: string
+          created_at: string
+          customer_name: string
+          items: Json
+          logo_url: string
+          note: string
+          order_id: string
+          paid_at: string
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          payouts_enabled: boolean
+          product_name: string
+          status: Database["public"]["Enums"]["order_status"]
+          store_slug: string
+          tracking_code: string
+          whatsapp: string
+        }[]
       }
       get_reply_cost: { Args: { p_plan: string }; Returns: number }
       get_store_by_slug: {

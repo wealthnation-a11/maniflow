@@ -96,11 +96,13 @@ Deno.serve(async (req) => {
         items: lines,
         source: "store",
         store_slug: profile.store_slug,
+        note,
       })
-      .select("id, amount")
+      .select("id, amount, tracking_code")
       .single();
 
     if (orderErr || !order) return json({ error: "Could not place your order. Please try again." }, 500);
+
 
     await supabase.from("store_events").insert({
       user_id: profile.id,
@@ -118,7 +120,7 @@ Deno.serve(async (req) => {
       metadata: { order_id: order.id },
     });
 
-    return json({ ok: true, order_id: order.id, amount, items: lines });
+    return json({ ok: true, order_id: order.id, amount, items: lines, tracking_code: (order as any).tracking_code });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Unexpected error" }, 500);
   }
