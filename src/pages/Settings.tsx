@@ -49,6 +49,9 @@ export default function Settings() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [planForCost, setPlanForCost] = useState<string>("free");
   const [payment, setPayment] = useState<PaymentDetails>({ bank_name: "", account_number: "", account_name: "" });
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
+  const [payout, setPayout] = useState({ subaccount_code: "", business_name: "" });
+
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
