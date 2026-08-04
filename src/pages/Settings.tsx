@@ -305,6 +305,56 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Automated online payments (paid plans only) */}
+      <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <h2 className="font-heading font-semibold text-sm sm:text-lg">Automated Online Payments</h2>
+          {!isPaidPlan ? <Badge variant="secondary" className="text-[9px] sm:text-[10px]">Paid plans only</Badge> : null}
+        </div>
+        <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
+          Optional. Let customers pay for store orders online with Paystack — money is settled straight into your bank account.
+        </p>
+
+        {isPaidPlan ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-1">
+              <span className="text-xs sm:text-sm">Accept online payments on my store</span>
+              <Switch checked={payoutsEnabled} onCheckedChange={setPayoutsEnabled} />
+            </div>
+            <div>
+              <Label className="text-xs sm:text-sm">Paystack subaccount code</Label>
+              <Input
+                value={payout.subaccount_code}
+                onChange={(e) => setPayout({ ...payout, subaccount_code: e.target.value.trim() })}
+                placeholder="ACCT_xxxxxxxxxxxx"
+                className="mt-1 font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Create a subaccount in your Paystack dashboard with your settlement bank account, then paste its code here. Payments for your store orders settle directly to you.
+              </p>
+            </div>
+            <div>
+              <Label className="text-xs sm:text-sm">Settlement business name (optional)</Label>
+              <Input
+                value={payout.business_name}
+                onChange={(e) => setPayout({ ...payout, business_name: e.target.value })}
+                placeholder="My Business Ltd"
+                className="mt-1"
+              />
+            </div>
+            {payoutsEnabled && !payout.subaccount_code ? (
+              <p className="text-[10px] text-destructive">Add your subaccount code to switch online payments on.</p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Upgrade to Growth or Business to unlock automated payments. Free-plan stores can still share bank details on the order tracking page.
+          </p>
+        )}
+      </div>
+
+
       {/* Profile / Account */}
       <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
