@@ -229,7 +229,7 @@ export default function Store() {
       return;
     }
 
-    setPlaced({ id: (data as any).order_id, amount: (data as any).amount });
+    setPlaced({ id: (data as any).order_id, amount: (data as any).amount, tracking_code: (data as any).tracking_code });
     setCart({});
 
     const phoneDigits = (store.whatsapp ?? "").replace(/[^\d]/g, "");
@@ -262,7 +262,7 @@ export default function Store() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-32">
       {/* Store header */}
       <header className="border-b bg-card">
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
@@ -309,10 +309,36 @@ export default function Store() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {store.business_name} received your order of ₦{placed.amount.toLocaleString()} and will confirm shortly.
                     </p>
+                    {placed.tracking_code ? (
+                      <div className="mt-4 bg-muted/40 rounded-lg p-3 text-left">
+                        <p className="text-[11px] font-semibold">Your tracking link</p>
+                        <p className="text-[11px] text-muted-foreground break-all mt-0.5">
+                          {window.location.origin}/track/{placed.tracking_code}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Button asChild size="sm" className="text-[11px] gradient-primary text-primary-foreground">
+                            <Link to={`/track/${placed.tracking_code}`}>Pay & track order</Link>
+                          </Button>
+                          <Button
+                            size="sm" variant="outline" className="text-[11px]"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/track/${placed.tracking_code}`);
+                              toast.success("Tracking link copied");
+                            }}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />Copy link
+                          </Button>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          Save this link — it shows payment and delivery status, plus the store's account details.
+                        </p>
+                      </div>
+                    ) : null}
                     <Button size="sm" variant="outline" className="mt-4 text-xs" onClick={() => { setPlaced(null); setCartOpen(false); }}>
                       Continue shopping
                     </Button>
                   </div>
+
                 ) : lines.length === 0 ? (
                   <div className="mt-8 text-center">
                     <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
