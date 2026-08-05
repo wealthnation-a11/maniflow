@@ -76,10 +76,17 @@ Deno.serve(async (req) => {
     const sessionIdRaw = String(body.session_id ?? "").slice(0, 64);
     const customerName = String(body.customer_name ?? "Store visitor").trim().slice(0, 80) || "Store visitor";
     const message = String(body.message ?? "").trim().slice(0, 1000);
+    const imageData = typeof body.image === "string" ? body.image : "";
 
     if (!slug) return json({ error: "Missing store link" }, 400);
     if (!sessionIdRaw) return json({ error: "Missing session" }, 400);
-    if (!message) return json({ error: "Please type a message" }, 400);
+    if (!message && !imageData) return json({ error: "Please type a message" }, 400);
+    if (imageData && !/^data:image\/(png|jpe?g|webp|gif);base64,/.test(imageData)) {
+      return json({ error: "Only PNG, JPG, WEBP or GIF images can be sent" }, 400);
+    }
+    if (imageData && imageData.length > 8_000_000) {
+      return json({ error: "That image is too large. Please send one under 5MB." }, 400);
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
