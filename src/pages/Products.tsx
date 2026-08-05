@@ -106,6 +106,9 @@ export default function Products() {
     if (!form.name || !form.price || !user) { toast.error("Product name and price are required"); return; }
     setSaving(true);
     const price = parseFloat(form.price) || 0;
+    const minPriceRaw = parseFloat(form.minPrice) || 0;
+    if (minPriceRaw > price) { toast.error("Lowest price can't be higher than the listed price"); setSaving(false); return; }
+    const min_price = Math.max(0, minPriceRaw);
     const stock = parseInt(form.stock) || 0;
     const cleanVariants = variants.filter((v) => v.name.trim());
 
@@ -113,7 +116,7 @@ export default function Products() {
     const low_stock_threshold = Math.max(0, parseInt(form.lowStock) || 0);
 
     const row = {
-      user_id: user.id, name: form.name, price, description: form.description,
+      user_id: user.id, name: form.name, price, min_price, description: form.description,
       image_url: form.image, stock, category: form.category, tags,
       track_inventory, low_stock_threshold,
       variants: cleanVariants as any, updated_at: new Date().toISOString(),
@@ -127,7 +130,7 @@ export default function Products() {
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
       if (error || !data) { toast.error("Failed to add product"); setSaving(false); return; }
-      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
+      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), min_price: Number((data as any).min_price ?? 0), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
       toast.success("Product added!");
     }
     setSaving(false);
