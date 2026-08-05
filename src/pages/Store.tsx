@@ -235,7 +235,13 @@ export default function Store() {
       return;
     }
 
-    setPlaced({ id: (data as any).order_id, amount: (data as any).amount, tracking_code: (data as any).tracking_code });
+    setPlaced({
+      id: (data as any).order_id,
+      amount: (data as any).amount,
+      tracking_code: (data as any).tracking_code,
+      pay_to: (data as any).pay_to,
+      card_payments_enabled: (data as any).card_payments_enabled,
+    });
     setCart({});
 
     const phoneDigits = (store.whatsapp ?? "").replace(/[^\d]/g, "");
