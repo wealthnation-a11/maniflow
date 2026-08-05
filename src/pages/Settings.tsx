@@ -188,7 +188,7 @@ export default function Settings() {
     }).eq("id", user.id);
 
     setSaving(false);
-    if (error) { toast.error("Failed to save settings"); return; }
+    if (error) { toast.error(error.message || "Failed to save settings"); return; }
 
     setStoreBusinessName(businessName);
     setStoreLogoUrl(logoUrl);
