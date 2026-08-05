@@ -129,10 +129,30 @@ Deno.serve(async (req) => {
 
     if (!conversationId) return json({ error: "Could not start the chat" }, 500);
 
+    // Store the shopper's photo (private bucket) so the owner can see it in their inbox
+    let imageLink = "";
+    if (imageData) {
+      const mime = imageData.slice(5, imageData.indexOf(";"));
+      const ext = mime.split("/")[1].replace("jpeg", "jpg");
+      const bytes = Uint8Array.from(atob(imageData.slice(imageData.indexOf(",") + 1)), (c) => c.charCodeAt(0));
+      const path = `${profile.id}/${conversationId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await admin.storage
+        .from("chat-uploads")
+        .upload(path, bytes, { contentType: mime, upsert: false });
+      if (upErr) {
+        console.error("store-chat upload error", upErr);
+      } else {
+        const { data: signed } = await admin.storage
+          .from("chat-uploads")
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+        imageLink = signed?.signedUrl ?? "";
+      }
+    }
+
     await admin.from("messages").insert({
       conversation_id: conversationId,
       role: "customer",
-      content: message,
+      content: imageLink ? `${message || "(sent a photo)"}\n[photo] ${imageLink}` : message,
     });
     await admin
       .from("conversations")
