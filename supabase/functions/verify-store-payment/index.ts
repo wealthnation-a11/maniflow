@@ -16,18 +16,6 @@ Deno.serve(async (req) => {
     const reference = String(body?.reference ?? "").trim();
     if (!/^mfo_[0-9a-z_]+$/i.test(reference)) return json({ error: "Invalid reference" }, 400);
 
-    const secret = Deno.env.get("PAYSTACK_SECRET_KEY");
-    if (!secret) return json({ error: "Payments are not configured" }, 500);
-
-    const res = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-      headers: { Authorization: `Bearer ${secret}` },
-    });
-    const data = await res.json();
-    if (!res.ok || !data?.status) {
-      return json({ error: data?.message ?? "Could not verify this payment" }, 400);
-    }
-
-    const paid = data.data?.status === "success";
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -40,6 +28,25 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!order) return json({ error: "Order not found for this payment" }, 404);
+
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("payout_details")
+      .eq("id", order.user_id)
+      .maybeSingle();
+
+    const secret = String((profile?.payout_details as any)?.secret_key ?? "").trim();
+    if (!secret.startsWith("sk_")) return json({ error: "Payments are not configured for this store" }, 400);
+
+    const res = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    const data = await res.json();
+    if (!res.ok || !data?.status) {
+      return json({ error: data?.message ?? "Could not verify this payment" }, 400);
+    }
+
+    const paid = data.data?.status === "success";
 
     if (paid && order.payment_status !== "paid") {
       await admin
