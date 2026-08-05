@@ -323,15 +323,17 @@ export default function Settings() {
               <Switch checked={payoutsEnabled} onCheckedChange={setPayoutsEnabled} />
             </div>
             <div>
-              <Label className="text-xs sm:text-sm">Paystack subaccount code</Label>
+              <Label className="text-xs sm:text-sm">Your Paystack secret key</Label>
               <Input
-                value={payout.subaccount_code}
-                onChange={(e) => setPayout({ ...payout, subaccount_code: e.target.value.trim() })}
-                placeholder="ACCT_xxxxxxxxxxxx"
+                type="password"
+                value={payout.secret_key}
+                onChange={(e) => setPayout({ ...payout, secret_key: e.target.value.trim() })}
+                placeholder="sk_live_… or sk_test_…"
                 className="mt-1 font-mono text-xs"
+                autoComplete="off"
               />
               <p className="text-[10px] text-muted-foreground mt-1">
-                Create a subaccount in your Paystack dashboard with your settlement bank account, then paste its code here. Payments for your store orders settle directly to you.
+                From your Paystack dashboard → Settings → API Keys &amp; Webhooks. Use your live key to take real payments; every store payment goes straight into your own Paystack account.
               </p>
             </div>
             <div>
@@ -343,8 +345,11 @@ export default function Settings() {
                 className="mt-1"
               />
             </div>
-            {payoutsEnabled && !payout.subaccount_code ? (
-              <p className="text-[10px] text-destructive">Add your subaccount code to switch online payments on.</p>
+            {payoutsEnabled && !payout.secret_key ? (
+              <p className="text-[10px] text-destructive">Add your Paystack secret key to switch online payments on.</p>
+            ) : null}
+            {payout.secret_key.startsWith("sk_test_") ? (
+              <p className="text-[10px] text-warning">This is a test key — customers won't be charged real money.</p>
             ) : null}
           </div>
         ) : (

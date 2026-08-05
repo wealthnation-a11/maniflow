@@ -157,18 +157,6 @@ export default function AppSidebar() {
             <Settings className="h-5 w-5" />
             <span>Settings</span>
           </Link>
-          <Link
-            to="/settings/realtime"
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-              location.pathname === "/settings/realtime"
-                ? "bg-sidebar-accent text-primary"
-                : "text-sidebar-foreground hover:bg-sidebar-accent"
-            }`}
-          >
-            <Radio className="h-5 w-5" />
-            <span>Realtime & Privacy</span>
-          </Link>
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors w-full"
