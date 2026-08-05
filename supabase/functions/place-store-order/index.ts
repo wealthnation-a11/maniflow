@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, business_name, store_slug")
+      .select("id, business_name, store_slug, phone, payment_details, payout_details, payouts_enabled, plan")
       .ilike("store_slug", slug)
       .maybeSingle();
 
