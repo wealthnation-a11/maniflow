@@ -50,7 +50,7 @@ export default function Settings() {
   const [planForCost, setPlanForCost] = useState<string>("free");
   const [payment, setPayment] = useState<PaymentDetails>({ bank_name: "", account_number: "", account_name: "" });
   const [payoutsEnabled, setPayoutsEnabled] = useState(false);
-  const [payout, setPayout] = useState({ subaccount_code: "", business_name: "" });
+  const [payout, setPayout] = useState({ secret_key: "", business_name: "" });
 
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +78,7 @@ export default function Settings() {
         if (pd && typeof pd === "object") setPayment({ bank_name: pd.bank_name || "", account_number: pd.account_number || "", account_name: pd.account_name || "" });
         setPayoutsEnabled(!!(profile as any).payouts_enabled);
         const po = (profile as any).payout_details as any;
-        if (po && typeof po === "object") setPayout({ subaccount_code: po.subaccount_code || "", business_name: po.business_name || "" });
+        if (po && typeof po === "object") setPayout({ secret_key: po.secret_key || "", business_name: po.business_name || "" });
       }
 
       if (conns) setConnections(conns as PlatformConnection[]);
@@ -183,7 +183,7 @@ export default function Settings() {
       logo_url: logoUrl,
       payment_details: payment as any,
       payout_details: (isPaidPlan ? payout : {}) as any,
-      payouts_enabled: isPaidPlan ? payoutsEnabled && !!payout.subaccount_code.trim() : false,
+      payouts_enabled: isPaidPlan ? payoutsEnabled && !!payout.secret_key.trim() : false,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
 
