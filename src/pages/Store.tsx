@@ -321,6 +321,34 @@ export default function Store() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {store.business_name} received your order of ₦{placed.amount.toLocaleString()} and will confirm shortly.
                     </p>
+
+                    {placed.pay_to?.account_number ? (
+                      <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-left">
+                        <p className="text-[11px] font-semibold">Pay ₦{placed.amount.toLocaleString()} to</p>
+                        <dl className="mt-1.5 space-y-1 text-[11px]">
+                          <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Bank</dt><dd className="font-medium text-right">{placed.pay_to.bank_name || "—"}</dd></div>
+                          <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Account number</dt><dd className="font-mono font-semibold text-right">{placed.pay_to.account_number}</dd></div>
+                          <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Account name</dt><dd className="font-medium text-right">{placed.pay_to.account_name || store.business_name}</dd></div>
+                        </dl>
+                        <Button
+                          size="sm" variant="outline" className="mt-2 text-[11px]"
+                          onClick={() => {
+                            navigator.clipboard.writeText(placed.pay_to!.account_number);
+                            toast.success("Account number copied");
+                          }}
+                        >
+                          <Copy className="h-3 w-3 mr-1" />Copy account number
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          Transfer the exact amount, then send your proof of payment. {store.business_name} confirms the payment and your order is released for delivery.
+                        </p>
+                      </div>
+                    ) : placed.card_payments_enabled ? null : (
+                      <p className="mt-4 text-[11px] text-muted-foreground">
+                        This store hasn't published account details yet — message them to arrange payment.
+                      </p>
+                    )}
+
                     {placed.tracking_code ? (
                       <div className="mt-4 bg-muted/40 rounded-lg p-3 text-left">
                         <p className="text-[11px] font-semibold">Your tracking link</p>
