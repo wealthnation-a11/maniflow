@@ -120,7 +120,28 @@ Deno.serve(async (req) => {
       metadata: { order_id: order.id },
     });
 
-    return json({ ok: true, order_id: order.id, amount, items: lines, tracking_code: (order as any).tracking_code });
+    const pd = (profile.payment_details ?? {}) as Record<string, string>;
+    const payTo = {
+      bank_name: pd.bank_name || pd.bankName || "",
+      account_number: pd.account_number || pd.accountNumber || "",
+      account_name: pd.account_name || pd.accountName || "",
+    };
+    const cardEnabled =
+      profile.plan !== "free" &&
+      !!profile.payouts_enabled &&
+      String((profile.payout_details as any)?.secret_key ?? "").startsWith("sk_");
+
+    return json({
+      ok: true,
+      order_id: order.id,
+      amount,
+      items: lines,
+      tracking_code: (order as any).tracking_code,
+      business_name: profile.business_name,
+      whatsapp: profile.phone ?? "",
+      pay_to: payTo,
+      card_payments_enabled: cardEnabled,
+    });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Unexpected error" }, 500);
   }
