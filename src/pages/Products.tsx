@@ -162,6 +162,13 @@ export default function Products() {
         <div><Label className="text-sm">Price (₦) *</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="15000" className="mt-1" /></div>
         <div><Label className="text-sm">Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="0" className="mt-1" /></div>
       </div>
+      <div className="rounded-lg border p-3">
+        <Label className="text-sm">Lowest price you'll accept (₦)</Label>
+        <p className="text-[10px] text-muted-foreground mb-1.5">
+          Your bargaining floor. The bot negotiates between this and the listed price and never goes below it. Leave empty for a fixed price.
+        </p>
+        <Input type="number" value={form.minPrice} onChange={(e) => setForm({ ...form, minPrice: e.target.value })} placeholder="e.g. 12000" />
+      </div>
       <div><Label className="text-sm">Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Hair Care" className="mt-1" /></div>
       <div className="rounded-lg border p-3 space-y-2">
         <div className="flex items-center justify-between gap-3">
