@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Bot } from "lucide-react";
+import { Loader2, Send, Bot, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; image?: string };
 
 export default function StoreChat({
   open,
@@ -24,9 +24,11 @@ export default function StoreChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState(() => localStorage.getItem("mf_store_customer_name") || "");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,18 +38,35 @@ export default function StoreChat({
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  const pickImage = (file: File | undefined) => {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
+      toast.error("Please choose a PNG, JPG, WEBP or GIF image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image is too large — please use one under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setImage(String(reader.result));
+    reader.readAsDataURL(file);
+  };
+
   const send = async () => {
     const text = input.trim();
-    if (!text || sending) return;
+    if ((!text && !image) || sending) return;
+    const attached = image;
     setInput("");
-    setMessages((m) => [...m, { role: "user", content: text }]);
+    setImage(null);
+    setMessages((m) => [...m, { role: "user", content: text, image: attached ?? undefined }]);
     setSending(true);
 
     const customerName = name.trim() || "Store visitor";
     localStorage.setItem("mf_store_customer_name", customerName);
 
     const { data, error } = await supabase.functions.invoke("store-chat", {
-      body: { slug, session_id: sessionId, customer_name: customerName, message: text },
+      body: { slug, session_id: sessionId, customer_name: customerName, message: text, image: attached },
     });
     setSending(false);
 
