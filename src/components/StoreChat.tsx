@@ -101,8 +101,11 @@ export default function StoreChat({
           ) : null}
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-xs whitespace-pre-wrap ${m.role === "user" ? "gradient-primary text-primary-foreground" : "bg-muted"}`}>
-                {m.content}
+              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-xs whitespace-pre-wrap space-y-1.5 ${m.role === "user" ? "gradient-primary text-primary-foreground" : "bg-muted"}`}>
+                {m.image ? (
+                  <img src={m.image} alt="Photo you sent to the store" className="rounded-lg max-h-48 w-auto" />
+                ) : null}
+                {m.content ? <p>{m.content}</p> : null}
               </div>
             </div>
           ))}
@@ -126,7 +129,37 @@ export default function StoreChat({
               aria-label="Your name"
             />
           ) : null}
+          {image ? (
+            <div className="relative inline-block">
+              <img src={image} alt="Selected attachment preview" className="h-16 w-16 object-cover rounded-lg border" />
+              <button
+                type="button"
+                onClick={() => setImage(null)}
+                aria-label="Remove image"
+                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : null}
           <div className="flex gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="hidden"
+              onChange={(e) => { pickImage(e.target.files?.[0]); e.target.value = ""; }}
+            />
+            <Button
+              size="icon"
+              variant="outline"
+              className="shrink-0"
+              aria-label="Attach a photo"
+              disabled={sending}
+              onClick={() => fileRef.current?.click()}
+            >
+              <ImagePlus className="h-4 w-4" />
+            </Button>
             <Input
               ref={inputRef}
               value={input}
@@ -136,7 +169,7 @@ export default function StoreChat({
               className="text-sm"
               aria-label="Message"
             />
-            <Button size="icon" className="gradient-primary text-primary-foreground shrink-0" disabled={sending || !input.trim()} onClick={send}>
+            <Button size="icon" className="gradient-primary text-primary-foreground shrink-0" disabled={sending || (!input.trim() && !image)} onClick={send}>
               <Send className="h-4 w-4" />
             </Button>
           </div>
