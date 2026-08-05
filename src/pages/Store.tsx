@@ -73,7 +73,13 @@ export default function Store() {
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [placing, setPlacing] = useState(false);
-  const [placed, setPlaced] = useState<{ id: string; amount: number; tracking_code?: string } | null>(null);
+  const [placed, setPlaced] = useState<{
+    id: string;
+    amount: number;
+    tracking_code?: string;
+    pay_to?: { bank_name: string; account_number: string; account_name: string };
+    card_payments_enabled?: boolean;
+  } | null>(null);
   const viewLogged = useRef(false);
   const productsRef = useRef<HTMLElement>(null);
 
