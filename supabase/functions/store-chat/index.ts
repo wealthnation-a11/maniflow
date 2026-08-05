@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
 
     const [{ data: botConfig }, { data: products }, { data: history }] = await Promise.all([
       admin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", profile.id).maybeSingle(),
-      admin.from("products").select("name, price, description, stock").eq("user_id", profile.id).limit(60),
+      admin.from("products").select("name, price, min_price, description, stock").eq("user_id", profile.id).limit(60),
       admin
         .from("messages")
         .select("role, content")
@@ -196,10 +196,29 @@ Deno.serve(async (req) => {
       storeUrl: `/${profile.store_slug}`,
     });
 
-    const priorTurns = ((history as any[]) ?? [])
+    const priorTurns: any[] = ((history as any[]) ?? [])
       .slice()
       .reverse()
       .map((m) => ({ role: m.role === "customer" ? "user" : "assistant", content: m.content }));
+
+    // Attach the shopper's photo to their latest turn so the model can see it
+    if (imageData) {
+      const lastUser = [...priorTurns].reverse().find((t) => t.role === "user");
+      if (lastUser) {
+        lastUser.content = [
+          { type: "text", text: message || "What do you think of this?" },
+          { type: "image_url", image_url: { url: imageData } },
+        ];
+      } else {
+        priorTurns.push({
+          role: "user",
+          content: [
+            { type: "text", text: message || "What do you think of this?" },
+            { type: "image_url", image_url: { url: imageData } },
+          ],
+        });
+      }
+    }
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
