@@ -76,10 +76,17 @@ Deno.serve(async (req) => {
     const sessionIdRaw = String(body.session_id ?? "").slice(0, 64);
     const customerName = String(body.customer_name ?? "Store visitor").trim().slice(0, 80) || "Store visitor";
     const message = String(body.message ?? "").trim().slice(0, 1000);
+    const imageData = typeof body.image === "string" ? body.image : "";
 
     if (!slug) return json({ error: "Missing store link" }, 400);
     if (!sessionIdRaw) return json({ error: "Missing session" }, 400);
-    if (!message) return json({ error: "Please type a message" }, 400);
+    if (!message && !imageData) return json({ error: "Please type a message" }, 400);
+    if (imageData && !/^data:image\/(png|jpe?g|webp|gif);base64,/.test(imageData)) {
+      return json({ error: "Only PNG, JPG, WEBP or GIF images can be sent" }, 400);
+    }
+    if (imageData && imageData.length > 8_000_000) {
+      return json({ error: "That image is too large. Please send one under 5MB." }, 400);
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -122,10 +129,30 @@ Deno.serve(async (req) => {
 
     if (!conversationId) return json({ error: "Could not start the chat" }, 500);
 
+    // Store the shopper's photo (private bucket) so the owner can see it in their inbox
+    let imageLink = "";
+    if (imageData) {
+      const mime = imageData.slice(5, imageData.indexOf(";"));
+      const ext = mime.split("/")[1].replace("jpeg", "jpg");
+      const bytes = Uint8Array.from(atob(imageData.slice(imageData.indexOf(",") + 1)), (c) => c.charCodeAt(0));
+      const path = `${profile.id}/${conversationId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await admin.storage
+        .from("chat-uploads")
+        .upload(path, bytes, { contentType: mime, upsert: false });
+      if (upErr) {
+        console.error("store-chat upload error", upErr);
+      } else {
+        const { data: signed } = await admin.storage
+          .from("chat-uploads")
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+        imageLink = signed?.signedUrl ?? "";
+      }
+    }
+
     await admin.from("messages").insert({
       conversation_id: conversationId,
       role: "customer",
-      content: message,
+      content: imageLink ? `${message || "(sent a photo)"}\n[photo] ${imageLink}` : message,
     });
     await admin
       .from("conversations")
@@ -145,7 +172,7 @@ Deno.serve(async (req) => {
 
     const [{ data: botConfig }, { data: products }, { data: history }] = await Promise.all([
       admin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", profile.id).maybeSingle(),
-      admin.from("products").select("name, price, description, stock").eq("user_id", profile.id).limit(60),
+      admin.from("products").select("name, price, min_price, description, stock").eq("user_id", profile.id).limit(60),
       admin
         .from("messages")
         .select("role, content")
@@ -169,10 +196,29 @@ Deno.serve(async (req) => {
       storeUrl: `/${profile.store_slug}`,
     });
 
-    const priorTurns = ((history as any[]) ?? [])
+    const priorTurns: any[] = ((history as any[]) ?? [])
       .slice()
       .reverse()
       .map((m) => ({ role: m.role === "customer" ? "user" : "assistant", content: m.content }));
+
+    // Attach the shopper's photo to their latest turn so the model can see it
+    if (imageData) {
+      const lastUser = [...priorTurns].reverse().find((t) => t.role === "user");
+      if (lastUser) {
+        lastUser.content = [
+          { type: "text", text: message || "What do you think of this?" },
+          { type: "image_url", image_url: { url: imageData } },
+        ];
+      } else {
+        priorTurns.push({
+          role: "user",
+          content: [
+            { type: "text", text: message || "What do you think of this?" },
+            { type: "image_url", image_url: { url: imageData } },
+          ],
+        });
+      }
+    }
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

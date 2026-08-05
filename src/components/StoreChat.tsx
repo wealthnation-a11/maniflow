@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Bot } from "lucide-react";
+import { Loader2, Send, Bot, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; image?: string };
 
 export default function StoreChat({
   open,
@@ -24,9 +24,11 @@ export default function StoreChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
   const [name, setName] = useState(() => localStorage.getItem("mf_store_customer_name") || "");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,18 +38,35 @@ export default function StoreChat({
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  const pickImage = (file: File | undefined) => {
+    if (!file) return;
+    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
+      toast.error("Please choose a PNG, JPG, WEBP or GIF image");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image is too large — please use one under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setImage(String(reader.result));
+    reader.readAsDataURL(file);
+  };
+
   const send = async () => {
     const text = input.trim();
-    if (!text || sending) return;
+    if ((!text && !image) || sending) return;
+    const attached = image;
     setInput("");
-    setMessages((m) => [...m, { role: "user", content: text }]);
+    setImage(null);
+    setMessages((m) => [...m, { role: "user", content: text, image: attached ?? undefined }]);
     setSending(true);
 
     const customerName = name.trim() || "Store visitor";
     localStorage.setItem("mf_store_customer_name", customerName);
 
     const { data, error } = await supabase.functions.invoke("store-chat", {
-      body: { slug, session_id: sessionId, customer_name: customerName, message: text },
+      body: { slug, session_id: sessionId, customer_name: customerName, message: text, image: attached },
     });
     setSending(false);
 
@@ -82,8 +101,11 @@ export default function StoreChat({
           ) : null}
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-xs whitespace-pre-wrap ${m.role === "user" ? "gradient-primary text-primary-foreground" : "bg-muted"}`}>
-                {m.content}
+              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-xs whitespace-pre-wrap space-y-1.5 ${m.role === "user" ? "gradient-primary text-primary-foreground" : "bg-muted"}`}>
+                {m.image ? (
+                  <img src={m.image} alt="Photo you sent to the store" className="rounded-lg max-h-48 w-auto" />
+                ) : null}
+                {m.content ? <p>{m.content}</p> : null}
               </div>
             </div>
           ))}
@@ -107,7 +129,37 @@ export default function StoreChat({
               aria-label="Your name"
             />
           ) : null}
+          {image ? (
+            <div className="relative inline-block">
+              <img src={image} alt="Selected attachment preview" className="h-16 w-16 object-cover rounded-lg border" />
+              <button
+                type="button"
+                onClick={() => setImage(null)}
+                aria-label="Remove image"
+                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : null}
           <div className="flex gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="hidden"
+              onChange={(e) => { pickImage(e.target.files?.[0]); e.target.value = ""; }}
+            />
+            <Button
+              size="icon"
+              variant="outline"
+              className="shrink-0"
+              aria-label="Attach a photo"
+              disabled={sending}
+              onClick={() => fileRef.current?.click()}
+            >
+              <ImagePlus className="h-4 w-4" />
+            </Button>
             <Input
               ref={inputRef}
               value={input}
@@ -117,7 +169,7 @@ export default function StoreChat({
               className="text-sm"
               aria-label="Message"
             />
-            <Button size="icon" className="gradient-primary text-primary-foreground shrink-0" disabled={sending || !input.trim()} onClick={send}>
+            <Button size="icon" className="gradient-primary text-primary-foreground shrink-0" disabled={sending || (!input.trim() && !image)} onClick={send}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

@@ -25,9 +25,6 @@ Deno.serve(async (req) => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Please enter a valid email for your receipt" }, 400);
     if (!callbackUrl.startsWith("http")) return json({ error: "Invalid callback URL" }, 400);
 
-    const secret = Deno.env.get("PAYSTACK_SECRET_KEY");
-    if (!secret) return json({ error: "Online payments are not configured" }, 500);
-
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -48,23 +45,21 @@ Deno.serve(async (req) => {
       .eq("id", order.user_id)
       .maybeSingle();
 
-    const subaccount = (profile?.payout_details as any)?.subaccount_code ?? "";
-    if (!profile || profile.plan === "free" || !profile.payouts_enabled || !subaccount) {
+    const ownerKey = String((profile?.payout_details as any)?.secret_key ?? "").trim();
+    if (!profile || profile.plan === "free" || !profile.payouts_enabled || !ownerKey.startsWith("sk_")) {
       return json({ error: "This store does not accept online payments yet." }, 400);
     }
 
     const reference = `mfo_${code}_${Date.now()}`;
     const res = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
-      headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${ownerKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         email,
         amount: Math.round(Number(order.amount) * 100),
         currency: "NGN",
         reference,
         callback_url: callbackUrl,
-        subaccount,
-        bearer: "subaccount",
         metadata: { order_id: order.id, tracking_code: code, store: profile.business_name },
       }),
     });

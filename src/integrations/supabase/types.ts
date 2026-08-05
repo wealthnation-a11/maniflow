@@ -441,6 +441,7 @@ export type Database = {
           id: string
           image_url: string | null
           low_stock_threshold: number
+          min_price: number
           name: string
           price: number
           stock: number
@@ -457,6 +458,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           low_stock_threshold?: number
+          min_price?: number
           name: string
           price?: number
           stock?: number
@@ -473,6 +475,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           low_stock_threshold?: number
+          min_price?: number
           name?: string
           price?: number
           stock?: number
@@ -644,6 +647,7 @@ export type Database = {
         Args: { p_plan: string; p_user_id: string }
         Returns: boolean
       }
+      is_published_store: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       campaign_status: "draft" | "scheduled" | "sent" | "active"

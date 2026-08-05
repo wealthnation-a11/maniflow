@@ -32,6 +32,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
+  min_price: number;
   description: string;
   image_url: string;
   stock: number;
@@ -50,7 +51,7 @@ export default function Products() {
   const [dbLoading, setDbLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
+  const [form, setForm] = useState({ name: "", price: "", minPrice: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
   const [variants, setVariants] = useState<Variant[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export default function Products() {
       const { data } = await supabase.from("products").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
       if (data) {
         setProducts(data.map((p: any) => ({
-          id: p.id, name: p.name, price: Number(p.price), description: p.description || "",
+          id: p.id, name: p.name, price: Number(p.price), min_price: Number(p.min_price ?? 0), description: p.description || "",
           image_url: p.image_url || "", stock: p.stock, category: p.category || "", tags: ((p as any).tags as string[]) || [],
           variants: (p.variants as Variant[]) || [],
           track_inventory: p.track_inventory ?? true, low_stock_threshold: p.low_stock_threshold ?? 5,
@@ -79,7 +80,8 @@ export default function Products() {
   const openEdit = (p: Product) => {
     setEditId(p.id);
     setForm({
-      name: p.name, price: String(p.price), description: p.description, image: p.image_url,
+      name: p.name, price: String(p.price), minPrice: p.min_price ? String(p.min_price) : "",
+      description: p.description, image: p.image_url,
       stock: String(p.stock), category: p.category,
       trackInventory: p.track_inventory, lowStock: String(p.low_stock_threshold ?? 5),
     });
@@ -90,7 +92,7 @@ export default function Products() {
 
   const openNew = () => {
     setEditId(null);
-    setForm({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
+    setForm({ name: "", price: "", minPrice: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
     setTags([]);
     setVariants([]);
     setShowForm(true);
@@ -104,6 +106,9 @@ export default function Products() {
     if (!form.name || !form.price || !user) { toast.error("Product name and price are required"); return; }
     setSaving(true);
     const price = parseFloat(form.price) || 0;
+    const minPriceRaw = parseFloat(form.minPrice) || 0;
+    if (minPriceRaw > price) { toast.error("Lowest price can't be higher than the listed price"); setSaving(false); return; }
+    const min_price = Math.max(0, minPriceRaw);
     const stock = parseInt(form.stock) || 0;
     const cleanVariants = variants.filter((v) => v.name.trim());
 
@@ -111,7 +116,7 @@ export default function Products() {
     const low_stock_threshold = Math.max(0, parseInt(form.lowStock) || 0);
 
     const row = {
-      user_id: user.id, name: form.name, price, description: form.description,
+      user_id: user.id, name: form.name, price, min_price, description: form.description,
       image_url: form.image, stock, category: form.category, tags,
       track_inventory, low_stock_threshold,
       variants: cleanVariants as any, updated_at: new Date().toISOString(),
@@ -125,7 +130,7 @@ export default function Products() {
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
       if (error || !data) { toast.error("Failed to add product"); setSaving(false); return; }
-      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
+      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), min_price: Number((data as any).min_price ?? 0), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
       toast.success("Product added!");
     }
     setSaving(false);
@@ -156,6 +161,13 @@ export default function Products() {
       <div className="grid grid-cols-2 gap-3">
         <div><Label className="text-sm">Price (₦) *</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="15000" className="mt-1" /></div>
         <div><Label className="text-sm">Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="0" className="mt-1" /></div>
+      </div>
+      <div className="rounded-lg border p-3">
+        <Label className="text-sm">Lowest price you'll accept (₦)</Label>
+        <p className="text-[10px] text-muted-foreground mb-1.5">
+          Your bargaining floor. The bot negotiates between this and the listed price and never goes below it. Leave empty for a fixed price.
+        </p>
+        <Input type="number" value={form.minPrice} onChange={(e) => setForm({ ...form, minPrice: e.target.value })} placeholder="e.g. 12000" />
       </div>
       <div><Label className="text-sm">Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Hair Care" className="mt-1" /></div>
       <div className="rounded-lg border p-3 space-y-2">

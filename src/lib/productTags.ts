@@ -31,6 +31,13 @@ export function slugify(input: string): string {
     .slice(0, 40);
 }
 
+/** The public host shoppers should get — never the editor/preview host. */
+export const PUBLIC_STORE_HOST = "https://maniflow.lovable.app";
+
 export function storeUrl(slug: string): string {
-  return `${window.location.origin}/${slug}`;
+  const host =
+    typeof window !== "undefined" && !/lovable(project)?\.(app|dev)$/.test(window.location.hostname)
+      ? window.location.origin
+      : PUBLIC_STORE_HOST;
+  return `${host}/${slug}`;
 }

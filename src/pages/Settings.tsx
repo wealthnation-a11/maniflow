@@ -50,7 +50,7 @@ export default function Settings() {
   const [planForCost, setPlanForCost] = useState<string>("free");
   const [payment, setPayment] = useState<PaymentDetails>({ bank_name: "", account_number: "", account_name: "" });
   const [payoutsEnabled, setPayoutsEnabled] = useState(false);
-  const [payout, setPayout] = useState({ subaccount_code: "", business_name: "" });
+  const [payout, setPayout] = useState({ secret_key: "", business_name: "" });
 
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +78,7 @@ export default function Settings() {
         if (pd && typeof pd === "object") setPayment({ bank_name: pd.bank_name || "", account_number: pd.account_number || "", account_name: pd.account_name || "" });
         setPayoutsEnabled(!!(profile as any).payouts_enabled);
         const po = (profile as any).payout_details as any;
-        if (po && typeof po === "object") setPayout({ subaccount_code: po.subaccount_code || "", business_name: po.business_name || "" });
+        if (po && typeof po === "object") setPayout({ secret_key: po.secret_key || "", business_name: po.business_name || "" });
       }
 
       if (conns) setConnections(conns as PlatformConnection[]);
@@ -183,12 +183,12 @@ export default function Settings() {
       logo_url: logoUrl,
       payment_details: payment as any,
       payout_details: (isPaidPlan ? payout : {}) as any,
-      payouts_enabled: isPaidPlan ? payoutsEnabled && !!payout.subaccount_code.trim() : false,
+      payouts_enabled: isPaidPlan ? payoutsEnabled && !!payout.secret_key.trim() : false,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
 
     setSaving(false);
-    if (error) { toast.error("Failed to save settings"); return; }
+    if (error) { toast.error(error.message || "Failed to save settings"); return; }
 
     setStoreBusinessName(businessName);
     setStoreLogoUrl(logoUrl);
@@ -323,15 +323,17 @@ export default function Settings() {
               <Switch checked={payoutsEnabled} onCheckedChange={setPayoutsEnabled} />
             </div>
             <div>
-              <Label className="text-xs sm:text-sm">Paystack subaccount code</Label>
+              <Label className="text-xs sm:text-sm">Your Paystack secret key</Label>
               <Input
-                value={payout.subaccount_code}
-                onChange={(e) => setPayout({ ...payout, subaccount_code: e.target.value.trim() })}
-                placeholder="ACCT_xxxxxxxxxxxx"
+                type="password"
+                value={payout.secret_key}
+                onChange={(e) => setPayout({ ...payout, secret_key: e.target.value.trim() })}
+                placeholder="sk_live_… or sk_test_…"
                 className="mt-1 font-mono text-xs"
+                autoComplete="off"
               />
               <p className="text-[10px] text-muted-foreground mt-1">
-                Create a subaccount in your Paystack dashboard with your settlement bank account, then paste its code here. Payments for your store orders settle directly to you.
+                From your Paystack dashboard → Settings → API Keys &amp; Webhooks. Use your live key to take real payments; every store payment goes straight into your own Paystack account.
               </p>
             </div>
             <div>
@@ -343,8 +345,11 @@ export default function Settings() {
                 className="mt-1"
               />
             </div>
-            {payoutsEnabled && !payout.subaccount_code ? (
-              <p className="text-[10px] text-destructive">Add your subaccount code to switch online payments on.</p>
+            {payoutsEnabled && !payout.secret_key ? (
+              <p className="text-[10px] text-destructive">Add your Paystack secret key to switch online payments on.</p>
+            ) : null}
+            {payout.secret_key.startsWith("sk_test_") ? (
+              <p className="text-[10px] text-warning">This is a test key — customers won't be charged real money.</p>
             ) : null}
           </div>
         ) : (
