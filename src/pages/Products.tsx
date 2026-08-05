@@ -32,6 +32,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
+  min_price: number;
   description: string;
   image_url: string;
   stock: number;
@@ -50,7 +51,7 @@ export default function Products() {
   const [dbLoading, setDbLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
+  const [form, setForm] = useState({ name: "", price: "", minPrice: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
   const [variants, setVariants] = useState<Variant[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -63,7 +64,7 @@ export default function Products() {
       const { data } = await supabase.from("products").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
       if (data) {
         setProducts(data.map((p: any) => ({
-          id: p.id, name: p.name, price: Number(p.price), description: p.description || "",
+          id: p.id, name: p.name, price: Number(p.price), min_price: Number(p.min_price ?? 0), description: p.description || "",
           image_url: p.image_url || "", stock: p.stock, category: p.category || "", tags: ((p as any).tags as string[]) || [],
           variants: (p.variants as Variant[]) || [],
           track_inventory: p.track_inventory ?? true, low_stock_threshold: p.low_stock_threshold ?? 5,
@@ -79,7 +80,8 @@ export default function Products() {
   const openEdit = (p: Product) => {
     setEditId(p.id);
     setForm({
-      name: p.name, price: String(p.price), description: p.description, image: p.image_url,
+      name: p.name, price: String(p.price), minPrice: p.min_price ? String(p.min_price) : "",
+      description: p.description, image: p.image_url,
       stock: String(p.stock), category: p.category,
       trackInventory: p.track_inventory, lowStock: String(p.low_stock_threshold ?? 5),
     });
@@ -90,7 +92,7 @@ export default function Products() {
 
   const openNew = () => {
     setEditId(null);
-    setForm({ name: "", price: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
+    setForm({ name: "", price: "", minPrice: "", description: "", image: "", stock: "", category: "", trackInventory: true, lowStock: "5" });
     setTags([]);
     setVariants([]);
     setShowForm(true);
