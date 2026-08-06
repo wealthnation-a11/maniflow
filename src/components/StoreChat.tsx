@@ -25,6 +25,7 @@ export default function StoreChat({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+  const [imageName, setImageName] = useState("");
   const [name, setName] = useState(() => localStorage.getItem("mf_store_customer_name") || "");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,18 +39,22 @@ export default function StoreChat({
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
+  const MAX_MB = 5;
+
   const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
-      toast.error("Please choose a PNG, JPG, WEBP or GIF image");
+    if (!ACCEPTED.includes(file.type)) {
+      toast.error("Only PNG, JPG, WEBP or GIF images can be sent");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image is too large — please use one under 5MB");
+    if (file.size > MAX_MB * 1024 * 1024) {
+      toast.error(`That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — please use one under ${MAX_MB}MB`);
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setImage(String(reader.result));
+    reader.onload = () => { setImage(String(reader.result)); setImageName(file.name); };
+    reader.onerror = () => toast.error("Could not read that image. Please try another file.");
     reader.readAsDataURL(file);
   };
 
