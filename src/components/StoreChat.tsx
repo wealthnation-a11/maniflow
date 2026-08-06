@@ -64,6 +64,7 @@ export default function StoreChat({
     const attached = image;
     setInput("");
     setImage(null);
+    setImageName("");
     setMessages((m) => [...m, { role: "user", content: text, image: attached ?? undefined }]);
     setSending(true);
 
