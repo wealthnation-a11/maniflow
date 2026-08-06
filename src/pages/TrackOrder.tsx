@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import ManyFlowLogo from "@/components/ManyFlowLogo";
+import PaymentProofForm from "@/components/PaymentProofForm";
 
 type Tracking = {
   order_id: string;
@@ -58,6 +59,14 @@ export default function TrackOrder() {
   }, [code]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Keep the buyer's view fresh so an owner approval shows up without a manual reload
+  useEffect(() => {
+    const t = window.setInterval(() => { load(); }, 20000);
+    return () => window.clearInterval(t);
+  }, [load]);
+
+
 
   // Verify a returning Paystack payment
   useEffect(() => {
