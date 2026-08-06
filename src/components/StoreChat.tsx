@@ -135,18 +135,23 @@ export default function StoreChat({
             />
           ) : null}
           {image ? (
-            <div className="relative inline-block">
-              <img src={image} alt="Selected attachment preview" className="h-16 w-16 object-cover rounded-lg border" />
-              <button
-                type="button"
-                onClick={() => setImage(null)}
-                aria-label="Remove image"
-                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <img src={image} alt="Selected attachment preview" className="h-16 w-16 object-cover rounded-lg border" />
+                <button
+                  type="button"
+                  onClick={() => { setImage(null); setImageName(""); }}
+                  aria-label="Remove image"
+                  className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate">{imageName}</p>
             </div>
-          ) : null}
+          ) : (
+            <p className="text-[10px] text-muted-foreground">You can attach a photo — PNG, JPG, WEBP or GIF, max 5MB.</p>
+          )}
           <div className="flex gap-2">
             <input
               ref={fileRef}
