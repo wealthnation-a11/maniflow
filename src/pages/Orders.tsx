@@ -288,7 +288,10 @@ export default function Orders() {
         </div>
       </div>
 
+      <PaymentProofsPanel onReviewed={loadOrders} />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
         {[
           { label: "Total Orders", value: orders.length },
           { label: "Paid", value: orders.filter(o => o.payment_status === "paid").length },
