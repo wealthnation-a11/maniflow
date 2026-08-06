@@ -349,6 +349,56 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_proofs: {
+        Row: {
+          amount_claimed: number
+          created_at: string
+          id: string
+          image_path: string
+          note: string
+          order_id: string
+          review_note: string
+          reviewed_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_claimed?: number
+          created_at?: string
+          id?: string
+          image_path?: string
+          note?: string
+          order_id: string
+          review_note?: string
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_claimed?: number
+          created_at?: string
+          id?: string
+          image_path?: string
+          note?: string
+          order_id?: string
+          review_note?: string
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_proofs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_kobo: number
@@ -624,6 +674,9 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["payment_status"]
           payouts_enabled: boolean
           product_name: string
+          proof_review_note: string
+          proof_status: string
+          proof_submitted_at: string
           status: Database["public"]["Enums"]["order_status"]
           store_slug: string
           tracking_code: string

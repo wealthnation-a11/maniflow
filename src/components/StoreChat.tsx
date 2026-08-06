@@ -25,6 +25,7 @@ export default function StoreChat({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+  const [imageName, setImageName] = useState("");
   const [name, setName] = useState(() => localStorage.getItem("mf_store_customer_name") || "");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,18 +39,22 @@ export default function StoreChat({
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
+  const MAX_MB = 5;
+
   const pickImage = (file: File | undefined) => {
     if (!file) return;
-    if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) {
-      toast.error("Please choose a PNG, JPG, WEBP or GIF image");
+    if (!ACCEPTED.includes(file.type)) {
+      toast.error("Only PNG, JPG, WEBP or GIF images can be sent");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image is too large — please use one under 5MB");
+    if (file.size > MAX_MB * 1024 * 1024) {
+      toast.error(`That image is ${(file.size / 1024 / 1024).toFixed(1)}MB — please use one under ${MAX_MB}MB`);
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setImage(String(reader.result));
+    reader.onload = () => { setImage(String(reader.result)); setImageName(file.name); };
+    reader.onerror = () => toast.error("Could not read that image. Please try another file.");
     reader.readAsDataURL(file);
   };
 
@@ -59,6 +64,7 @@ export default function StoreChat({
     const attached = image;
     setInput("");
     setImage(null);
+    setImageName("");
     setMessages((m) => [...m, { role: "user", content: text, image: attached ?? undefined }]);
     setSending(true);
 
@@ -130,18 +136,23 @@ export default function StoreChat({
             />
           ) : null}
           {image ? (
-            <div className="relative inline-block">
-              <img src={image} alt="Selected attachment preview" className="h-16 w-16 object-cover rounded-lg border" />
-              <button
-                type="button"
-                onClick={() => setImage(null)}
-                aria-label="Remove image"
-                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <img src={image} alt="Selected attachment preview" className="h-16 w-16 object-cover rounded-lg border" />
+                <button
+                  type="button"
+                  onClick={() => { setImage(null); setImageName(""); }}
+                  aria-label="Remove image"
+                  className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate">{imageName}</p>
             </div>
-          ) : null}
+          ) : (
+            <p className="text-[10px] text-muted-foreground">You can attach a photo — PNG, JPG, WEBP or GIF, max 5MB.</p>
+          )}
           <div className="flex gap-2">
             <input
               ref={fileRef}

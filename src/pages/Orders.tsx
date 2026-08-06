@@ -17,6 +17,7 @@ import EmptyState from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeSubscription } from "@/lib/realtime";
+import PaymentProofsPanel from "@/components/PaymentProofsPanel";
 
 type Order = {
   id: string;
@@ -287,7 +288,10 @@ export default function Orders() {
         </div>
       </div>
 
+      <PaymentProofsPanel onReviewed={loadOrders} />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
         {[
           { label: "Total Orders", value: orders.length },
           { label: "Paid", value: orders.filter(o => o.payment_status === "paid").length },

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import ManyFlowLogo from "@/components/ManyFlowLogo";
+import PaymentProofForm from "@/components/PaymentProofForm";
 
 type Tracking = {
   order_id: string;
@@ -31,6 +32,9 @@ type Tracking = {
   account_number: string | null;
   account_name: string | null;
   payouts_enabled: boolean;
+  proof_status: string | null;
+  proof_review_note: string | null;
+  proof_submitted_at: string | null;
 };
 
 const STEPS = [
@@ -55,6 +59,14 @@ export default function TrackOrder() {
   }, [code]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Keep the buyer's view fresh so an owner approval shows up without a manual reload
+  useEffect(() => {
+    const t = window.setInterval(() => { load(); }, 20000);
+    return () => window.clearInterval(t);
+  }, [load]);
+
+
 
   // Verify a returning Paystack payment
   useEffect(() => {
@@ -220,11 +232,19 @@ export default function TrackOrder() {
                 >
                   <Copy className="h-3 w-3 mr-1" />Copy account number
                 </Button>
-                <p className="text-[10px] text-muted-foreground mt-2">Send your proof of payment to the store on WhatsApp.</p>
+                <p className="text-[10px] text-muted-foreground mt-2">After transferring, tap “I've made the payment” below and upload your receipt.</p>
               </div>
             ) : !order.payouts_enabled ? (
               <p className="text-xs text-muted-foreground">The store will share payment details with you shortly.</p>
             ) : null}
+
+            <PaymentProofForm
+              trackingCode={order.tracking_code}
+              amount={Number(order.amount)}
+              proofStatus={order.proof_status}
+              reviewNote={order.proof_review_note}
+              onSubmitted={load}
+            />
           </section>
         ) : (
           <section className="bg-card rounded-xl shadow-card p-4 flex items-center gap-2">
