@@ -232,11 +232,19 @@ export default function TrackOrder() {
                 >
                   <Copy className="h-3 w-3 mr-1" />Copy account number
                 </Button>
-                <p className="text-[10px] text-muted-foreground mt-2">Send your proof of payment to the store on WhatsApp.</p>
+                <p className="text-[10px] text-muted-foreground mt-2">After transferring, tap “I've made the payment” below and upload your receipt.</p>
               </div>
             ) : !order.payouts_enabled ? (
               <p className="text-xs text-muted-foreground">The store will share payment details with you shortly.</p>
             ) : null}
+
+            <PaymentProofForm
+              trackingCode={order.tracking_code}
+              amount={Number(order.amount)}
+              proofStatus={order.proof_status}
+              reviewNote={order.proof_review_note}
+              onSubmitted={load}
+            />
           </section>
         ) : (
           <section className="bg-card rounded-xl shadow-card p-4 flex items-center gap-2">
