@@ -31,6 +31,9 @@ type Tracking = {
   account_number: string | null;
   account_name: string | null;
   payouts_enabled: boolean;
+  proof_status: string | null;
+  proof_review_note: string | null;
+  proof_submitted_at: string | null;
 };
 
 const STEPS = [
