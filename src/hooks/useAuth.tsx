@@ -19,12 +19,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // Distinguishes a deliberate sign-out from a session that simply expired.
+  const manualSignOut = useRef(false);
+  const hadSession = useRef(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session) hadSession.current = true;
       // Mirror key auth events into the debug log
       import("@/lib/authDebug").then(({ authDebug }) => {
         if (event === "SIGNED_IN" && session?.user) {
@@ -39,11 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           authDebug.log("idle", { message: "SIGNED_OUT" });
         }
       });
+
+      if (event === "SIGNED_OUT" && hadSession.current && !manualSignOut.current) {
+        toast.error("Session expired, please log in again.");
+      }
+      if (event === "SIGNED_OUT") hadSession.current = false;
+      manualSignOut.current = false;
     });
 
+    // Restore any persisted session (localStorage) so returning users skip login
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session) hadSession.current = true;
       setLoading(false);
     });
 
@@ -67,9 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    manualSignOut.current = true;
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error) {
+      manualSignOut.current = false;
+      throw error;
+    }
   };
+
 
   return (
     <AuthContext.Provider value={{ session, user, loading, signUp, signIn, signOut }}>
