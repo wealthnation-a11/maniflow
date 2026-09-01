@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
   // Optional: business name from profile.
   const { data: profile } = await admin.from("profiles").select("business_name").eq("id", userId).maybeSingle();
-  const businessName = profile?.business_name || "Manyflow";
+  const businessName = profile?.business_name || "Maniflow";
 
   const { data: orders, error: ordersErr } = await admin
     .from("orders")

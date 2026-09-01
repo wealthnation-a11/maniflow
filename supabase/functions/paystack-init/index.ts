@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: email || `user-${userId}@manyflow.app`,
+        email: email || `user-${userId}@maniflow.app`,
         amount: amount_kobo,
         currency: "NGN",
         reference,

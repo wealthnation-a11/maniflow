@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, ArrowLeft } from "lucide-react";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -14,7 +14,7 @@ export default function NotFound() {
       >
         <div className="flex justify-center mb-6">
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center">
-            <ManyFlowLogo className="h-8 w-8" />
+            <ManiflowLogo className="h-8 w-8" />
           </div>
         </div>
         <h1 className="font-heading text-6xl font-bold text-primary mb-2">404</h1>

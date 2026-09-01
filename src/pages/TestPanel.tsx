@@ -48,7 +48,7 @@ export default function TestPanel() {
       if (data?.error) throw new Error(data.error);
       setMessages([...next, { role: "assistant", content: data.reply || "(empty reply)" }]);
       setDiag(data.diagnostics);
-      try { localStorage.setItem("manyflow_test_sent", "1"); } catch {}
+      try { localStorage.setItem("maniflow_test_sent", "1"); } catch {}
     } catch (e: any) {
       toast({ title: "Simulation failed", description: e.message || "Try again", variant: "destructive" });
     } finally {
