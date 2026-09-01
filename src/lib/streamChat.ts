@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
@@ -13,11 +15,21 @@ export async function streamChat({
   onDone: () => void;
   onError: (error: string, status?: number) => void;
 }) {
+  // The chat function authenticates the caller, so we must send the signed-in
+  // user's access token — not the public key.
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) {
+    onError("Your session has expired. Please sign in again to use the assistant.", 401);
+    return;
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ messages }),
   });
@@ -28,9 +40,11 @@ export async function streamChat({
       const body = await resp.json();
       errorMsg = body.error || errorMsg;
     } catch { /* ignore parse errors */ }
+    if (resp.status === 401) errorMsg = "Your session has expired. Please sign in again.";
     onError(errorMsg, resp.status);
     return;
   }
+
 
   if (!resp.body) {
     onError("No response stream available.");
