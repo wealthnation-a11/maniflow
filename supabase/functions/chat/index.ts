@@ -60,34 +60,51 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: "You are Maniflow AI, a helpful business assistant for e-commerce sellers who use WhatsApp, Instagram, and Facebook to sell products. Help with sales strategies, customer engagement, product descriptions, campaign ideas, and general business advice. Keep answers clear, actionable, and concise. Use markdown formatting for readability.",
-          },
-          ...messages,
-        ],
-        stream: true,
-      }),
-    });
+    const systemPrompt =
+      "You are Maniflow AI, a helpful business assistant for e-commerce sellers who use WhatsApp, Instagram, and Facebook to sell products. Help with sales strategies, customer engagement, product descriptions, campaign ideas, and general business advice. Keep answers clear, actionable, and concise. Use markdown formatting for readability.";
+
+    const callGateway = (model: string) =>
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
+          stream: true,
+        }),
+      });
+
+    let response = await callGateway("google/gemini-2.5-flash");
 
     if (!response.ok) {
+      const detail = await response.text();
+      console.error("AI gateway error:", response.status, detail);
+
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait and try again." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI service unavailable. Please try again." }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "The AI workspace is out of credits. Please top up to continue." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Model/route problems: retry once with a known-good fallback model
+      if (response.status === 400 || response.status === 404) {
+        response = await callGateway("google/gemini-2.5-flash-lite");
+      }
+      if (!response.ok) {
+        const detail2 = await response.text().catch(() => "");
+        console.error("AI gateway fallback error:", response.status, detail2);
+        return new Response(JSON.stringify({
+          error: `AI service error (${response.status}). Please try again shortly.`,
+        }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
+
 
     // Tee the stream so we can deduct after success without delaying client output
     const [clientStream, monitorStream] = response.body!.tee();
