@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: profile } = await admin.from("profiles").select("business_name, sales_sheet_id").eq("id", userId).maybeSingle();
-  const businessName = profile?.business_name || "Manyflow";
+  const businessName = profile?.business_name || "Maniflow";
   let spreadsheetId: string | null = (profile as any)?.sales_sheet_id ?? null;
 
   const body = await req.json().catch(() => ({}));

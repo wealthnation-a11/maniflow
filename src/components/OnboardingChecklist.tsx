@@ -20,7 +20,7 @@ export default function OnboardingChecklist() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    try { setDismissed(localStorage.getItem("manyflow_checklist_dismissed") === "1"); } catch {}
+    try { setDismissed(localStorage.getItem("maniflow_checklist_dismissed") === "1"); } catch {}
   }, []);
 
   const load = useCallback(async () => {
@@ -38,7 +38,7 @@ export default function OnboardingChecklist() {
     const hasProducts = (productsRes.count ?? 0) > 0;
     const hasConnection = (connRes.count ?? 0) > 0;
     const hasAiReply = (msgsRes.count ?? 0) > 0;
-    const testSent = (() => { try { return localStorage.getItem("manyflow_test_sent") === "1"; } catch { return false; } })();
+    const testSent = (() => { try { return localStorage.getItem("maniflow_test_sent") === "1"; } catch { return false; } })();
 
     setSteps([
       { id: "business", title: "Set up your business", description: "Add your business name and payment details so the AI can share them.", done: !!profile?.business_name && hasPayment, href: "/settings", cta: "Open Settings" },
@@ -80,7 +80,7 @@ export default function OnboardingChecklist() {
           </div>
         </div>
         <button
-          onClick={() => { try { localStorage.setItem("manyflow_checklist_dismissed", "1"); } catch {} setDismissed(true); }}
+          onClick={() => { try { localStorage.setItem("maniflow_checklist_dismissed", "1"); } catch {} setDismissed(true); }}
           className="text-[11px] text-muted-foreground hover:text-foreground"
         >
           Dismiss

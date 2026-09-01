@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ArrowRight, ArrowLeft, MessageSquare, Package, Bot } from "lucide-react";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ export default function Onboarding() {
 
   const steps = [
     {
-      title: "Welcome to ManyFlow! 🚀",
+      title: "Welcome to Maniflow! 🚀",
       subtitle: "Let's get your business automated in under 5 minutes",
     },
     {
@@ -54,7 +54,7 @@ export default function Onboarding() {
   };
 
   const finish = () => {
-    toast.success("Welcome to ManyFlow! Your AI assistant is active.");
+    toast.success("Welcome to Maniflow! Your AI assistant is active.");
     navigate("/dashboard");
   };
 
@@ -63,8 +63,8 @@ export default function Onboarding() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <ManyFlowLogo className="h-8 w-8" />
-          <span className="font-heading font-bold text-2xl">ManyFlow</span>
+          <ManiflowLogo className="h-8 w-8" />
+          <span className="font-heading font-bold text-2xl">Maniflow</span>
         </div>
 
         {/* Progress */}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import PaymentProofForm from "@/components/PaymentProofForm";
 
 type Tracking = {
@@ -279,8 +279,8 @@ export default function TrackOrder() {
 
       <footer className="border-t mt-4">
         <div className="max-w-2xl mx-auto px-4 py-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
-          <ManyFlowLogo className="h-4 w-4" />
-          <span>Powered by ManyFlow</span>
+          <ManiflowLogo className="h-4 w-4" />
+          <span>Powered by Maniflow</span>
         </div>
       </footer>
     </div>

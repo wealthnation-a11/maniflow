@@ -34,7 +34,7 @@ export default function RealtimeConsentBanner() {
         <div className="flex-1 min-w-0">
           <h3 className="font-heading font-semibold text-sm sm:text-base">Enable live updates?</h3>
           <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-            Manyflow can keep your dashboard, inbox, notifications, and credit balance in sync in
+            Maniflow can keep your dashboard, inbox, notifications, and credit balance in sync in
             real time over a secure websocket scoped to your account. If you decline, the app still
             works — it just won't auto-refresh.
           </p>

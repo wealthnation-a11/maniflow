@@ -23,7 +23,7 @@ import {
   FlaskConical,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
-import ManyFlowLogo from "./ManyFlowLogo";
+import ManiflowLogo from "./ManiflowLogo";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", badgeKey: null },
@@ -62,8 +62,8 @@ export default function AppSidebar() {
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-sidebar border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <ManyFlowLogo className="h-6 w-6" />
-          <span className="font-heading font-bold text-sidebar-foreground text-lg">ManyFlow</span>
+          <ManiflowLogo className="h-6 w-6" />
+          <span className="font-heading font-bold text-sidebar-foreground text-lg">Maniflow</span>
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/inbox" className="relative p-1 text-sidebar-foreground">
@@ -95,7 +95,7 @@ export default function AppSidebar() {
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
           ) : (
-            <ManyFlowLogo className="h-7 w-7" />
+            <ManiflowLogo className="h-7 w-7" />
           )}
           <span className="font-heading font-bold text-sidebar-foreground text-xl tracking-tight">{businessName}</span>
         </div>

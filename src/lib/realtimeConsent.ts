@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 export type ConsentState = "unknown" | "granted" | "denied";
 
-const KEY = "manyflow.realtimeConsent";
+const KEY = "maniflow.realtimeConsent";
 const listeners = new Set<() => void>();
 
 function read(): ConsentState {

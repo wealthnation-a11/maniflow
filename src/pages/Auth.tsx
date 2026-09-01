@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Mail, Lock, Building2, Phone, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -131,8 +131,8 @@ export default function Auth() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6">
-              <ManyFlowLogo className="h-8 w-8" />
-              <span className="font-heading font-bold text-2xl">ManyFlow</span>
+              <ManiflowLogo className="h-8 w-8" />
+              <span className="font-heading font-bold text-2xl">Maniflow</span>
             </Link>
             <h1 className="font-heading text-2xl font-bold">Reset your password</h1>
             <p className="text-muted-foreground text-sm mt-1">
@@ -184,8 +184,8 @@ export default function Auth() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <ManyFlowLogo className="h-8 w-8" />
-            <span className="font-heading font-bold text-2xl">ManyFlow</span>
+            <ManiflowLogo className="h-8 w-8" />
+            <span className="font-heading font-bold text-2xl">Maniflow</span>
           </Link>
           <h1 className="font-heading text-2xl font-bold">
             {isSignup ? "Create your account" : "Welcome back"}

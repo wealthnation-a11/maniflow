@@ -19,7 +19,7 @@ export type SalesRow = {
  *    automatically when a business edits rows in Excel.
  *  - "By Platform": per-platform breakdown using SUMIF.
  */
-export function exportSalesWorkbook(filename: string, rows: SalesRow[], businessName = "Manyflow") {
+export function exportSalesWorkbook(filename: string, rows: SalesRow[], businessName = "Maniflow") {
   const wb = XLSX.utils.book_new();
 
   // --- Sales sheet ---

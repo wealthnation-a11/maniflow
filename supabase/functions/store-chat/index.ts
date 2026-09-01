@@ -1,4 +1,4 @@
-// Public storefront chat: shoppers talk to the store owner's ManyFlow bot.
+// Public storefront chat: shoppers talk to the store owner's Maniflow bot.
 // Runs with service role, deducts the owner's credits, and mirrors the
 // conversation into the owner's inbox.
 import { createClient } from "npm:@supabase/supabase-js@2";

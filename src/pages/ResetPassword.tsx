@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Lock, Loader2, CheckCircle, Eye, EyeOff, Check, X } from "lucide-react";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,8 +104,8 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-md text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <ManyFlowLogo className="h-8 w-8" />
-            <span className="font-heading font-bold text-2xl">ManyFlow</span>
+            <ManiflowLogo className="h-8 w-8" />
+            <span className="font-heading font-bold text-2xl">Maniflow</span>
           </Link>
           <h1 className="font-heading text-2xl font-bold mb-2">Invalid Reset Link</h1>
           <p className="text-muted-foreground text-sm mb-6">This password reset link is invalid or has expired.</p>
@@ -122,8 +122,8 @@ export default function ResetPassword() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <ManyFlowLogo className="h-8 w-8" />
-            <span className="font-heading font-bold text-2xl">ManyFlow</span>
+            <ManiflowLogo className="h-8 w-8" />
+            <span className="font-heading font-bold text-2xl">Maniflow</span>
           </Link>
           <h1 className="font-heading text-2xl font-bold">Set new password</h1>
           <p className="text-muted-foreground text-sm mt-1">Enter your new password below</p>

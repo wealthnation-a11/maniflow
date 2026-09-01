@@ -8,8 +8,8 @@ export type AuthDebugEvent = {
   message?: string;
 };
 
-const KEY = "manyflow.authDebug.events";
-const STATUS_KEY = "manyflow.authDebug.status";
+const KEY = "maniflow.authDebug.events";
+const STATUS_KEY = "maniflow.authDebug.status";
 const listeners = new Set<() => void>();
 
 function loadFromStorage(): AuthDebugEvent[] {

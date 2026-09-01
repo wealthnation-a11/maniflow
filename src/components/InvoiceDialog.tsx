@@ -95,7 +95,7 @@ export default function InvoiceDialog({ order, open, onOpenChange }: InvoiceDial
               )}
               <div>
                 <div style={{ fontSize: 18, fontWeight: 700 }}>{businessName}</div>
-                <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Powered by ManyFlow</div>
+                <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Powered by Maniflow</div>
               </div>
             </div>
             <div style={{ textAlign: "right" }}>

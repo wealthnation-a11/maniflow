@@ -89,7 +89,7 @@ export default function ChatAssistant() {
           <Sparkles className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-lg font-heading font-bold text-foreground">ManyFlow AI</h1>
+          <h1 className="text-lg font-heading font-bold text-foreground">Maniflow AI</h1>
           <p className="text-xs text-muted-foreground">Your business assistant</p>
         </div>
       </div>

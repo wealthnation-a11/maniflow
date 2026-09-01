@@ -1,7 +1,7 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ const plans: Array<{
     name: "Free Trial",
     price: "₦0",
     period: "/ 3 days",
-    desc: "Try ManyFlow with 100 credits",
+    desc: "Try Maniflow with 100 credits",
     features: [
       "100 trial credits",
       "5 credits per AI reply",
@@ -132,8 +132,8 @@ export default function Pricing() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <ManyFlowLogo className="h-7 w-7" />
-          <span className="font-heading font-bold text-xl">ManyFlow</span>
+          <ManiflowLogo className="h-7 w-7" />
+          <span className="font-heading font-bold text-xl">Maniflow</span>
         </Link>
         {user ? (
           <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>

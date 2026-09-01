@@ -32,7 +32,7 @@ export default function RealtimeSettings() {
       <div>
         <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold">Realtime & Privacy</h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-          Control whether Manyflow may keep a live websocket open to your account.
+          Control whether Maniflow may keep a live websocket open to your account.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export default function RealtimeSettings() {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              When enabled, Manyflow opens an authenticated websocket scoped to <code className="text-[11px]">user:&lt;your-uid&gt;:*</code> so
+              When enabled, Maniflow opens an authenticated websocket scoped to <code className="text-[11px]">user:&lt;your-uid&gt;:*</code> so
               your dashboard, inbox, notifications, and credit balance update instantly without refreshing.
             </p>
           </div>
@@ -112,8 +112,8 @@ export default function RealtimeSettings() {
       <div className="bg-muted/40 border border-border rounded-xl p-4 sm:p-5">
         <h3 className="font-heading font-semibold text-sm mb-2">How your choice is stored</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Your preference is saved locally in this browser under <code className="text-[11px]">manyflow.realtimeConsent</code> and
-          applies to every page in Manyflow. It follows you until you change it or clear browser storage. You can revisit this
+          Your preference is saved locally in this browser under <code className="text-[11px]">maniflow.realtimeConsent</code> and
+          applies to every page in Maniflow. It follows you until you change it or clear browser storage. You can revisit this
           page at any time to grant, revoke, or reset your choice.
         </p>
       </div>

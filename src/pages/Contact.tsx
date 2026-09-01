@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Send, MapPin, Mail, Phone } from "lucide-react";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,8 +21,8 @@ export default function Contact() {
     <div className="min-h-screen bg-background">
       <nav className="flex items-center justify-between px-4 md:px-8 h-16 max-w-7xl mx-auto">
         <Link to="/" className="flex items-center gap-2">
-          <ManyFlowLogo className="h-7 w-7" />
-          <span className="font-heading font-bold text-xl">ManyFlow</span>
+          <ManiflowLogo className="h-7 w-7" />
+          <span className="font-heading font-bold text-xl">Maniflow</span>
         </Link>
         <Link to="/auth?mode=signup"><Button size="sm">Get Started</Button></Link>
       </nav>
@@ -37,7 +37,7 @@ export default function Contact() {
               <Mail className="h-5 w-5 text-primary mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Email</p>
-                <p className="text-sm text-muted-foreground">hello@manyflow.co</p>
+                <p className="text-sm text-muted-foreground">hello@maniflow.co</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

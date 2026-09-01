@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { tagMeta, PRODUCT_TAGS } from "@/lib/productTags";
-import ManyFlowLogo from "@/components/ManyFlowLogo";
+import ManiflowLogo from "@/components/ManiflowLogo";
 import StoreChat from "@/components/StoreChat";
 import StoreBottomNav from "@/components/StoreBottomNav";
 
@@ -604,8 +604,8 @@ export default function Store() {
 
       <footer className="border-t mt-6">
         <div className="max-w-5xl mx-auto px-4 py-5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
-          <ManyFlowLogo className="h-4 w-4" />
-          <span>Powered by ManyFlow</span>
+          <ManiflowLogo className="h-4 w-4" />
+          <span>Powered by Maniflow</span>
         </div>
       </footer>
 
