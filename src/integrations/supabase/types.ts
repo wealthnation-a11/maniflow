@@ -554,8 +554,10 @@ export type Database = {
           phone: string | null
           plan: string
           plan_purchased_at: string | null
+          store_accent: string
           store_description: string
           store_slug: string | null
+          store_theme: string
           timezone: string | null
           trial_ends_at: string | null
           trial_expired_alert_sent_at: string | null
@@ -577,8 +579,10 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
+          store_accent?: string
           store_description?: string
           store_slug?: string | null
+          store_theme?: string
           timezone?: string | null
           trial_ends_at?: string | null
           trial_expired_alert_sent_at?: string | null
@@ -600,8 +604,10 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_purchased_at?: string | null
+          store_accent?: string
           store_description?: string
           store_slug?: string | null
+          store_theme?: string
           timezone?: string | null
           trial_ends_at?: string | null
           trial_expired_alert_sent_at?: string | null
@@ -647,6 +653,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_use_store_theme: {
+        Args: { p_plan: string; p_theme: string }
+        Returns: boolean
+      }
       deduct_credits: {
         Args: {
           p_amount: number
@@ -690,8 +700,10 @@ export type Database = {
           business_name: string
           currency: string
           logo_url: string
+          store_accent: string
           store_description: string
           store_slug: string
+          store_theme: string
           user_id: string
           whatsapp: string
         }[]
@@ -701,6 +713,7 @@ export type Database = {
         Returns: boolean
       }
       is_published_store: { Args: { _user_id: string }; Returns: boolean }
+      is_valid_store_theme: { Args: { p_theme: string }; Returns: boolean }
     }
     Enums: {
       campaign_status: "draft" | "scheduled" | "sent" | "active"
