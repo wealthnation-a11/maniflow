@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_store_theme() FROM PUBLIC, anon, authenticated;
