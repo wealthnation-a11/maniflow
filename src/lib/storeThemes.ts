@@ -237,6 +237,9 @@ export function themeStyle(theme: StoreTheme, accentOverride?: string | null): R
 
   return {
     fontFamily: theme.font,
+    "--font-heading": theme.font,
+    "--font-body": theme.font,
+
     "--background": hexToHslToken(theme.page),
     "--foreground": hexToHslToken(theme.text),
     "--card": hexToHslToken(theme.card),
