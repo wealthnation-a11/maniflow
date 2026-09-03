@@ -27,7 +27,10 @@ type StoreInfo = {
   store_description: string;
   currency: string | null;
   whatsapp: string | null;
+  store_theme?: string | null;
+  store_accent?: string | null;
 };
+
 
 type StoreProduct = {
   id: string;
