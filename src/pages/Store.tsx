@@ -17,6 +17,8 @@ import { tagMeta, PRODUCT_TAGS } from "@/lib/productTags";
 import ManiflowLogo from "@/components/ManiflowLogo";
 import StoreChat from "@/components/StoreChat";
 import StoreBottomNav from "@/components/StoreBottomNav";
+import { getTheme, themeStyle } from "@/lib/storeThemes";
+
 
 
 type StoreInfo = {
