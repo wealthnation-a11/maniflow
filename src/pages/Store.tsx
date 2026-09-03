@@ -17,6 +17,8 @@ import { tagMeta, PRODUCT_TAGS } from "@/lib/productTags";
 import ManiflowLogo from "@/components/ManiflowLogo";
 import StoreChat from "@/components/StoreChat";
 import StoreBottomNav from "@/components/StoreBottomNav";
+import { getTheme, themeStyle } from "@/lib/storeThemes";
+
 
 
 type StoreInfo = {
@@ -27,7 +29,10 @@ type StoreInfo = {
   store_description: string;
   currency: string | null;
   whatsapp: string | null;
+  store_theme?: string | null;
+  store_accent?: string | null;
 };
+
 
 type StoreProduct = {
   id: string;
@@ -273,10 +278,17 @@ export default function Store() {
     );
   }
 
+  const theme = getTheme(store.store_theme);
+  const themeVars = themeStyle(theme, store.store_accent);
+
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background text-foreground pb-32" style={themeVars}>
       {/* Store header */}
-      <header className="border-b bg-card">
+      <header
+        className="border-b"
+        style={{ background: "hsl(var(--store-header-bg))", color: "hsl(var(--store-header-fg))" }}
+      >
+
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -290,9 +302,10 @@ export default function Store() {
               <div className="min-w-0">
                 <h1 className="font-heading text-xl sm:text-3xl font-bold truncate">{store.business_name || "Store"}</h1>
                 {store.store_description ? (
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">{store.store_description}</p>
+                  <p className="text-xs sm:text-sm opacity-80 mt-0.5 line-clamp-2">{store.store_description}</p>
                 ) : null}
-                <p className="text-[11px] text-muted-foreground mt-1">{products.length} product{products.length === 1 ? "" : "s"}</p>
+                <p className="text-[11px] opacity-70 mt-1">{products.length} product{products.length === 1 ? "" : "s"}</p>
+
               </div>
             </div>
 
@@ -308,7 +321,7 @@ export default function Store() {
                   ) : null}
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+              <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-background text-foreground" style={themeVars}>
                 <SheetHeader>
                   <SheetTitle>Your cart</SheetTitle>
                   <SheetDescription>Review your items and place a single order.</SheetDescription>
@@ -622,7 +635,9 @@ export default function Store() {
         slug={store.store_slug}
         sessionId={sessionId()}
         businessName={store.business_name || "the store"}
+        themeStyle={themeVars}
       />
+
     </div>
 
   );

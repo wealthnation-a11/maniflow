@@ -14,13 +14,16 @@ export default function StoreChat({
   slug,
   sessionId,
   businessName,
+  themeStyle,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   slug: string;
   sessionId: string;
   businessName: string;
+  themeStyle?: React.CSSProperties;
 }) {
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -88,7 +91,7 @@ export default function StoreChat({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0 bg-background text-foreground" style={themeStyle}>
         <SheetHeader className="px-4 pt-5 pb-3 border-b">
           <SheetTitle className="text-base">Chat with {businessName}</SheetTitle>
           <SheetDescription className="text-xs">
