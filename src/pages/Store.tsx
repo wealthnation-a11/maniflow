@@ -278,10 +278,17 @@ export default function Store() {
     );
   }
 
+  const theme = getTheme(store.store_theme);
+  const themeVars = themeStyle(theme, store.store_accent);
+
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-screen bg-background text-foreground pb-32" style={themeVars}>
       {/* Store header */}
-      <header className="border-b bg-card">
+      <header
+        className="border-b"
+        style={{ background: "hsl(var(--store-header-bg))", color: "hsl(var(--store-header-fg))" }}
+      >
+
         <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
