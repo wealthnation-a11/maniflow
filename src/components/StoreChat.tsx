@@ -14,13 +14,16 @@ export default function StoreChat({
   slug,
   sessionId,
   businessName,
+  themeStyle,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   slug: string;
   sessionId: string;
   businessName: string;
+  themeStyle?: React.CSSProperties;
 }) {
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
