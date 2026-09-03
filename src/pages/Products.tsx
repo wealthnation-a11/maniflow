@@ -260,7 +260,9 @@ export default function Products() {
       </div>
 
       <StoreLinkCard />
+      <StoreThemePicker />
       <StoreAnalyticsCard />
+
 
       {isMobile ? (
         <Drawer open={showForm} onOpenChange={setShowForm}>
