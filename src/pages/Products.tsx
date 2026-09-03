@@ -23,6 +23,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import ProductImageUpload from "@/components/ProductImageUpload";
 import StoreLinkCard from "@/components/StoreLinkCard";
+import StoreThemePicker from "@/components/StoreThemePicker";
+
 import StoreAnalyticsCard from "@/components/StoreAnalyticsCard";
 import { PRODUCT_TAGS, tagMeta } from "@/lib/productTags";
 
