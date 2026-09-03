@@ -635,7 +635,9 @@ export default function Store() {
         slug={store.store_slug}
         sessionId={sessionId()}
         businessName={store.business_name || "the store"}
+        themeStyle={themeVars}
       />
+
     </div>
 
   );
