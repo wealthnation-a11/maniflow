@@ -321,7 +321,7 @@ export default function Store() {
                   ) : null}
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+              <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-background text-foreground" style={themeVars}>
                 <SheetHeader>
                   <SheetTitle>Your cart</SheetTitle>
                   <SheetDescription>Review your items and place a single order.</SheetDescription>
