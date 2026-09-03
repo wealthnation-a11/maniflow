@@ -302,9 +302,10 @@ export default function Store() {
               <div className="min-w-0">
                 <h1 className="font-heading text-xl sm:text-3xl font-bold truncate">{store.business_name || "Store"}</h1>
                 {store.store_description ? (
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">{store.store_description}</p>
+                  <p className="text-xs sm:text-sm opacity-80 mt-0.5 line-clamp-2">{store.store_description}</p>
                 ) : null}
-                <p className="text-[11px] text-muted-foreground mt-1">{products.length} product{products.length === 1 ? "" : "s"}</p>
+                <p className="text-[11px] opacity-70 mt-1">{products.length} product{products.length === 1 ? "" : "s"}</p>
+
               </div>
             </div>
 
