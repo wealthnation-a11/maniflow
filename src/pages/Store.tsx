@@ -39,6 +39,7 @@ type StoreProduct = {
   name: string;
   description: string | null;
   price: number;
+  min_price: number;
   image_url: string | null;
   stock: number;
   category: string | null;
@@ -74,6 +75,7 @@ export default function Store() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(searchParams.get("chat") === "1");
+  const [chatSeed, setChatSeed] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
@@ -106,13 +108,14 @@ export default function Store() {
       if (info) {
         const { data } = await supabase
           .from("products")
-          .select("id, name, description, price, image_url, stock, category, tags, track_inventory, low_stock_threshold")
+          .select("id, name, description, price, min_price, image_url, stock, category, tags, track_inventory, low_stock_threshold")
           .eq("user_id", info.user_id)
           .order("created_at", { ascending: false });
         if (!cancelled) {
           setProducts(((data ?? []) as any[]).map((p) => ({
             ...p,
             price: Number(p.price),
+            min_price: Number(p.min_price ?? 0),
             track_inventory: p.track_inventory ?? true,
             low_stock_threshold: p.low_stock_threshold ?? 5,
           })));
@@ -566,6 +569,11 @@ export default function Store() {
                   <div className="p-3 flex flex-col flex-1">
                     <h2 className="font-heading font-semibold text-xs sm:text-sm leading-tight line-clamp-2">{p.name}</h2>
                     <p className="text-primary font-bold text-sm sm:text-base mt-1">₦{p.price.toLocaleString()}</p>
+                    {p.min_price > 0 && p.min_price < p.price ? (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Open to offers from <span className="font-semibold">₦{p.min_price.toLocaleString()}</span>
+                      </p>
+                    ) : null}
                     {p.description ? (
                       <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{p.description}</p>
                     ) : null}
@@ -580,6 +588,20 @@ export default function Store() {
                         <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
                         {out ? "Sold out" : inCart > 0 ? `In cart (${inCart})` : "Add to cart"}
                       </Button>
+                      {p.min_price > 0 && p.min_price < p.price && !out ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-[11px] h-8"
+                          onClick={() => {
+                            track("product_click", p.id);
+                            setChatSeed(`Hi! I'm interested in ${p.name} (₦${p.price.toLocaleString()}). Can we agree on a better price?`);
+                            setChatOpen(true);
+                          }}
+                        >
+                          <Bot className="h-3.5 w-3.5 mr-1.5" /> Make an offer
+                        </Button>
+                      ) : null}
                       {waLink(p) ? (
                         <a
                           href={waLink(p)!}
@@ -635,6 +657,7 @@ export default function Store() {
         slug={store.store_slug}
         sessionId={sessionId()}
         businessName={store.business_name || "the store"}
+        initialInput={chatSeed}
         themeStyle={themeVars}
       />
 
