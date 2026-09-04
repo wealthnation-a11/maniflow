@@ -15,6 +15,7 @@ export default function StoreChat({
   sessionId,
   businessName,
   themeStyle,
+  initialInput,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -22,6 +23,7 @@ export default function StoreChat({
   sessionId: string;
   businessName: string;
   themeStyle?: React.CSSProperties;
+  initialInput?: string;
 }) {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -41,6 +43,10 @@ export default function StoreChat({
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
+
+  useEffect(() => {
+    if (open && initialInput) setInput(initialInput);
+  }, [open, initialInput]);
 
   const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
   const MAX_MB = 5;
