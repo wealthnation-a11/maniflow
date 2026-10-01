@@ -21,7 +21,9 @@ import {
   Sparkles,
   Coins,
   FlaskConical,
+  ShieldCheck,
 } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { ThemeToggle } from "./ThemeToggle";
 import ManiflowLogo from "./ManiflowLogo";
 
