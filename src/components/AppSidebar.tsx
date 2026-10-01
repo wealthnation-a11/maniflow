@@ -40,6 +40,8 @@ const navItems = [
   { label: "Notifications", icon: Bell, path: "/notifications", badgeKey: "notifications" as const },
 ];
 
+const adminNavItem = { label: "Admin", icon: ShieldCheck, path: "/admin", badgeKey: null };
+
 export default function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,6 +50,7 @@ export default function AppSidebar() {
   const { signOut } = useAuth();
   const counts = useSidebarCounts();
   const { info: credits } = useCredits();
+  const { isAdmin } = useIsAdmin();
 
   const handleSignOut = async () => {
     await signOut();
@@ -103,7 +106,7 @@ export default function AppSidebar() {
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1">
-          {navItems.map((item) => {
+          {(isAdmin ? [...navItems, adminNavItem] : navItems).map((item) => {
             const active = location.pathname === item.path;
             const badgeCount = getBadgeCount(item.badgeKey);
             return (
