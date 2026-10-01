@@ -32,6 +32,7 @@ import TrackOrder from "./pages/TrackOrder";
 import Notifications from "./pages/Notifications";
 import CreditsHistory from "./pages/CreditsHistory";
 import TestPanel from "./pages/TestPanel";
+import Admin from "./pages/Admin";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -73,6 +74,7 @@ const App = () => (
                   <Route path="/credits" element={<CreditsHistory />} />
                   <Route path="/test" element={<TestPanel />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/admin" element={<Admin />} />
                   <Route path="/settings/realtime" element={<RealtimeSettings />} />
                 </Route>
               </Route>
