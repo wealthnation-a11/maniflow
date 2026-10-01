@@ -648,11 +648,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_credits: {
+        Args: { p_amount: number; p_reason: string; p_user_id: string }
+        Returns: boolean
+      }
       can_use_store_theme: {
         Args: { p_plan: string; p_theme: string }
         Returns: boolean
@@ -712,10 +737,18 @@ export type Database = {
         Args: { p_plan: string; p_user_id: string }
         Returns: boolean
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_published_store: { Args: { _user_id: string }; Returns: boolean }
       is_valid_store_theme: { Args: { p_theme: string }; Returns: boolean }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       campaign_status: "draft" | "scheduled" | "sent" | "active"
       conversation_status: "active" | "closed" | "archived"
       customer_status: "active" | "inactive" | "new"
@@ -850,6 +883,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       campaign_status: ["draft", "scheduled", "sent", "active"],
       conversation_status: ["active", "closed", "archived"],
       customer_status: ["active", "inactive", "new"],
