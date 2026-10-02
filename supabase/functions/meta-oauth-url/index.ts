@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     const redirectUri = `${SUPABASE_URL}/functions/v1/meta-oauth`;
 
     const scopesMap: Record<string, string> = {
-      whatsapp: "whatsapp_business_management,whatsapp_business_messaging,business_management",
+      whatsapp: "whatsapp_business_management,whatsapp_business_messaging",
       facebook: "pages_messaging,pages_manage_metadata,pages_show_list,pages_read_engagement",
       instagram: "instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_show_list",
     };
