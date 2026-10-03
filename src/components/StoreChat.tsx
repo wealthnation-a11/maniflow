@@ -8,6 +8,14 @@ import { toast } from "sonner";
 
 type ChatMessage = { role: "user" | "assistant"; content: string; image?: string };
 
+const QUICK_QUESTIONS = [
+  "Is this available?",
+  "What's your best price?",
+  "How does delivery work?",
+  "What's your return policy?",
+  "How do I pay?",
+];
+
 export default function StoreChat({
   open,
   onOpenChange,
@@ -67,8 +75,8 @@ export default function StoreChat({
     reader.readAsDataURL(file);
   };
 
-  const send = async () => {
-    const text = input.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? input).trim();
     if ((!text && !image) || sending) return;
     const attached = image;
     setInput("");
@@ -162,6 +170,19 @@ export default function StoreChat({
           ) : (
             <p className="text-[10px] text-muted-foreground">You can attach a photo — PNG, JPG, WEBP or GIF, max 5MB.</p>
           )}
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" aria-label="Suggested questions">
+            {QUICK_QUESTIONS.map((q) => (
+              <button
+                key={q}
+                type="button"
+                disabled={sending}
+                onClick={() => send(q)}
+                className="shrink-0 text-[11px] px-2.5 py-1 rounded-full border bg-card text-muted-foreground hover:text-foreground hover:border-primary transition-colors disabled:opacity-50"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
           <div className="flex gap-2">
             <input
               ref={fileRef}
@@ -189,7 +210,7 @@ export default function StoreChat({
               className="text-sm"
               aria-label="Message"
             />
-            <Button size="icon" className="gradient-primary text-primary-foreground shrink-0" disabled={sending || (!input.trim() && !image)} onClick={send}>
+            <Button size="icon" className="gradient-primary text-primary-foreground shrink-0" disabled={sending || (!input.trim() && !image)} onClick={() => send()}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

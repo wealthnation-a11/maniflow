@@ -215,6 +215,48 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          min_order_amount: number
+          used_count: number
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order_amount?: number
+          used_count?: number
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order_amount?: number
+          used_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -289,6 +331,10 @@ export type Database = {
           created_at: string
           customer_name: string
           customer_phone: string | null
+          delivery_fee: number
+          delivery_zone: string | null
+          discount_amount: number
+          discount_code: string | null
           id: string
           inventory_applied: boolean
           items: Json
@@ -310,6 +356,10 @@ export type Database = {
           created_at?: string
           customer_name?: string
           customer_phone?: string | null
+          delivery_fee?: number
+          delivery_zone?: string | null
+          discount_amount?: number
+          discount_code?: string | null
           id?: string
           inventory_applied?: boolean
           items?: Json
@@ -331,6 +381,10 @@ export type Database = {
           created_at?: string
           customer_name?: string
           customer_phone?: string | null
+          delivery_fee?: number
+          delivery_zone?: string | null
+          discount_amount?: number
+          discount_code?: string | null
           id?: string
           inventory_applied?: boolean
           items?: Json
@@ -540,11 +594,14 @@ export type Database = {
       profiles: {
         Row: {
           ai_tone: string | null
+          announcement_enabled: boolean
+          announcement_text: string
           business_name: string
           cost_per_ai_reply: number
           created_at: string
           credits_balance: number
           currency: string | null
+          delivery_zones: Json
           id: string
           logo_url: string | null
           low_credits_alert_sent_at: string | null
@@ -556,6 +613,7 @@ export type Database = {
           plan_purchased_at: string | null
           store_accent: string
           store_description: string
+          store_policies: string
           store_slug: string | null
           store_theme: string
           timezone: string | null
@@ -565,11 +623,14 @@ export type Database = {
         }
         Insert: {
           ai_tone?: string | null
+          announcement_enabled?: boolean
+          announcement_text?: string
           business_name?: string
           cost_per_ai_reply?: number
           created_at?: string
           credits_balance?: number
           currency?: string | null
+          delivery_zones?: Json
           id: string
           logo_url?: string | null
           low_credits_alert_sent_at?: string | null
@@ -581,6 +642,7 @@ export type Database = {
           plan_purchased_at?: string | null
           store_accent?: string
           store_description?: string
+          store_policies?: string
           store_slug?: string | null
           store_theme?: string
           timezone?: string | null
@@ -590,11 +652,14 @@ export type Database = {
         }
         Update: {
           ai_tone?: string | null
+          announcement_enabled?: boolean
+          announcement_text?: string
           business_name?: string
           cost_per_ai_reply?: number
           created_at?: string
           credits_balance?: number
           currency?: string | null
+          delivery_zones?: Json
           id?: string
           logo_url?: string | null
           low_credits_alert_sent_at?: string | null
@@ -606,6 +671,7 @@ export type Database = {
           plan_purchased_at?: string | null
           store_accent?: string
           store_description?: string
+          store_policies?: string
           store_slug?: string | null
           store_theme?: string
           timezone?: string | null
@@ -701,6 +767,10 @@ export type Database = {
           business_name: string
           created_at: string
           customer_name: string
+          delivery_fee: number
+          delivery_zone: string
+          discount_amount: number
+          discount_code: string
           items: Json
           logo_url: string
           note: string
@@ -722,8 +792,11 @@ export type Database = {
       get_store_by_slug: {
         Args: { p_slug: string }
         Returns: {
+          announcement_text: string
           business_name: string
           currency: string
+          delivery_zones: Json
+          has_discounts: boolean
           logo_url: string
           store_accent: string
           store_description: string

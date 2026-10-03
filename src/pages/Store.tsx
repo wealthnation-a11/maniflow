@@ -31,6 +31,9 @@ type StoreInfo = {
   whatsapp: string | null;
   store_theme?: string | null;
   store_accent?: string | null;
+  announcement_text?: string | null;
+  delivery_zones?: Array<{ name: string; fee: number }> | null;
+  has_discounts?: boolean | null;
 };
 
 
@@ -80,6 +83,11 @@ export default function Store() {
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [zone, setZone] = useState("");
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; amount: number } | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [placed, setPlaced] = useState<{
     id: string;
     amount: number;
@@ -158,6 +166,22 @@ export default function Store() {
         document.head.appendChild(meta);
       }
       meta.setAttribute("content", desc.slice(0, 155));
+      const setMeta = (attr: "property" | "name", key: string, value: string) => {
+        let el = document.querySelector(`meta[${attr}="${key}"]`);
+        if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+        el.setAttribute("content", value);
+      };
+      const title = `${store.business_name} — Shop online`;
+      setMeta("property", "og:title", title);
+      setMeta("property", "og:description", desc.slice(0, 200));
+      setMeta("property", "og:type", "website");
+      setMeta("property", "og:url", window.location.href);
+      setMeta("name", "twitter:title", title);
+      setMeta("name", "twitter:description", desc.slice(0, 200));
+      if (store.logo_url) {
+        setMeta("property", "og:image", store.logo_url);
+        setMeta("name", "twitter:image", store.logo_url);
+      }
     }
   }, [store]);
 
@@ -169,14 +193,20 @@ export default function Store() {
     );
   }, [products]);
 
+  const categories = useMemo(
+    () => [...new Set(products.map((p) => (p.category ?? "").trim()).filter(Boolean))].sort(),
+    [products],
+  );
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return products.filter((p) => {
       const matchesQ = !q || p.name.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
       const matchesTag = !activeTag || (p.tags ?? []).includes(activeTag);
-      return matchesQ && matchesTag;
+      const matchesCat = !activeCategory || (p.category ?? "").trim() === activeCategory;
+      return matchesQ && matchesTag && matchesCat;
     });
-  }, [products, query, activeTag]);
+  }, [products, query, activeTag, activeCategory]);
 
   const lines: CartLine[] = useMemo(
     () =>
@@ -191,6 +221,45 @@ export default function Store() {
 
   const cartCount = lines.reduce((a, l) => a + l.quantity, 0);
   const cartTotal = lines.reduce((a, l) => a + l.product.price * l.quantity, 0);
+  const zones = store?.delivery_zones ?? [];
+  const zoneFee = Number(zones.find((z) => z.name === zone)?.fee ?? 0);
+  const grandTotal = Math.max(0, cartTotal - (promo?.amount ?? 0) + zoneFee);
+
+  const applyPromo = async () => {
+    if (!store || !promoInput.trim()) return;
+    setCheckingPromo(true);
+    const { data } = await supabase.functions.invoke("place-store-order", {
+      body: {
+        preview: true, slug: store.store_slug, customer_name: "preview", customer_phone: "0000000000",
+        discount_code: promoInput.trim(), delivery_zone: zone,
+        items: lines.map((l) => ({ product_id: l.product.id, quantity: l.quantity })),
+      },
+    });
+    setCheckingPromo(false);
+    const d = data as any;
+    if (!d || d.discount_error || !d.discount_code) {
+      setPromo(null);
+      toast.error(d?.discount_error || d?.error || "That promo code isn't valid");
+      return;
+    }
+    setPromo({ code: d.discount_code, amount: Number(d.discount_amount) });
+    toast.success(`Code ${d.discount_code} applied — you save ₦${Number(d.discount_amount).toLocaleString()}`);
+  };
+
+  const orderViaWhatsApp = () => {
+    const phoneDigits = (store?.whatsapp ?? "").replace(/[^\d]/g, "");
+    if (!phoneDigits || lines.length === 0) return;
+    const summary = lines.map((l) => `• ${l.product.name} x${l.quantity} — ₦${(l.product.price * l.quantity).toLocaleString()}`).join("\n");
+    const extra = [
+      zone ? `Delivery: ${zone}${zoneFee ? ` (₦${zoneFee.toLocaleString()})` : " (Free)"}` : "",
+      promo ? `Promo: ${promo.code} (-₦${promo.amount.toLocaleString()})` : "",
+      name ? `Name: ${name}` : "",
+      phone ? `Phone: ${phone}` : "",
+      note ? `Note: ${note}` : "",
+    ].filter(Boolean).join("\n");
+    const text = `Hi ${store?.business_name}, I'd like to order:\n${summary}\n${extra ? extra + "\n" : ""}Total: ₦${grandTotal.toLocaleString()}`;
+    window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+  };
 
   const soldOut = (p: StoreProduct) => p.track_inventory && p.stock <= 0;
   const maxQty = (p: StoreProduct) => (p.track_inventory ? Math.max(0, p.stock) : 99);
@@ -224,6 +293,7 @@ export default function Store() {
 
   const checkout = async () => {
     if (!store) return;
+    if (zones.length > 0 && !zone) { toast.error("Please choose a delivery option"); return; }
     setPlacing(true);
     const { data, error } = await supabase.functions.invoke("place-store-order", {
       body: {
@@ -231,6 +301,8 @@ export default function Store() {
         customer_name: name,
         customer_phone: phone,
         note,
+        delivery_zone: zone,
+        discount_code: promo?.code ?? "",
         session_id: sessionId(),
         items: lines.map((l) => ({ product_id: l.product.id, quantity: l.quantity })),
       },
@@ -251,11 +323,13 @@ export default function Store() {
       card_payments_enabled: (data as any).card_payments_enabled,
     });
     setCart({});
+    setPromo(null);
+    setPromoInput("");
 
     const phoneDigits = (store.whatsapp ?? "").replace(/[^\d]/g, "");
     if (phoneDigits) {
       const summary = lines.map((l) => `• ${l.product.name} x${l.quantity}`).join("\n");
-      const text = `Hi ${store.business_name}, I just placed an order on your store page:\n${summary}\nTotal: ₦${cartTotal.toLocaleString()}\nName: ${name}\nPhone: ${phone}${note ? `\nNote: ${note}` : ""}`;
+      const text = `Hi ${store.business_name}, I just placed an order on your store page:\n${summary}\nTotal: ₦${Number((data as any).amount).toLocaleString()}\nName: ${name}\nPhone: ${phone}${note ? `\nNote: ${note}` : ""}`;
       window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     }
   };
@@ -286,6 +360,15 @@ export default function Store() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-32" style={themeVars}>
+      {store.announcement_text ? (
+        <div
+          className="text-center text-[11px] sm:text-xs font-medium px-4 py-2"
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+          role="note"
+        >
+          {store.announcement_text}
+        </div>
+      ) : null}
       {/* Store header */}
       <header
         className="border-b"
@@ -436,9 +519,54 @@ export default function Store() {
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-sm font-semibold border-t pt-3">
-                      <span>Total</span>
-                      <span className="text-primary">₦{cartTotal.toLocaleString()}</span>
+                    {zones.length > 0 ? (
+                      <div>
+                        <Label className="text-xs">Delivery option *</Label>
+                        <div className="mt-1 grid gap-1.5">
+                          {zones.map((z) => (
+                            <button
+                              key={z.name}
+                              type="button"
+                              onClick={() => setZone(z.name)}
+                              className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs text-left transition-colors ${zone === z.name ? "border-primary bg-primary/10" : "bg-card"}`}
+                            >
+                              <span className="font-medium">{z.name}</span>
+                              <span className="text-muted-foreground">{Number(z.fee) > 0 ? `₦${Number(z.fee).toLocaleString()}` : "Free"}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {store.has_discounts ? (
+                      <div>
+                        <Label className="text-xs">Promo code</Label>
+                        <div className="mt-1 flex gap-2">
+                          <Input
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); if (promo) setPromo(null); }}
+                            placeholder="e.g. SAVE10"
+                            className="text-sm uppercase"
+                          />
+                          <Button size="sm" variant="outline" className="text-xs" disabled={checkingPromo || !promoInput.trim()} onClick={applyPromo}>
+                            {checkingPromo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Apply"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="border-t pt-3 space-y-1 text-xs">
+                      <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>₦{cartTotal.toLocaleString()}</span></div>
+                      {promo ? (
+                        <div className="flex justify-between text-success"><span>Promo ({promo.code})</span><span>-₦{promo.amount.toLocaleString()}</span></div>
+                      ) : null}
+                      {zones.length > 0 ? (
+                        <div className="flex justify-between text-muted-foreground"><span>Delivery</span><span>{zone ? (zoneFee ? `₦${zoneFee.toLocaleString()}` : "Free") : "—"}</span></div>
+                      ) : null}
+                      <div className="flex items-center justify-between text-sm font-semibold pt-1">
+                        <span>Total</span>
+                        <span className="text-primary">₦{grandTotal.toLocaleString()}</span>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -460,6 +588,11 @@ export default function Store() {
                       {placing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                       Place order
                     </Button>
+                    {waLink() ? (
+                      <Button variant="outline" className="w-full text-sm" onClick={orderViaWhatsApp}>
+                        <MessageCircle className="h-4 w-4 mr-2" /> Order via WhatsApp instead
+                      </Button>
+                    ) : null}
                     <p className="text-[10px] text-muted-foreground text-center">
                       The store will confirm your order and share payment details on WhatsApp.
                     </p>
@@ -512,6 +645,25 @@ export default function Store() {
                 className={`shrink-0 text-[11px] px-3 py-1.5 rounded-full border transition-colors ${activeTag === t.id ? "bg-foreground text-background" : "bg-card text-muted-foreground"}`}
               >
                 {t.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {categories.length > 1 ? (
+          <div className="flex gap-2 overflow-x-auto pb-1 mt-2">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`shrink-0 text-[11px] px-3 py-1.5 rounded-full border transition-colors ${!activeCategory ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+            >
+              All categories
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setActiveCategory(activeCategory === c ? null : c)}
+                className={`shrink-0 text-[11px] px-3 py-1.5 rounded-full border transition-colors ${activeCategory === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}
+              >
+                {c}
               </button>
             ))}
           </div>

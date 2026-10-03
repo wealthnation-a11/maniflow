@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, business_name, store_slug, phone, payment_details, payout_details, payouts_enabled, plan")
+      .select("id, business_name, store_slug, phone, payment_details, payout_details, payouts_enabled, plan, delivery_zones")
       .ilike("store_slug", slug)
       .maybeSingle();
 
@@ -78,7 +78,56 @@ Deno.serve(async (req) => {
 
     if (lines.length === 0) return json({ error: "No available items in your cart" }, 400);
 
-    const amount = lines.reduce((sum, l) => sum + l.subtotal, 0);
+    const subtotal = lines.reduce((sum, l) => sum + l.subtotal, 0);
+
+    // Delivery zone (looked up server-side so the fee can't be tampered with)
+    const zones = Array.isArray(profile.delivery_zones) ? profile.delivery_zones as Array<{ name: string; fee: number }> : [];
+    const zoneName = String(body.delivery_zone ?? "").trim();
+    let deliveryFee = 0;
+    let deliveryZone: string | null = null;
+    if (zones.length > 0) {
+      const z = zones.find((x) => String(x?.name ?? "") === zoneName);
+      if (!z) {
+        if (!body.preview) return json({ error: "Please choose a delivery option" }, 400);
+      } else {
+        deliveryZone = z.name;
+        deliveryFee = Math.max(0, Number(z.fee) || 0);
+      }
+    }
+
+    // Promo code
+    const codeInput = String(body.discount_code ?? "").trim().toUpperCase().slice(0, 40);
+    let discountAmount = 0;
+    let discountCode: string | null = null;
+    let discountId: string | null = null;
+    let discountError: string | null = null;
+    if (codeInput) {
+      const { data: dc } = await supabase
+        .from("discount_codes")
+        .select("id, code, discount_type, discount_value, min_order_amount, max_uses, used_count, active, expires_at")
+        .eq("user_id", profile.id)
+        .ilike("code", codeInput)
+        .maybeSingle();
+      if (!dc || !dc.active) discountError = "That promo code isn't valid";
+      else if (dc.expires_at && new Date(dc.expires_at) < new Date()) discountError = "That promo code has expired";
+      else if (dc.max_uses != null && dc.used_count >= dc.max_uses) discountError = "That promo code has been used up";
+      else if (subtotal < Number(dc.min_order_amount)) discountError = `Spend at least ₦${Number(dc.min_order_amount).toLocaleString()} to use this code`;
+      else {
+        discountAmount = dc.discount_type === "percent"
+          ? Math.round(subtotal * Math.min(100, Number(dc.discount_value)) / 100)
+          : Math.min(subtotal, Number(dc.discount_value));
+        discountCode = dc.code;
+        discountId = dc.id;
+      }
+      if (discountError && !body.preview) return json({ error: discountError }, 400);
+    }
+
+    const amount = Math.max(0, subtotal - discountAmount + deliveryFee);
+
+    if (body.preview) {
+      return json({ ok: true, subtotal, delivery_fee: deliveryFee, discount_amount: discountAmount, discount_code: discountCode, discount_error: discountError, amount });
+    }
+
     const productName =
       lines.length === 1 ? lines[0].name : `${lines[0].name} + ${lines.length - 1} more`;
 
@@ -97,11 +146,41 @@ Deno.serve(async (req) => {
         source: "store",
         store_slug: profile.store_slug,
         note,
+        delivery_zone: deliveryZone,
+        delivery_fee: deliveryFee,
+        discount_code: discountCode,
+        discount_amount: discountAmount,
       })
       .select("id, amount, tracking_code")
       .single();
 
     if (orderErr || !order) return json({ error: "Could not place your order. Please try again." }, 500);
+
+    if (discountId) {
+      const { data: cur } = await supabase.from("discount_codes").select("used_count").eq("id", discountId).maybeSingle();
+      await supabase.from("discount_codes").update({ used_count: (cur?.used_count ?? 0) + 1 }).eq("id", discountId);
+    }
+
+    // Keep the owner's customer list up to date (repeat buyers matched by phone)
+    try {
+      const { data: existing } = await supabase
+        .from("customers").select("id, total_orders, total_spent")
+        .eq("user_id", profile.id).eq("phone", customerPhone).maybeSingle();
+      const now = new Date().toISOString();
+      if (existing) {
+        await supabase.from("customers").update({
+          name: customerName,
+          total_orders: (existing.total_orders ?? 0) + 1,
+          total_spent: Number(existing.total_spent ?? 0) + amount,
+          last_order_at: now,
+        }).eq("id", existing.id);
+      } else {
+        await supabase.from("customers").insert({
+          user_id: profile.id, name: customerName, phone: customerPhone, platform: "whatsapp",
+          total_orders: 1, total_spent: amount, last_order_at: now,
+        });
+      }
+    } catch (_) { /* non-blocking */ }
 
 
     await supabase.from("store_events").insert({
