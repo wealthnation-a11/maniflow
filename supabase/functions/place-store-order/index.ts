@@ -156,6 +156,32 @@ Deno.serve(async (req) => {
 
     if (orderErr || !order) return json({ error: "Could not place your order. Please try again." }, 500);
 
+    if (discountId) {
+      const { data: cur } = await supabase.from("discount_codes").select("used_count").eq("id", discountId).maybeSingle();
+      await supabase.from("discount_codes").update({ used_count: (cur?.used_count ?? 0) + 1 }).eq("id", discountId);
+    }
+
+    // Keep the owner's customer list up to date (repeat buyers matched by phone)
+    try {
+      const { data: existing } = await supabase
+        .from("customers").select("id, total_orders, total_spent")
+        .eq("user_id", profile.id).eq("phone", customerPhone).maybeSingle();
+      const now = new Date().toISOString();
+      if (existing) {
+        await supabase.from("customers").update({
+          name: customerName,
+          total_orders: (existing.total_orders ?? 0) + 1,
+          total_spent: Number(existing.total_spent ?? 0) + amount,
+          last_order_at: now,
+        }).eq("id", existing.id);
+      } else {
+        await supabase.from("customers").insert({
+          user_id: profile.id, name: customerName, phone: customerPhone, platform: "whatsapp",
+          total_orders: 1, total_spent: amount, last_order_at: now,
+        });
+      }
+    } catch (_) { /* non-blocking */ }
+
 
     await supabase.from("store_events").insert({
       user_id: profile.id,
