@@ -18,6 +18,8 @@ function buildSystemPrompt(opts: {
   qaRules: any[];
   paymentDetails: any;
   storeUrl: string;
+  policies?: string;
+  deliveryZones?: any[];
 }) {
   const productLines =
     (opts.products || [])
@@ -52,6 +54,12 @@ ${opts.products?.length ? productLines : "(no products listed yet)"}
 
 KNOWLEDGE / FAQ:
 ${qa}
+
+STORE POLICIES (set by the owner — answer returns, delivery times, pickup etc. from this):
+${opts.policies?.trim() || "(none provided — if asked, say the store will confirm)"}
+
+DELIVERY OPTIONS & FEES:
+${(opts.deliveryZones || []).map((z: any) => `- ${z.name}: ${Number(z.fee) > 0 ? "₦" + Number(z.fee).toLocaleString() : "Free"}`).join("\n") || "(not set — ask for their location and say the store will confirm the fee)"}
 
 PAYMENT DETAILS (share in full the moment the customer agrees to buy or asks how to pay):
 ${payInfo}
@@ -99,7 +107,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await admin
       .from("profiles")
-      .select("id, business_name, ai_tone, plan, payment_details, credits_balance, trial_ends_at, store_slug")
+      .select("id, business_name, ai_tone, plan, payment_details, credits_balance, trial_ends_at, store_slug, store_policies, delivery_zones")
       .ilike("store_slug", slug)
       .maybeSingle();
 
@@ -198,6 +206,8 @@ Deno.serve(async (req) => {
       qaRules: (botConfig?.qa_rules as any[]) || [],
       paymentDetails,
       storeUrl: `/${profile.store_slug}`,
+      policies: (profile as any).store_policies || "",
+      deliveryZones: Array.isArray((profile as any).delivery_zones) ? (profile as any).delivery_zones : [],
     });
 
     const priorTurns: any[] = ((history as any[]) ?? [])
