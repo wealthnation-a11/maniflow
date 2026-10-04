@@ -3,7 +3,7 @@ import { useParams, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Loader2, PackageCheck, Truck, CheckCircle2, Clock, MessageCircle, Copy,
-  CreditCard, Package, Store as StoreIcon,
+  CreditCard, Package, Store as StoreIcon, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,45 @@ type Tracking = {
   proof_status: string | null;
   proof_review_note: string | null;
   proof_submitted_at: string | null;
+  delivery_zone?: string | null;
+  delivery_fee?: number | null;
+  discount_code?: string | null;
+  discount_amount?: number | null;
 };
+
+const esc = (v: unknown) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+function downloadReceipt(o: Tracking) {
+  const naira = (n: number) => `₦${Number(n || 0).toLocaleString()}`;
+  const items = (o.items ?? []).length
+    ? (o.items ?? []).map((l) => `<tr><td>${esc(l.name)}</td><td class="r">${l.quantity}</td><td class="r">${naira(l.price)}</td><td class="r">${naira(l.subtotal)}</td></tr>`).join("")
+    : `<tr><td colspan="4">${esc(o.product_name)}</td></tr>`;
+  const subtotal = (o.items ?? []).reduce((a, l) => a + Number(l.subtotal || 0), 0) || Number(o.amount);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Receipt ${esc(o.tracking_code)}</title>
+<style>body{font-family:Arial,sans-serif;color:#222;max-width:640px;margin:32px auto;padding:0 16px}
+header{display:flex;align-items:center;gap:12px;border-bottom:2px solid #222;padding-bottom:12px}
+img{height:48px;width:48px;object-fit:cover;border-radius:8px}h1{font-size:20px;margin:0}
+table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}th,td{padding:8px 4px;border-bottom:1px solid #ddd;text-align:left}
+.r{text-align:right}.meta{font-size:12px;color:#555;margin-top:12px;line-height:1.6}.tot td{font-weight:bold;border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;background:#e6f6ec;color:#167a3e;font-size:11px;font-weight:bold}
+footer{margin-top:24px;font-size:11px;color:#888;text-align:center}@media print{button{display:none}}</style></head><body>
+<header>${o.logo_url ? `<img src="${esc(o.logo_url)}" alt="">` : ""}<div><h1>${esc(o.business_name)}</h1><div style="font-size:12px;color:#555">Payment receipt</div></div></header>
+<div class="meta">Receipt for: <b>${esc(o.customer_name)}</b><br>Order code: <b>${esc(o.tracking_code.toUpperCase())}</b><br>
+Order date: ${new Date(o.created_at).toLocaleString()}<br>${o.paid_at ? `Paid on: ${new Date(o.paid_at).toLocaleString()}<br>` : ""}
+Status: <span class="badge">${o.payment_status === "paid" ? "PAID" : "AWAITING PAYMENT"}</span></div>
+<table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead><tbody>${items}
+<tr><td colspan="3" class="r">Subtotal</td><td class="r">${naira(subtotal)}</td></tr>
+${Number(o.discount_amount) > 0 ? `<tr><td colspan="3" class="r">Promo ${esc(o.discount_code)}</td><td class="r">-${naira(Number(o.discount_amount))}</td></tr>` : ""}
+${o.delivery_zone ? `<tr><td colspan="3" class="r">Delivery (${esc(o.delivery_zone)})</td><td class="r">${Number(o.delivery_fee) > 0 ? naira(Number(o.delivery_fee)) : "Free"}</td></tr>` : ""}
+<tr class="tot"><td colspan="3" class="r">Total</td><td class="r">${naira(Number(o.amount))}</td></tr></tbody></table>
+<footer>Powered by Maniflow</footer>
+<p style="text-align:center"><button onclick="window.print()" style="padding:8px 16px">Save as PDF / Print</button></p>
+<script>setTimeout(function(){window.print()},400)</script></body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast.error("Please allow pop-ups to download your receipt"); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
 
 const STEPS = [
   { key: "pending", label: "Order placed", icon: Clock },
@@ -194,11 +232,27 @@ export default function TrackOrder() {
               <p className="text-xs text-muted-foreground">{order.product_name}</p>
             ) : null}
           </div>
+          {Number(order.discount_amount) > 0 ? (
+            <div className="flex items-center justify-between text-xs text-success mt-2">
+              <span>Promo ({order.discount_code})</span><span>-₦{Number(order.discount_amount).toLocaleString()}</span>
+            </div>
+          ) : null}
+          {order.delivery_zone ? (
+            <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+              <span>Delivery ({order.delivery_zone})</span>
+              <span>{Number(order.delivery_fee) > 0 ? `₦${Number(order.delivery_fee).toLocaleString()}` : "Free"}</span>
+            </div>
+          ) : null}
           <div className="flex items-center justify-between border-t mt-3 pt-3 text-sm font-semibold">
             <span>Total</span>
             <span className="text-primary">₦{Number(order.amount).toLocaleString()}</span>
           </div>
           {order.note ? <p className="text-[11px] text-muted-foreground mt-2">Note: {order.note}</p> : null}
+          {order.payment_status === "paid" ? (
+            <Button size="sm" variant="outline" className="w-full mt-3 text-xs" onClick={() => downloadReceipt(order)}>
+              <Download className="h-3.5 w-3.5 mr-1.5" /> Download receipt (PDF)
+            </Button>
+          ) : null}
         </section>
 
         {/* Payment */}

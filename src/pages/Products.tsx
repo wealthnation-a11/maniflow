@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import ProductImageUpload from "@/components/ProductImageUpload";
 import StoreLinkCard from "@/components/StoreLinkCard";
 import StoreThemePicker from "@/components/StoreThemePicker";
+import StoreSetupPanel from "@/components/StoreSetupPanel";
 
 import StoreAnalyticsCard from "@/components/StoreAnalyticsCard";
 import { PRODUCT_TAGS, tagMeta } from "@/lib/productTags";
@@ -262,6 +263,7 @@ export default function Products() {
       </div>
 
       <StoreLinkCard />
+      <StoreSetupPanel />
       <StoreThemePicker />
       <StoreAnalyticsCard />
 
@@ -307,7 +309,7 @@ export default function Products() {
                     })}
                   </div>
                 ) : null}
-                {p.stock <= 5 && p.stock > 0 && <span className="absolute top-1.5 right-1.5 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-warning/90 text-warning-foreground">Low Stock</span>}
+                {p.track_inventory && p.stock <= (p.low_stock_threshold ?? 5) && p.stock > 0 && <span className="absolute top-1.5 right-1.5 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-warning/90 text-warning-foreground">Only {p.stock} left</span>}
                 {p.stock === 0 && <span className="absolute top-1.5 right-1.5 text-[9px] sm:text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/90 text-destructive-foreground">Out of Stock</span>}
               </div>
               <div className="p-2.5 sm:p-4">

@@ -291,6 +291,17 @@ export default function Customers() {
                 ))}
               </div>
             </div>
+            {selectedCustomer.phone ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild className="gradient-primary text-primary-foreground">
+                  <a
+                    href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, "").replace(/^0/, "234")}?text=${encodeURIComponent(`Hi ${selectedCustomer.name}, `)}`}
+                    target="_blank" rel="noopener noreferrer"
+                  >WhatsApp</a>
+                </Button>
+                <Button asChild variant="outline"><a href={`tel:${selectedCustomer.phone}`}>Call</a></Button>
+              </div>
+            ) : null}
             <Button className="w-full" variant="outline" onClick={() => setSelectedCustomer(null)}>Close</Button>
           </motion.div>
         </div>
