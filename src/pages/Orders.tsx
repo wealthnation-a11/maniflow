@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeSubscription } from "@/lib/realtime";
 import PaymentProofsPanel from "@/components/PaymentProofsPanel";
+import WhatsAppOrderMenu from "@/components/WhatsAppOrderMenu";
 
 type Order = {
   id: string;
@@ -29,6 +30,7 @@ type Order = {
   status: string;
   payment_status: string;
   created_at: string;
+  tracking_code?: string | null;
 };
 
 const statusStyles: Record<string, string> = {
@@ -73,7 +75,7 @@ export default function Orders() {
       setOrders(data.map((o: any) => ({
         id: o.id, customer_name: o.customer_name, customer_phone: o.customer_phone || "",
         product_name: o.product_name || "", amount: Number(o.amount), platform: o.platform,
-        status: o.status, payment_status: o.payment_status, created_at: o.created_at,
+        status: o.status, payment_status: o.payment_status, created_at: o.created_at, tracking_code: o.tracking_code ?? null,
       })));
       setLastSyncAt(Date.now());
     }
@@ -346,7 +348,7 @@ export default function Orders() {
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${paymentStyles[o.payment_status]}`}>{o.payment_status}</span>
                   <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">{o.platform}</span>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setInvoiceOrder(o)}><FileText className="h-3 w-3" /> Invoice</Button>
+                <div className="flex"><WhatsAppOrderMenu order={o} phone={o.customer_phone} business={businessName} /><Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setInvoiceOrder(o)}><FileText className="h-3 w-3" /> Invoice</Button></div>
               </div>
             </motion.div>
           ))}
@@ -383,6 +385,7 @@ export default function Orders() {
                     <td className="px-4 py-3"><span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${statusStyles[o.status]}`}>{o.status}</span></td>
                     <td className="px-4 py-3"><span className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full capitalize ${paymentStyles[o.payment_status]}`}>{o.payment_status}</span></td>
                     <td className="px-4 py-3 text-center">
+                      <div className="inline-flex"><WhatsAppOrderMenu order={o} phone={o.customer_phone} business={businessName} /></div>
                       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5" onClick={() => setInvoiceOrder(o)}><FileText className="h-3.5 w-3.5" /> Invoice</Button>
                     </td>
                   </motion.tr>

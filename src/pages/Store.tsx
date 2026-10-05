@@ -1,3 +1,5 @@
+import { Share2 } from "lucide-react";
+import { productShareText, waUrl, STORE_ORIGIN } from "@/lib/whatsapp";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -754,6 +756,14 @@ export default function Store() {
                           <Bot className="h-3.5 w-3.5 mr-1.5" /> Make an offer
                         </Button>
                       ) : null}
+                      <a
+                        href={waUrl(productShareText(p, store.business_name || "", `${STORE_ORIGIN}/${store.store_slug}`))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground hover:text-foreground py-1"
+                      >
+                        <Share2 className="h-3 w-3" /> Share on WhatsApp
+                      </a>
                       {waLink(p) ? (
                         <a
                           href={waLink(p)!}
