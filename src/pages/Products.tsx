@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Share2 } from "lucide-react";
+import { productShareText, waUrl, STORE_ORIGIN } from "@/lib/whatsapp";
 import { Plus, Pencil, Trash2, Package, X, Upload, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +62,16 @@ export default function Products() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [shareInfo, setShareInfo] = useState<{ slug: string; business: string }>({ slug: "", business: "" });
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("store_slug, business_name").eq("id", user.id).maybeSingle()
+      .then(({ data }) => setShareInfo({ slug: (data as any)?.store_slug || "", business: (data as any)?.business_name || "" }));
+  }, [user]);
+  const shareProduct = (p: { name: string; price: number }) => {
+    if (!shareInfo.slug) { toast.error("Set your shop link first to share products"); return; }
+    window.open(waUrl(productShareText(p, shareInfo.business, `${STORE_ORIGIN}/${shareInfo.slug}`)), "_blank", "noopener");
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -340,6 +352,7 @@ export default function Products() {
                 </AnimatePresence>
                 <div className="flex gap-1.5 sm:gap-2 mt-2 sm:mt-3">
                   <Button variant="outline" size="sm" className="flex-1 text-[10px] sm:text-xs h-7 sm:h-8" onClick={() => openEdit(p)}><Pencil className="h-3 w-3 mr-0.5 sm:mr-1" /> Edit</Button>
+                  <Button variant="outline" size="sm" className="h-7 sm:h-8 w-7 sm:w-auto px-0 sm:px-2 text-success" title="Share to WhatsApp Status" onClick={() => shareProduct(p)}><Share2 className="h-3 w-3" /></Button>
                   <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 h-7 sm:h-8 w-7 sm:w-auto px-0 sm:px-2" onClick={() => setDeleteId(p.id)}><Trash2 className="h-3 w-3" /></Button>
                 </div>
               </div>
