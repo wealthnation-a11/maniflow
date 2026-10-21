@@ -144,6 +144,55 @@ Deno.serve(async (req: Request) => {
         if (changes?.field === "instagram" || entry.id?.startsWith("17")) platform = "instagram";
       }
 
+      // ── Comment-to-DM (FB feed comments / IG comments) ──
+      const ch = entry.changes?.[0];
+      const isComment = ch && ((ch.field === "comments") || (ch.field === "feed" && ch.value?.item === "comment" && ch.value?.verb === "add"));
+      if (isComment) {
+        const v = ch.value || {};
+        const commentId = v.comment_id || v.id;
+        const commenterId = v.from?.id;
+        const commentText = String(v.message || v.text || "").toLowerCase();
+        const { data: conn } = await supabaseAdmin.from("platform_connections").select("*")
+          .eq("page_id", entry.id).in("platform", ["instagram", "facebook"]).maybeSingle();
+        if (!conn || !commentId || commenterId === entry.id) {
+          return new Response(JSON.stringify({ status: "comment ignored" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const plat = conn.platform;
+        const { data: rules } = await supabaseAdmin.from("autoresponder_rules").select("*")
+          .eq("user_id", conn.user_id).eq("is_active", true).eq("trigger_type", "comment");
+        const rule = (rules || []).find((r: any) => (r.platform === "all" || r.platform === plat) &&
+          ((r.keywords || []).length === 0 || r.keywords.some((k: string) => {
+            const kw = String(k).toLowerCase().trim();
+            return r.match_type === "exact" ? commentText.trim() === kw : commentText.includes(kw);
+          })));
+        if (rule) {
+          const { data: p } = await supabaseAdmin.from("profiles").select("business_name, store_slug, payment_details").eq("id", conn.user_id).maybeSingle();
+          const pd: any = p?.payment_details || {};
+          const fill = (s: string) => s
+            .replaceAll("{business_name}", p?.business_name || "")
+            .replaceAll("{store_url}", p?.store_slug ? `https://maniflow.lovable.app/${p.store_slug}` : "")
+            .replaceAll("{bank_name}", pd.bankName || "")
+            .replaceAll("{account_number}", pd.accountNumber || "")
+            .replaceAll("{account_name}", pd.accountName || "");
+          const auth = { Authorization: `Bearer ${conn.access_token}`, "Content-Type": "application/json" };
+          // Private DM reply to the comment
+          await fetch(`https://graph.facebook.com/v21.0/${entry.id}/messages`, {
+            method: "POST", headers: auth,
+            body: JSON.stringify({ recipient: { comment_id: commentId }, message: { text: fill(rule.response_text) } }),
+          }).then(async (r) => { if (!r.ok) console.error("Private reply failed", r.status, await r.text()); });
+          // Public reply
+          if (rule.public_reply_text) {
+            const url = plat === "instagram"
+              ? `https://graph.facebook.com/v21.0/${commentId}/replies`
+              : `https://graph.facebook.com/v21.0/${commentId}/comments`;
+            await fetch(url, { method: "POST", headers: auth, body: JSON.stringify({ message: fill(rule.public_reply_text) }) })
+              .then(async (r) => { if (!r.ok) console.error("Public reply failed", r.status, await r.text()); });
+          }
+          await supabaseAdmin.from("autoresponder_rules").update({ hits: (rule.hits || 0) + 1 }).eq("id", rule.id);
+        }
+        return new Response(JSON.stringify({ status: rule ? "comment_replied" : "comment_no_rule" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       if (!messageText && entry.changes?.[0]) {
         const changes = entry.changes[0];
         if (changes.field === "messages" || changes.field === "feed") {
@@ -208,6 +257,49 @@ Deno.serve(async (req: Request) => {
         conversation_id: conversationId, role: "customer",
         content: messageText, platform_message_id: messageId,
       });
+
+      // ── Autoresponder rules (instant, 0 credits) ──
+      {
+        const { data: rules } = await supabaseAdmin
+          .from("autoresponder_rules").select("*")
+          .eq("user_id", userId).eq("is_active", true);
+        const applicable = (rules || []).filter((r: any) => r.platform === "all" || r.platform === platform);
+        const text = messageText.toLowerCase().trim();
+        let match: any = applicable.find((r: any) => r.trigger_type === "keyword" &&
+          (r.keywords || []).some((k: string) => {
+            const kw = String(k).toLowerCase().trim();
+            if (!kw) return false;
+            return r.match_type === "exact" ? text === kw : text.includes(kw);
+          }));
+        if (!match && !existingConv) match = applicable.find((r: any) => r.trigger_type === "welcome");
+        if (match) {
+          const { data: prof2 } = await supabaseAdmin.from("profiles")
+            .select("store_slug, payment_details").eq("id", userId).maybeSingle();
+          const pd: any = prof2?.payment_details || {};
+          const reply = String(match.response_text)
+            .replaceAll("{business_name}", profile?.business_name || "")
+            .replaceAll("{store_url}", prof2?.store_slug ? `https://maniflow.lovable.app/${prof2.store_slug}` : "")
+            .replaceAll("{bank_name}", pd.bankName || "")
+            .replaceAll("{account_number}", pd.accountNumber || "")
+            .replaceAll("{account_name}", pd.accountName || "");
+          const ep = platform === "instagram"
+            ? `https://graph.facebook.com/v21.0/${pageId}/messages`
+            : `https://graph.facebook.com/v21.0/me/messages`;
+          const r = await fetch(ep, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${connection.access_token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ recipient: { id: senderId }, message: { text: reply } }),
+          });
+          if (r.ok) {
+            await supabaseAdmin.from("messages").insert({ conversation_id: conversationId, role: "ai", content: reply });
+            await supabaseAdmin.from("autoresponder_rules").update({ hits: (match.hits || 0) + 1 }).eq("id", match.id);
+            return new Response(JSON.stringify({ status: "autoresponder", rule: match.id }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          console.error("Autoresponder send failed:", r.status, await r.text());
+        }
+      }
 
       if (!planActive) {
         await notifyOnce(supabaseAdmin, userId, "trial_expired",

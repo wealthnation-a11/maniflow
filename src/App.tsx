@@ -18,6 +18,7 @@ import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import RealtimeSettings from "./pages/RealtimeSettings";
 import BotConfig from "./pages/BotConfig";
+import Autoresponder from "./pages/Autoresponder";
 import ChatAssistant from "./pages/ChatAssistant";
 import Onboarding from "./pages/Onboarding";
 import About from "./pages/About";
@@ -69,6 +70,7 @@ const App = () => (
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/campaigns" element={<Campaigns />} />
                   <Route path="/bot-config" element={<BotConfig />} />
+                  <Route path="/autoresponder" element={<Autoresponder />} />
                   <Route path="/chat" element={<ChatAssistant />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/credits" element={<CreditsHistory />} />
