@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      autoresponder_rules: {
+        Row: {
+          created_at: string
+          hits: number
+          id: string
+          is_active: boolean
+          keywords: string[]
+          match_type: string
+          name: string
+          platform: string
+          public_reply_text: string
+          response_text: string
+          trigger_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hits?: number
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          match_type?: string
+          name?: string
+          platform?: string
+          public_reply_text?: string
+          response_text?: string
+          trigger_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hits?: number
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          match_type?: string
+          name?: string
+          platform?: string
+          public_reply_text?: string
+          response_text?: string
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bot_configs: {
         Row: {
           bot_settings: Json
