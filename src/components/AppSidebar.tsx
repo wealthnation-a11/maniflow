@@ -18,6 +18,7 @@ import {
   
   Bell,
   Bot,
+  Zap,
   Sparkles,
   Coins,
   FlaskConical,
@@ -30,6 +31,7 @@ import ManiflowLogo from "./ManiflowLogo";
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard", badgeKey: null },
   { label: "Inbox", icon: MessageSquare, path: "/inbox", badgeKey: "inbox" as const },
+  { label: "Autoresponder", icon: Zap, path: "/autoresponder", badgeKey: null },
   { label: "Bot Config", icon: Bot, path: "/bot-config", badgeKey: null },
   { label: "Test Panel", icon: FlaskConical, path: "/test", badgeKey: null },
   { label: "AI Assistant", icon: Sparkles, path: "/chat", badgeKey: null },
