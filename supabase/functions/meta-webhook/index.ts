@@ -209,6 +209,49 @@ Deno.serve(async (req: Request) => {
         content: messageText, platform_message_id: messageId,
       });
 
+      // ── Autoresponder rules (instant, 0 credits) ──
+      {
+        const { data: rules } = await supabaseAdmin
+          .from("autoresponder_rules").select("*")
+          .eq("user_id", userId).eq("is_active", true);
+        const applicable = (rules || []).filter((r: any) => r.platform === "all" || r.platform === platform);
+        const text = messageText.toLowerCase().trim();
+        let match: any = applicable.find((r: any) => r.trigger_type === "keyword" &&
+          (r.keywords || []).some((k: string) => {
+            const kw = String(k).toLowerCase().trim();
+            if (!kw) return false;
+            return r.match_type === "exact" ? text === kw : text.includes(kw);
+          }));
+        if (!match && !existingConv) match = applicable.find((r: any) => r.trigger_type === "welcome");
+        if (match) {
+          const { data: prof2 } = await supabaseAdmin.from("profiles")
+            .select("store_slug, payment_details").eq("id", userId).maybeSingle();
+          const pd: any = prof2?.payment_details || {};
+          const reply = String(match.response_text)
+            .replaceAll("{business_name}", profile?.business_name || "")
+            .replaceAll("{store_url}", prof2?.store_slug ? `https://maniflow.lovable.app/${prof2.store_slug}` : "")
+            .replaceAll("{bank_name}", pd.bankName || "")
+            .replaceAll("{account_number}", pd.accountNumber || "")
+            .replaceAll("{account_name}", pd.accountName || "");
+          const ep = platform === "instagram"
+            ? `https://graph.facebook.com/v21.0/${pageId}/messages`
+            : `https://graph.facebook.com/v21.0/me/messages`;
+          const r = await fetch(ep, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${connection.access_token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ recipient: { id: senderId }, message: { text: reply } }),
+          });
+          if (r.ok) {
+            await supabaseAdmin.from("messages").insert({ conversation_id: conversationId, role: "ai", content: reply });
+            await supabaseAdmin.from("autoresponder_rules").update({ hits: (match.hits || 0) + 1 }).eq("id", match.id);
+            return new Response(JSON.stringify({ status: "autoresponder", rule: match.id }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          console.error("Autoresponder send failed:", r.status, await r.text());
+        }
+      }
+
       if (!planActive) {
         await notifyOnce(supabaseAdmin, userId, "trial_expired",
           "Trial expired", "Your free trial ended. Upgrade to keep your AI bot replying.",
