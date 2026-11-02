@@ -1,3 +1,4 @@
+import { formatMoney, currencyGuide } from "../_shared/currency.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -25,6 +26,7 @@ function buildSystemPrompt(opts: {
   products: any[];
   qaRules: any[];
   paymentDetails: any;
+  currency?: string | null;
   botSettings: any;
 }) {
   const productLines = (opts.products || []).map((p: any) => {
@@ -32,7 +34,7 @@ function buildSystemPrompt(opts: {
     const min = Number(p.min_price ?? p.minPrice ?? price);
     const negotiable = min > 0 && min < price;
     const stock = p.stock != null ? `, stock: ${p.stock}` : "";
-    return `- ${p.name}: ₦${price.toLocaleString()}${negotiable ? ` (negotiable down to ₦${min.toLocaleString()})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
+    return `- ${p.name}: ${formatMoney(price, opts.currency)}${negotiable ? ` (negotiable down to ${formatMoney(min, opts.currency)})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
   }).join("\n") || "(no products configured yet — apologise and offer to take a manual order)";
 
   const qa = (opts.qaRules || []).map((r: any) =>
@@ -56,6 +58,8 @@ ${qa}
 
 PAYMENT DETAILS (share IMMEDIATELY and in full the moment the customer agrees to buy or asks for account/payment info):
 ${payInfo}
+
+${currencyGuide(opts.currency)}
 
 STRICT NEGOTIATION RULES:
 1. If a product is firm, politely refuse to lower the price.
@@ -167,7 +171,7 @@ Deno.serve(async (req: Request) => {
 
       const [{ data: botConfig }, { data: profile }, { data: products }] = await Promise.all([
         supabaseAdmin.from("bot_configs").select("*").eq("user_id", userId).maybeSingle(),
-        supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, trial_ends_at, credits_balance, payment_details").eq("id", userId).maybeSingle(),
+        supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, trial_ends_at, credits_balance, payment_details, currency").eq("id", userId).maybeSingle(),
         supabaseAdmin.from("products").select("name, price, description, stock, variants").eq("user_id", userId),
       ]);
 
@@ -235,6 +239,7 @@ Deno.serve(async (req: Request) => {
           : (botConfig?.payment_details || {});
 
       const systemPrompt = buildSystemPrompt({
+        currency: profile?.currency,
         customerName,
         businessName: profile?.business_name || "",
         aiTone: profile?.ai_tone || "friendly",

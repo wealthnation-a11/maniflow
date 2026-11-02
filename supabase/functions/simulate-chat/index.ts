@@ -1,3 +1,4 @@
+import { formatMoney, currencyGuide } from "../_shared/currency.ts";
 // Test-only simulator: builds the SAME system prompt the real webhook builds,
 // calls the AI, and returns the reply + diagnostics. No credit deduction,
 // no real messages sent, no DB writes.
@@ -18,13 +19,14 @@ function buildSystemPrompt(opts: {
   products: any[];
   qaRules: any[];
   paymentDetails: any;
+  currency?: string | null;
 }) {
   const productLines = (opts.products || []).map((p: any) => {
     const price = Number(p.price || 0);
     const min = Number(p.min_price ?? p.minPrice ?? price);
     const negotiable = min > 0 && min < price;
     const stock = p.stock != null ? `, stock: ${p.stock}` : "";
-    return `- ${p.name}: ₦${price.toLocaleString()}${negotiable ? ` (negotiable down to ₦${min.toLocaleString()})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
+    return `- ${p.name}: ${formatMoney(price, opts.currency)}${negotiable ? ` (negotiable down to ${formatMoney(min, opts.currency)})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
   }).join("\n") || "(no products configured yet — apologise and offer to take a manual order)";
 
   const qa = (opts.qaRules || []).map((r: any) =>
@@ -48,6 +50,8 @@ ${qa}
 
 PAYMENT DETAILS (share IMMEDIATELY and in full the moment the customer agrees to buy or asks for account/payment info):
 ${payInfo}
+
+${currencyGuide(opts.currency)}
 
 STRICT NEGOTIATION RULES:
 1. If a product is firm, politely refuse to lower the price.
@@ -103,8 +107,8 @@ Deno.serve(async (req: Request) => {
     );
 
     const [{ data: profile }, { data: botConfig }, { data: products }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, payment_details, credits_balance, trial_ends_at").eq("id", user.id).maybeSingle(),
-      supabaseAdmin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", user.id).maybeSingle(),
+      supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, payment_details, currency, credits_balance, trial_ends_at").eq("id", user.id).maybeSingle(),
+      supabaseAdmin.from("bot_configs").select("qa_rules, payment_details, currency").eq("user_id", user.id).maybeSingle(),
       supabaseAdmin.from("products").select("name, price, description, stock, variants").eq("user_id", user.id),
     ]);
 
@@ -114,6 +118,7 @@ Deno.serve(async (req: Request) => {
         : (botConfig?.payment_details || {});
 
     const systemPrompt = buildSystemPrompt({
+        currency: profile?.currency,
       customerName,
       businessName: profile?.business_name || "",
       aiTone: profile?.ai_tone || "friendly",

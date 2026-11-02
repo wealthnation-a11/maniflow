@@ -1,3 +1,4 @@
+import { formatMoney, currencyGuide } from "../_shared/currency.ts";
 // Public storefront chat: shoppers talk to the store owner's Maniflow bot.
 // Runs with service role, deducts the owner's credits, and mirrors the
 // conversation into the owner's inbox.
@@ -17,6 +18,7 @@ function buildSystemPrompt(opts: {
   products: any[];
   qaRules: any[];
   paymentDetails: any;
+  currency?: string | null;
   storeUrl: string;
   policies?: string;
   deliveryZones?: any[];
@@ -28,7 +30,7 @@ function buildSystemPrompt(opts: {
         const min = Number(p.min_price ?? price);
         const negotiable = min > 0 && min < price;
         const stock = p.stock != null ? `, stock: ${p.stock}` : "";
-        return `- ${p.name}: ₦${price.toLocaleString()}${negotiable ? ` (negotiable down to ₦${min.toLocaleString()})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
+        return `- ${p.name}: ${formatMoney(price, opts.currency)}${negotiable ? ` (negotiable down to ${formatMoney(min, opts.currency)})` : " (firm)"}${stock}${p.description ? ` — ${p.description}` : ""}`;
       })
       .join("\n") || "(no products listed yet)";
 
@@ -59,10 +61,12 @@ STORE POLICIES (set by the owner — answer returns, delivery times, pickup etc.
 ${opts.policies?.trim() || "(none provided — if asked, say the store will confirm)"}
 
 DELIVERY OPTIONS & FEES:
-${(opts.deliveryZones || []).map((z: any) => `- ${z.name}: ${Number(z.fee) > 0 ? "₦" + Number(z.fee).toLocaleString() : "Free"}`).join("\n") || "(not set — ask for their location and say the store will confirm the fee)"}
+${(opts.deliveryZones || []).map((z: any) => `- ${z.name}: ${Number(z.fee) > 0 ? formatMoney(Number(z.fee), opts.currency) : "Free"}`).join("\n") || "(not set — ask for their location and say the store will confirm the fee)"}
 
 PAYMENT DETAILS (share in full the moment the customer agrees to buy or asks how to pay):
 ${payInfo}
+
+${currencyGuide(opts.currency)}
 
 RULES:
 1. Help with pricing, availability, shipping and delivery questions.
@@ -107,7 +111,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await admin
       .from("profiles")
-      .select("id, business_name, ai_tone, plan, payment_details, credits_balance, trial_ends_at, store_slug, store_policies, delivery_zones")
+      .select("id, business_name, ai_tone, plan, payment_details, currency, credits_balance, trial_ends_at, store_slug, store_policies, delivery_zones")
       .ilike("store_slug", slug)
       .maybeSingle();
 
@@ -183,7 +187,7 @@ Deno.serve(async (req) => {
     }
 
     const [{ data: botConfig }, { data: products }, { data: history }] = await Promise.all([
-      admin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", profile.id).maybeSingle(),
+      admin.from("bot_configs").select("qa_rules, payment_details, currency").eq("user_id", profile.id).maybeSingle(),
       admin.from("products").select("name, price, min_price, description, stock").eq("user_id", profile.id).limit(60),
       admin
         .from("messages")
@@ -199,6 +203,7 @@ Deno.serve(async (req) => {
         : botConfig?.payment_details || {};
 
     const systemPrompt = buildSystemPrompt({
+        currency: profile.currency,
       customerName,
       businessName: profile.business_name || "",
       aiTone: profile.ai_tone || "friendly",
