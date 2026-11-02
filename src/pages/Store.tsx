@@ -1,3 +1,4 @@
+import { formatMoney, detectVisitorCurrency, fetchRates, getCurrency } from "@/lib/currency";
 import { Share2 } from "lucide-react";
 import { productShareText, waUrl, STORE_ORIGIN } from "@/lib/whatsapp";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -74,6 +75,16 @@ export default function Store() {
   const [searchParams] = useSearchParams();
   const [store, setStore] = useState<StoreInfo | null>(null);
   const [products, setProducts] = useState<StoreProduct[]>([]);
+  const fmt = (n: number | string) => formatMoney(n, store?.currency);
+  const [visitorCur, setVisitorCur] = useState<string | null>(null);
+  const [rate, setRate] = useState<number | null>(null);
+  useEffect(() => {
+    const base = getCurrency(store?.currency).code;
+    const local = detectVisitorCurrency();
+    if (!store || !local || local === base) return;
+    fetchRates(base).then((r) => { if (r?.[local]) { setVisitorCur(local); setRate(r[local]); } });
+  }, [store]);
+  const approx = (n: number) => (visitorCur && rate ? `≈ ${formatMoney(Math.round(n * rate), visitorCur)}` : null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -245,21 +256,21 @@ export default function Store() {
       return;
     }
     setPromo({ code: d.discount_code, amount: Number(d.discount_amount) });
-    toast.success(`Code ${d.discount_code} applied — you save ₦${Number(d.discount_amount).toLocaleString()}`);
+    toast.success(`Code ${d.discount_code} applied — you save ${fmt(Number(d.discount_amount))}`);
   };
 
   const orderViaWhatsApp = () => {
     const phoneDigits = (store?.whatsapp ?? "").replace(/[^\d]/g, "");
     if (!phoneDigits || lines.length === 0) return;
-    const summary = lines.map((l) => `• ${l.product.name} x${l.quantity} — ₦${(l.product.price * l.quantity).toLocaleString()}`).join("\n");
+    const summary = lines.map((l) => `• ${l.product.name} x${l.quantity} — ${fmt((l.product.price * l.quantity))}`).join("\n");
     const extra = [
-      zone ? `Delivery: ${zone}${zoneFee ? ` (₦${zoneFee.toLocaleString()})` : " (Free)"}` : "",
-      promo ? `Promo: ${promo.code} (-₦${promo.amount.toLocaleString()})` : "",
+      zone ? `Delivery: ${zone}${zoneFee ? ` (${fmt(zoneFee)})` : " (Free)"}` : "",
+      promo ? `Promo: ${promo.code} (-${fmt(promo.amount)})` : "",
       name ? `Name: ${name}` : "",
       phone ? `Phone: ${phone}` : "",
       note ? `Note: ${note}` : "",
     ].filter(Boolean).join("\n");
-    const text = `Hi ${store?.business_name}, I'd like to order:\n${summary}\n${extra ? extra + "\n" : ""}Total: ₦${grandTotal.toLocaleString()}`;
+    const text = `Hi ${store?.business_name}, I'd like to order:\n${summary}\n${extra ? extra + "\n" : ""}Total: ${fmt(grandTotal)}`;
     window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
   };
 
@@ -288,7 +299,7 @@ export default function Store() {
   const waLink = (p?: StoreProduct) => {
     const phoneDigits = (store?.whatsapp ?? "").replace(/[^\d]/g, "");
     const text = p
-      ? `Hi ${store?.business_name}, I'd like to order "${p.name}" (₦${p.price.toLocaleString()}).`
+      ? `Hi ${store?.business_name}, I'd like to order "${p.name}" (${fmt(p.price)}).`
       : `Hi ${store?.business_name}, I'd like to place an order.`;
     return phoneDigits ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}` : null;
   };
@@ -331,7 +342,7 @@ export default function Store() {
     const phoneDigits = (store.whatsapp ?? "").replace(/[^\d]/g, "");
     if (phoneDigits) {
       const summary = lines.map((l) => `• ${l.product.name} x${l.quantity}`).join("\n");
-      const text = `Hi ${store.business_name}, I just placed an order on your store page:\n${summary}\nTotal: ₦${Number((data as any).amount).toLocaleString()}\nName: ${name}\nPhone: ${phone}${note ? `\nNote: ${note}` : ""}`;
+      const text = `Hi ${store.business_name}, I just placed an order on your store page:\n${summary}\nTotal: ${fmt(Number((data as any).amount))}\nName: ${name}\nPhone: ${phone}${note ? `\nNote: ${note}` : ""}`;
       window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     }
   };
@@ -420,12 +431,12 @@ export default function Store() {
                     <CheckCircle2 className="h-10 w-10 text-success mx-auto mb-3" />
                     <p className="font-heading font-semibold text-sm">Order placed</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {store.business_name} received your order of ₦{placed.amount.toLocaleString()} and will confirm shortly.
+                      {store.business_name} received your order of {fmt(placed.amount)} and will confirm shortly.
                     </p>
 
                     {placed.pay_to?.account_number ? (
                       <div className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-left">
-                        <p className="text-[11px] font-semibold">Pay ₦{placed.amount.toLocaleString()} to</p>
+                        <p className="text-[11px] font-semibold">Pay {fmt(placed.amount)} to</p>
                         <dl className="mt-1.5 space-y-1 text-[11px]">
                           <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Bank</dt><dd className="font-medium text-right">{placed.pay_to.bank_name || "—"}</dd></div>
                           <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Account number</dt><dd className="font-mono font-semibold text-right">{placed.pay_to.account_number}</dd></div>
@@ -499,7 +510,7 @@ export default function Store() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium truncate">{l.product.name}</p>
-                            <p className="text-[11px] text-muted-foreground">₦{(l.product.price * l.quantity).toLocaleString()}</p>
+                            <p className="text-[11px] text-muted-foreground">{fmt((l.product.price * l.quantity))}</p>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button size="sm" variant="outline" className="h-6 w-6 p-0" onClick={() => setQty(l.product, l.quantity - 1)}>
@@ -533,7 +544,7 @@ export default function Store() {
                               className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs text-left transition-colors ${zone === z.name ? "border-primary bg-primary/10" : "bg-card"}`}
                             >
                               <span className="font-medium">{z.name}</span>
-                              <span className="text-muted-foreground">{Number(z.fee) > 0 ? `₦${Number(z.fee).toLocaleString()}` : "Free"}</span>
+                              <span className="text-muted-foreground">{Number(z.fee) > 0 ? `${fmt(Number(z.fee))}` : "Free"}</span>
                             </button>
                           ))}
                         </div>
@@ -558,16 +569,16 @@ export default function Store() {
                     ) : null}
 
                     <div className="border-t pt-3 space-y-1 text-xs">
-                      <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>₦{cartTotal.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{fmt(cartTotal)}</span></div>
                       {promo ? (
-                        <div className="flex justify-between text-success"><span>Promo ({promo.code})</span><span>-₦{promo.amount.toLocaleString()}</span></div>
+                        <div className="flex justify-between text-success"><span>Promo ({promo.code})</span><span>-{fmt(promo.amount)}</span></div>
                       ) : null}
                       {zones.length > 0 ? (
-                        <div className="flex justify-between text-muted-foreground"><span>Delivery</span><span>{zone ? (zoneFee ? `₦${zoneFee.toLocaleString()}` : "Free") : "—"}</span></div>
+                        <div className="flex justify-between text-muted-foreground"><span>Delivery</span><span>{zone ? (zoneFee ? `${fmt(zoneFee)}` : "Free") : "—"}</span></div>
                       ) : null}
                       <div className="flex items-center justify-between text-sm font-semibold pt-1">
                         <span>Total</span>
-                        <span className="text-primary">₦{grandTotal.toLocaleString()}</span>
+                        <span className="text-primary">{fmt(grandTotal)}</span>
                       </div>
                     </div>
 
@@ -722,10 +733,10 @@ export default function Store() {
 
                   <div className="p-3 flex flex-col flex-1">
                     <h2 className="font-heading font-semibold text-xs sm:text-sm leading-tight line-clamp-2">{p.name}</h2>
-                    <p className="text-primary font-bold text-sm sm:text-base mt-1">₦{p.price.toLocaleString()}</p>
+                    <p className="text-primary font-bold text-sm sm:text-base mt-1">{fmt(p.price)}</p>
                     {p.min_price > 0 && p.min_price < p.price ? (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Open to offers from <span className="font-semibold">₦{p.min_price.toLocaleString()}</span>
+                        Open to offers from <span className="font-semibold">{fmt(p.min_price)}</span>
                       </p>
                     ) : null}
                     {p.description ? (
@@ -749,7 +760,7 @@ export default function Store() {
                           className="w-full text-[11px] h-8"
                           onClick={() => {
                             track("product_click", p.id);
-                            setChatSeed(`Hi! I'm interested in ${p.name} (₦${p.price.toLocaleString()}). Can we agree on a better price?`);
+                            setChatSeed(`Hi! I'm interested in ${p.name} (${fmt(p.price)}). Can we agree on a better price?`);
                             setChatOpen(true);
                           }}
                         >
@@ -790,7 +801,7 @@ export default function Store() {
           <div className="max-w-5xl mx-auto flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold">{cartCount} item{cartCount === 1 ? "" : "s"}</p>
-              <p className="text-[11px] text-muted-foreground">₦{cartTotal.toLocaleString()}</p>
+              <p className="text-[11px] text-muted-foreground">{fmt(cartTotal)}</p>
             </div>
             <Button size="sm" className="gradient-primary text-primary-foreground text-xs" onClick={() => setCartOpen(true)}>
               View cart
