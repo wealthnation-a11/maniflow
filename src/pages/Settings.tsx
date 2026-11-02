@@ -1,3 +1,4 @@
+import { CURRENCIES } from "@/lib/currency";
 import { useState, useRef, useEffect } from "react";
 import { CheckCircle2, Globe, Bell, CreditCard, Bot, Save, UserCircle, Upload, Trash2, X, ExternalLink, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -407,10 +408,9 @@ export default function Settings() {
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ngn">₦ Nigerian Naira</SelectItem>
-                  <SelectItem value="usd">$ US Dollar</SelectItem>
-                  <SelectItem value="gbp">£ British Pound</SelectItem>
-                  <SelectItem value="ghs">₵ Ghanaian Cedi</SelectItem>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code.toLowerCase()}>{c.symbol} {c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
