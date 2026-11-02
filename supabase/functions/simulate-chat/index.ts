@@ -108,7 +108,7 @@ Deno.serve(async (req: Request) => {
 
     const [{ data: profile }, { data: botConfig }, { data: products }] = await Promise.all([
       supabaseAdmin.from("profiles").select("business_name, ai_tone, plan, payment_details, currency, credits_balance, trial_ends_at").eq("id", user.id).maybeSingle(),
-      supabaseAdmin.from("bot_configs").select("qa_rules, payment_details, currency").eq("user_id", user.id).maybeSingle(),
+      supabaseAdmin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", user.id).maybeSingle(),
       supabaseAdmin.from("products").select("name, price, description, stock, variants").eq("user_id", user.id),
     ]);
 

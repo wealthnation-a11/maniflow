@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
     }
 
     const [{ data: botConfig }, { data: products }, { data: history }] = await Promise.all([
-      admin.from("bot_configs").select("qa_rules, payment_details, currency").eq("user_id", profile.id).maybeSingle(),
+      admin.from("bot_configs").select("qa_rules, payment_details").eq("user_id", profile.id).maybeSingle(),
       admin.from("products").select("name, price, min_price, description, stock").eq("user_id", profile.id).limit(60),
       admin
         .from("messages")
