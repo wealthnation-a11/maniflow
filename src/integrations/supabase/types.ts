@@ -263,6 +263,48 @@ export type Database = {
         }
         Relationships: []
       }
+      debts: {
+        Row: {
+          amount: number
+          amount_paid: number
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          description: string
+          id: string
+          order_id: string | null
+          settled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          amount_paid?: number
+          created_at?: string
+          customer_name: string
+          customer_phone?: string | null
+          description?: string
+          id?: string
+          order_id?: string | null
+          settled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          amount_paid?: number
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          description?: string
+          id?: string
+          order_id?: string | null
+          settled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       discount_codes: {
         Row: {
           active: boolean
@@ -588,6 +630,7 @@ export type Database = {
       products: {
         Row: {
           category: string | null
+          cost_price: number
           created_at: string
           description: string | null
           id: string
@@ -605,6 +648,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          cost_price?: number
           created_at?: string
           description?: string | null
           id?: string
@@ -622,6 +666,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          cost_price?: number
           created_at?: string
           description?: string | null
           id?: string

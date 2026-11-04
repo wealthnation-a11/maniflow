@@ -15,6 +15,13 @@
       "when": 1792552305833,
       "tag": "0001_autoresponder_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793763718164,
+      "tag": "0002_phase_b_cost_price_and_debts",
+      "breakpoints": true
     }
   ]
 }
