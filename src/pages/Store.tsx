@@ -734,6 +734,7 @@ export default function Store() {
                   <div className="p-3 flex flex-col flex-1">
                     <h2 className="font-heading font-semibold text-xs sm:text-sm leading-tight line-clamp-2">{p.name}</h2>
                     <p className="text-primary font-bold text-sm sm:text-base mt-1">{fmt(p.price)}</p>
+                    {approx(p.price) && <p className="text-[10px] text-muted-foreground">{approx(p.price)} (approx.)</p>}
                     {p.min_price > 0 && p.min_price < p.price ? (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         Open to offers from <span className="font-semibold">{fmt(p.min_price)}</span>
