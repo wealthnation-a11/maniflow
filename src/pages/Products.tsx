@@ -127,13 +127,14 @@ export default function Products() {
     if (minPriceRaw > price) { toast.error("Lowest price can't be higher than the listed price"); setSaving(false); return; }
     const min_price = Math.max(0, minPriceRaw);
     const stock = parseInt(form.stock) || 0;
+    const costPrice = Math.max(0, parseFloat(form.costPrice) || 0);
     const cleanVariants = variants.filter((v) => v.name.trim());
 
     const track_inventory = form.trackInventory;
     const low_stock_threshold = Math.max(0, parseInt(form.lowStock) || 0);
 
     const row = {
-      user_id: user.id, name: form.name, price, min_price, description: form.description,
+      user_id: user.id, name: form.name, price, min_price, cost_price: costPrice, description: form.description,
       image_url: form.image, stock, category: form.category, tags,
       track_inventory, low_stock_threshold,
       variants: cleanVariants as any, updated_at: new Date().toISOString(),
@@ -147,7 +148,7 @@ export default function Products() {
     } else {
       const { data, error } = await supabase.from("products").insert(row).select().single();
       if (error || !data) { toast.error("Failed to add product"); setSaving(false); return; }
-      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), min_price: Number((data as any).min_price ?? 0), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
+      setProducts((prev) => [{ id: data.id, name: data.name, price: Number(data.price), min_price: Number((data as any).min_price ?? 0), cost_price: Number((data as any).cost_price ?? 0), description: data.description || "", image_url: data.image_url || "", stock: data.stock, category: data.category || "", tags: ((data as any).tags as string[]) || [], variants: (data.variants as Variant[]) || [], track_inventory: (data as any).track_inventory ?? true, low_stock_threshold: (data as any).low_stock_threshold ?? 5 }, ...prev]);
       toast.success("Product added!");
     }
     setSaving(false);
@@ -165,8 +166,8 @@ export default function Products() {
 
   const handleCSVUpload = () => toast.info("CSV upload coming soon!");
   const handleExport = () => {
-    exportToCSV("products", ["Name", "Price", "Stock", "Category", "Description"],
-      products.map((p) => [p.name, `₦${p.price.toLocaleString()}`, String(p.stock), p.category, p.description]));
+    exportToCSV("products", ["Name", "Price", "Cost", "Stock", "Category", "Description"],
+      products.map((p) => [p.name, `₦${p.price.toLocaleString()}`, `₦${p.cost_price.toLocaleString()}`, String(p.stock), p.category, p.description]));
     toast.success(`Exported ${products.length} products`);
   };
 
@@ -185,6 +186,13 @@ export default function Products() {
           Your bargaining floor. The bot negotiates between this and the listed price and never goes below it. Leave empty for a fixed price.
         </p>
         <Input type="number" value={form.minPrice} onChange={(e) => setForm({ ...form, minPrice: e.target.value })} placeholder="e.g. 12000" />
+      </div>
+      <div className="rounded-lg border p-3">
+        <Label className="text-sm">What you bought it for — cost price (₦)</Label>
+        <p className="text-[10px] text-muted-foreground mb-1.5">
+          How much the item costs you. This powers the profit figures on your dashboard. Leave empty if unknown.
+        </p>
+        <Input type="number" min={0} value={form.costPrice} onChange={(e) => setForm({ ...form, costPrice: e.target.value })} placeholder="e.g. 8000" />
       </div>
       <div><Label className="text-sm">Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. Hair Care" className="mt-1" /></div>
       <div className="rounded-lg border p-3 space-y-2">
@@ -332,6 +340,9 @@ export default function Products() {
                   {p.category && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">{p.category}</span>}
                 </div>
                 <p className="text-primary font-bold text-sm sm:text-lg">₦{p.price.toLocaleString()}</p>
+                {p.cost_price > 0 && (
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Cost ₦{p.cost_price.toLocaleString()} · you keep ₦{(p.price - p.cost_price).toLocaleString()}</p>
+                )}
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 line-clamp-2 hidden sm:block">{p.description}</p>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">{p.stock} in stock</p>
                 {p.variants.length > 0 && (
