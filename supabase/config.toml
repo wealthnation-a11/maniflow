@@ -19,3 +19,6 @@ verify_jwt = false
 verify_jwt = false
 [functions.store-paystack-webhook]
 verify_jwt = false
+
+[functions.meta-manual-connect]
+verify_jwt = false
