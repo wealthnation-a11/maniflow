@@ -23,6 +23,7 @@ import {
   Coins,
   FlaskConical,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { ThemeToggle } from "./ThemeToggle";
@@ -38,6 +39,7 @@ const navItems = [
   { label: "Store", icon: Package, path: "/products", badgeKey: null },
   { label: "Orders", icon: ShoppingCart, path: "/orders", badgeKey: null },
   { label: "Customers", icon: Users, path: "/customers", badgeKey: null },
+  { label: "Who Owes Me", icon: Wallet, path: "/debts", badgeKey: null },
   { label: "Campaigns", icon: Megaphone, path: "/campaigns", badgeKey: null },
   { label: "Notifications", icon: Bell, path: "/notifications", badgeKey: "notifications" as const },
 ];

@@ -14,6 +14,7 @@ import Inbox from "./pages/Inbox";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
 import Customers from "./pages/Customers";
+import Debts from "./pages/Debts";
 import Campaigns from "./pages/Campaigns";
 import Settings from "./pages/Settings";
 import RealtimeSettings from "./pages/RealtimeSettings";
@@ -68,6 +69,7 @@ const App = () => (
                   <Route path="/products" element={<Products />} />
                   <Route path="/orders" element={<Orders />} />
                   <Route path="/customers" element={<Customers />} />
+                  <Route path="/debts" element={<Debts />} />
                   <Route path="/campaigns" element={<Campaigns />} />
                   <Route path="/bot-config" element={<BotConfig />} />
                   <Route path="/autoresponder" element={<Autoresponder />} />

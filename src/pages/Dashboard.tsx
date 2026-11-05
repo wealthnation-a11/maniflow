@@ -28,6 +28,7 @@ import OnboardingChecklist from "@/components/OnboardingChecklist";
 import SessionRequired from "@/components/SessionRequired";
 import RealtimeConsentBanner from "@/components/RealtimeConsentBanner";
 import { useRealtimeSubscription } from "@/lib/realtime";
+import { formatMoney } from "@/lib/currency";
 
 type DashboardData = {
   totalConversations: number;
@@ -36,6 +37,19 @@ type DashboardData = {
   customerMessages: number;
   manualMessages: number;
   connectedPlatforms: { platform: string; connected: boolean }[];
+};
+
+type Finance = {
+  currency: string | null;
+  revenue: number;
+  goodsCost: number;
+  grossProfit: number;
+  netProfit: number;
+  deliveryFees: number;
+  awaitingPayment: number;
+  productsWithoutCost: number;
+  linesWithoutCost: number;
+  totalProducts: number;
 };
 
 export default function Dashboard() {
@@ -56,15 +70,30 @@ export default function Dashboard() {
     ],
   });
   const [dataLoading, setDataLoading] = useState(true);
+  const [finance, setFinance] = useState<Finance>({
+    currency: null,
+    revenue: 0,
+    goodsCost: 0,
+    grossProfit: 0,
+    netProfit: 0,
+    deliveryFees: 0,
+    awaitingPayment: 0,
+    productsWithoutCost: 0,
+    linesWithoutCost: 0,
+    totalProducts: 0,
+  });
 
   const fetchData = async () => {
     if (!user) return;
     // Only show the skeleton on the very first load — realtime ticks should not flash it.
     setDataLoading((prev) => prev);
-    const [convsRes, msgsRes, connectionsRes] = await Promise.all([
+    const [convsRes, msgsRes, connectionsRes, ordersRes, productsRes, profileRes] = await Promise.all([
       supabase.from("conversations").select("id, platform, status, created_at").eq("user_id", user.id),
       supabase.from("messages").select("id, role, conversation_id, created_at"),
       supabase.from("platform_connections").select("platform").eq("user_id", user.id),
+      supabase.from("orders").select("amount, items, delivery_fee, discount_amount, payment_status").eq("user_id", user.id),
+      supabase.from("products").select("id, name, cost_price").eq("user_id", user.id),
+      supabase.from("profiles").select("currency").eq("id", user.id).maybeSingle(),
     ]);
 
     const conversations = convsRes.data || [];
@@ -72,6 +101,43 @@ export default function Dashboard() {
     const connections = connectionsRes.data || [];
 
     const connectedPlatformNames = connections.map((c) => c.platform);
+
+    // Profit analytics: paid orders vs what the goods cost the merchant.
+    const orders = ordersRes.data || [];
+    const productCost = new Map<string, number>();
+    for (const p of productsRes.data || []) {
+      productCost.set(p.id, Number((p as any).cost_price ?? 0));
+      productCost.set(String((p as any).name || "").trim().toLowerCase(), Number((p as any).cost_price ?? 0));
+    }
+    let revenue = 0, goodsCost = 0, deliveryFees = 0, awaitingPayment = 0, linesWithoutCost = 0;
+    for (const o of orders) {
+      const deliveryFee = Number((o as any).delivery_fee ?? 0);
+      if (o.payment_status === "paid") {
+        revenue += Number(o.amount || 0);
+        deliveryFees += deliveryFee;
+        for (const line of (Array.isArray((o as any).items) ? (o as any).items : []) as Array<{ product_id?: string; name?: string; quantity?: number }>) {
+          const qty = Math.max(0, Number(line?.quantity ?? 0));
+          const cost = productCost.get(line?.product_id || "") ?? productCost.get(String(line?.name || "").trim().toLowerCase()) ?? 0;
+          if (cost > 0) goodsCost += cost * qty;
+          else linesWithoutCost += qty;
+        }
+      } else if (o.payment_status === "pending") {
+        awaitingPayment += Number(o.amount || 0) + deliveryFee;
+      }
+    }
+    const productsWithoutCost = (productsRes.data || []).filter((p) => !(Number((p as any).cost_price ?? 0) > 0)).length;
+    setFinance({
+      currency: (profileRes.data as any)?.currency || null,
+      revenue,
+      goodsCost,
+      grossProfit: revenue - goodsCost,
+      netProfit: revenue - goodsCost - deliveryFees,
+      deliveryFees,
+      awaitingPayment,
+      productsWithoutCost,
+      linesWithoutCost,
+      totalProducts: (productsRes.data || []).length,
+    });
 
     setData({
       totalConversations: conversations.length,
@@ -100,6 +166,9 @@ export default function Dashboard() {
       { config: { event: "*", table: "conversations", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
       { config: { event: "*", table: "messages" }, callback: () => fetchData() },
       { config: { event: "*", table: "platform_connections", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
+      { config: { event: "*", table: "orders", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
+      { config: { event: "*", table: "products", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
+      { config: { event: "*", table: "debts", filter: `user_id=eq.${user?.id ?? ""}` }, callback: () => fetchData() },
     ]
   );
 
@@ -166,6 +235,59 @@ export default function Dashboard() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{s.label}</p>
           </motion.div>
         ))}
+      </div>
+
+      {/* Sales & Profit */}
+      <div>
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-primary" />
+            <h2 className="font-heading font-semibold text-sm sm:text-lg">Sales &amp; Profit</h2>
+          </div>
+          <button onClick={() => navigate("/debts")} className="text-[10px] sm:text-xs text-primary hover:underline whitespace-nowrap">
+            Who owes me
+          </button>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {[
+            { label: "Revenue (paid)", value: formatMoney(finance.revenue, finance.currency), icon: DollarSign, color: "text-primary" },
+            { label: "Cost of Goods", value: formatMoney(finance.goodsCost, finance.currency), icon: Package, color: "text-warning" },
+            { label: "Gross Profit", value: formatMoney(finance.grossProfit, finance.currency), icon: TrendingUp, color: "text-info" },
+            { label: "Net Profit", value: formatMoney(finance.netProfit, finance.currency), icon: Target, color: "text-success" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="bg-card rounded-xl p-3 sm:p-4 md:p-5 shadow-card"
+            >
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <s.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${s.color}`} />
+              </div>
+              <p className="font-heading text-sm sm:text-lg md:text-xl font-bold truncate">{s.value}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{s.label}</p>
+            </motion.div>
+          ))}
+        </div>
+        <div className="mt-2 px-1 space-y-1">
+          {finance.awaitingPayment > 0 && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              {formatMoney(finance.awaitingPayment, finance.currency)} awaiting payment from buyers.
+            </p>
+          )}
+          {finance.revenue > 0 && finance.totalProducts > 0 && finance.productsWithoutCost > 0 && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              {finance.productsWithoutCost} of {finance.totalProducts} products have no cost price, so profit may look higher than it is.{" "}
+              <button onClick={() => navigate("/products")} className="text-primary hover:underline">Set cost prices</button>
+            </p>
+          )}
+          {finance.totalProducts === 0 && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Add products with their cost price in Store to see your profit here.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* AI Activity */}
