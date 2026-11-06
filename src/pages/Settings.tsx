@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { setLogoUrl as setStoreLogoUrl, setBusinessName as setStoreBusinessName } from "@/store/businessStore";
 import CreditsPanel from "@/components/CreditsPanel";
+import ManualConnectDialog from "@/components/ManualConnectDialog";
 
 type PlatformConnection = {
   id: string;
@@ -54,6 +55,7 @@ export default function Settings() {
   const [payout, setPayout] = useState({ secret_key: "", business_name: "" });
 
   const [disconnectPlatform, setDisconnectPlatform] = useState<string | null>(null);
+  const [manualPlatform, setManualPlatform] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [saving, setSaving] = useState(false);
@@ -205,6 +207,13 @@ export default function Settings() {
 
       <CreditsPanel />
 
+      <ManualConnectDialog
+        platform={manualPlatform}
+        verifyToken={manualPlatform ? getConnection(manualPlatform)?.webhook_verify_token : undefined}
+        onClose={() => setManualPlatform(null)}
+        onConnected={(c) => setConnections((prev) => [...prev.filter((x) => x.platform !== c.platform), c])}
+      />
+
       {/* Platform connections */}
       <div className="bg-card rounded-xl shadow-card p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -232,9 +241,17 @@ export default function Settings() {
                     <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs text-destructive h-6 sm:h-7 px-1.5 sm:px-2" onClick={() => setDisconnectPlatform(p.key)}>Disconnect</Button>
                   </div>
                 ) : (
-                  <Button size="sm" className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7" onClick={() => handleOAuthConnect(p.key)}>
-                    <ExternalLink className="h-3 w-3 mr-1" />Connect
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="outline" className="text-[10px] sm:text-xs h-6 sm:h-7 px-2" onClick={() => setManualPlatform(p.key)}>
+                      API keys
+                    </Button>
+                    <Button size="sm" className="gradient-primary text-primary-foreground text-[10px] sm:text-xs h-6 sm:h-7" onClick={() => handleOAuthConnect(p.key)}>
+                      <ExternalLink className="h-3 w-3 mr-1" />Connect
+                    </Button>
+                  </div>
+                )}
+                {conn && !isComingSoon && (
+                  <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs h-6 sm:h-7 px-1.5" onClick={() => setManualPlatform(p.key)}>Webhook info</Button>
                 )}
               </div>
             );
